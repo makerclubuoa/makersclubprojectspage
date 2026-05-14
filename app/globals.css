@@ -1975,23 +1975,25 @@ button {
 }
 
 @media (max-width: 768px) {
+  .nav {
+    overflow: visible;
+  }
   .nav__hamburger {
     display: flex;
   }
   .nav__links {
     display: none;
-    position: fixed;
-    top: 57px;
+    position: absolute;
+    top: 100%;
     left: 0;
     right: 0;
-    bottom: 0;
+    height: 100svh;
     background: var(--paper);
     flex-direction: column;
     align-items: stretch;
     gap: 0;
     padding: 8px 0 24px;
     overflow-y: auto;
-    z-index: 49;
     border-top: 1px solid var(--rule);
   }
   .nav__links--open {
