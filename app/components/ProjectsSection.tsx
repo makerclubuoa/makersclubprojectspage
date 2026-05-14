@@ -49,16 +49,14 @@ function applyFilters(
 }
 
 function ProjectCard({
-  project, index, total, onCatClick, onToolClick,
+  project, onCatClick, onToolClick,
 }: {
-  project: Project; index: number; total: number
+  project: Project
   onCatClick: (cat: string) => void
   onToolClick: (tool: string) => void
 }) {
   const router = useRouter()
 
-  const idx = String(index + 1).padStart(3, '0')
-  const totalStr = String(total).padStart(3, '0')
   const color = categoryColor(project.category)
 
   function handleClick(e: React.MouseEvent) {
@@ -72,11 +70,7 @@ function ProjectCard({
       className="card reveal"
       href={`/projects/${project.id}`}
       onClick={handleClick}
-      style={{ transitionDelay: `${Math.min(index * 28, 240)}ms` }}
     >
-      <div className="card__id">
-        {idx} / {totalStr}
-      </div>
       <div className="card__media">
         <div
           className="ph"
@@ -97,7 +91,6 @@ function ProjectCard({
         </div>
       </div>
       <div className="card__body">
-        <div className="card__num">PRJ_{project.id.toUpperCase()}</div>
         <h4 className="card__title">{project.title}</h4>
         <p className="card__blurb">{project.blurb}</p>
         <div className="tags">
@@ -291,7 +284,7 @@ export default function ProjectsSection({
             <>
               <div className="grid" ref={gridRef}>
                 {paginated.map((p, i) => (
-                  <ProjectCard key={p.id} project={p} index={i} total={paginated.length} onCatClick={handleCatClick} onToolClick={handleToolClick} />
+                  <ProjectCard key={p.id} project={p} onCatClick={handleCatClick} onToolClick={handleToolClick} />
                 ))}
               </div>
               <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />

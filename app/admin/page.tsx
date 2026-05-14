@@ -30,6 +30,12 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const [actingId, setActingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [pending, setPending] = useState<{
+    id: string
+    title: string
+    label: string
+    action: () => Promise<void>
+  } | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
 
@@ -96,7 +102,6 @@ export default function AdminPage() {
   }
 
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return
     setActingId(id)
     setActionError(null)
     const { error } = await supabase.from('Projects').delete().eq('id', id)
@@ -106,6 +111,12 @@ export default function AdminPage() {
       setProjects(prev => prev.filter(p => p.id !== id))
     }
     setActingId(null)
+  }
+
+  async function confirmPending() {
+    if (!pending) return
+    setPending(null)
+    await pending.action()
   }
 
   if (loading || !user) return null
@@ -203,7 +214,7 @@ export default function AdminPage() {
                       <button
                         className="dash-row__edit"
                         style={{ color: 'var(--pop-blue)' }}
-                        onClick={() => setStatus(p.id, null, 'approved')}
+                        onClick={() => setPending({ id: p.id, title: p.title, label: 'Approve', action: () => setStatus(p.id, null, 'approved') })}
                         disabled={busy}
                       >
                         {busy ? '…' : '✓ Approve'}
@@ -214,7 +225,7 @@ export default function AdminPage() {
                       <button
                         className="dash-row__edit"
                         style={{ color: 'var(--pop-violet)' }}
-                        onClick={() => toggleFeatured(p.id, true)}
+                        onClick={() => setPending({ id: p.id, title: p.title, label: 'Feature', action: () => toggleFeatured(p.id, true) })}
                         disabled={busy}
                       >
                         {busy ? '…' : '★ Feature'}
@@ -225,7 +236,7 @@ export default function AdminPage() {
                       <button
                         className="dash-row__edit"
                         style={{ color: 'var(--pop-blue)' }}
-                        onClick={() => toggleFeatured(p.id, false)}
+                        onClick={() => setPending({ id: p.id, title: p.title, label: 'Un-feature', action: () => toggleFeatured(p.id, false) })}
                         disabled={busy}
                       >
                         {busy ? '…' : '★ Un-feature'}
@@ -235,7 +246,7 @@ export default function AdminPage() {
                     {!isRejected && (
                       <button
                         className="dash-row__delete"
-                        onClick={() => setStatus(p.id, 'REJECTED', 'rejected')}
+                        onClick={() => setPending({ id: p.id, title: p.title, label: 'Reject', action: () => setStatus(p.id, 'REJECTED', 'rejected') })}
                         disabled={busy}
                       >
                         {busy ? '…' : '✕ Reject'}
@@ -244,7 +255,7 @@ export default function AdminPage() {
 
                     <button
                       className="dash-row__delete"
-                      onClick={() => handleDelete(p.id, p.title)}
+                      onClick={() => setPending({ id: p.id, title: p.title, label: 'Delete', action: () => handleDelete(p.id, p.title) })}
                       disabled={busy}
                     >
                       {busy ? '…' : 'Delete'}
@@ -261,6 +272,29 @@ export default function AdminPage() {
       </main>
 
       <Footer />
+
+      {pending && (
+        <div className="modal-backdrop" onClick={() => setPending(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <p className="modal__label">Confirm action</p>
+            <p className="modal__title">
+              {pending.label} <em>"{pending.title}"</em>?
+            </p>
+            {pending.label === 'Delete' && (
+              <p className="modal__warn">This cannot be undone.</p>
+            )}
+            <div className="modal__actions">
+              <button className="btn btn--ghost" onClick={() => setPending(null)}>Cancel</button>
+              <button
+                className={`btn ${pending.label === 'Delete' || pending.label === 'Reject' ? 'btn--danger' : 'btn--gradient'}`}
+                onClick={confirmPending}
+              >
+                {pending.label}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

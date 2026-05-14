@@ -137,10 +137,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <div className="project-meta-card__header">FIG.01 — PROJECT RECORD</div>
 
                 <div className="project-meta-card__row">
-                  <span className="k">ID</span>
-                  <span className="v">PRJ_{project.id.toUpperCase()}</span>
-                </div>
-                <div className="project-meta-card__row">
                   <span className="k">Category</span>
                   <span className="v">{project.category}</span>
                 </div>
