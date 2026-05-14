@@ -8,6 +8,7 @@ import CursorTrail from '@/app/components/CursorTrail'
 import { CATEGORIES } from '@/lib/projects'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
+import CustomSelect from '@/app/components/CustomSelect'
 
 const SUBMIT_CATEGORIES = CATEGORIES.filter(c => c !== 'All')
 
@@ -291,9 +292,11 @@ export default function SubmitPage() {
                     {/* Category */}
                     <div className="field">
                       <label>Category</label>
-                      <select value={category} onChange={e => setCategory(e.target.value)}>
-                        {SUBMIT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
+                      <CustomSelect
+                        value={category}
+                        onChange={setCategory}
+                        options={SUBMIT_CATEGORIES.map(c => ({ value: c, label: c }))}
+                      />
                     </div>
 
                     {/* Makers */}

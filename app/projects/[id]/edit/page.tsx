@@ -9,6 +9,7 @@ import CursorTrail from '@/app/components/CursorTrail'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES, type Project } from '@/lib/projects'
+import CustomSelect from '@/app/components/CustomSelect'
 
 const EDIT_CATEGORIES = CATEGORIES.filter(c => c !== 'All')
 
@@ -191,9 +192,11 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
               <div className="field">
                 <label>Category</label>
-                <select value={category} onChange={e => setCategory(e.target.value)}>
-                  {EDIT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <CustomSelect
+                  value={category}
+                  onChange={setCategory}
+                  options={EDIT_CATEGORIES.map(c => ({ value: c, label: c }))}
+                />
               </div>
 
               <div className="field">

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { CATEGORIES, categoryColor, type Project } from '@/lib/projects'
 import Pagination from '@/app/components/Pagination'
+import CustomSelect from '@/app/components/CustomSelect'
 
 const TRAIL_COLORS = ['#567dff', '#9f42d1', '#f04ab9', '#ff25c7', '#ff3c6d', '#ff856a']
 
@@ -212,20 +213,24 @@ export default function ProjectsSection({
 
             <div className="select">
               <label>Made_with</label>
-              <select value={tool} onChange={e => { setTool(e.target.value); setPage(1) }}>
-                {allTools.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+              <CustomSelect
+                value={tool}
+                onChange={v => { setTool(v); setPage(1) }}
+                options={allTools.map(t => ({ value: t, label: t }))}
+              />
             </div>
 
             <div className="select">
               <label>Sort</label>
-              <select value={sort} onChange={e => { setSort(e.target.value); setPage(1) }}>
-                <option value="newest">Newest</option>
-                <option value="popular">Most loved</option>
-                <option value="az">A — Z</option>
-              </select>
+              <CustomSelect
+                value={sort}
+                onChange={v => { setSort(v); setPage(1) }}
+                options={[
+                  { value: 'newest', label: 'Newest' },
+                  { value: 'popular', label: 'Most loved' },
+                  { value: 'az', label: 'A — Z' },
+                ]}
+              />
             </div>
 
             <button

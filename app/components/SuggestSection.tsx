@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/app/components/AuthProvider'
+import CustomSelect from '@/app/components/CustomSelect'
 
 const HINTS = [
   'Intro to Arduino',
@@ -176,20 +177,28 @@ export default function SuggestSection() {
                 <div className="field__row">
                   <div className="field">
                     <label>Best size</label>
-                    <select value={size} onChange={e => setSize(e.target.value)}>
-                      <option>~ 5 — 10 people</option>
-                      <option>~ 10 — 20 people</option>
-                      <option>~ 20 — 40 people</option>
-                      <option>40+ (event-event)</option>
-                    </select>
+                    <CustomSelect
+                      value={size}
+                      onChange={setSize}
+                      options={[
+                        { value: '~ 5 — 10 people', label: '~ 5 — 10 people' },
+                        { value: '~ 10 — 20 people', label: '~ 10 — 20 people' },
+                        { value: '~ 20 — 40 people', label: '~ 20 — 40 people' },
+                        { value: '40+ (event-event)', label: '40+ (event-event)' },
+                      ]}
+                    />
                   </div>
                   <div className="field">
                     <label>Could you help run it?</label>
-                    <select value={helpRun} onChange={e => setHelpRun(e.target.value)}>
-                      <option>No, just wanna come</option>
-                      <option>Maybe — ask me</option>
-                      <option>Yes, count me in</option>
-                    </select>
+                    <CustomSelect
+                      value={helpRun}
+                      onChange={setHelpRun}
+                      options={[
+                        { value: 'No, just wanna come', label: 'No, just wanna come' },
+                        { value: 'Maybe — ask me', label: 'Maybe — ask me' },
+                        { value: 'Yes, count me in', label: 'Yes, count me in' },
+                      ]}
+                    />
                   </div>
                 </div>
 

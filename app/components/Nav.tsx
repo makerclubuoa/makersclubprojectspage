@@ -14,7 +14,9 @@ export default function Nav() {
   useEffect(() => {
     const mode = document.body.dataset.mode
     const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    setDark(mode === 'dark' || (!mode && sysDark))
+    const isDark = mode === 'dark' || (!mode && sysDark)
+    setDark(isDark)
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
     const onScroll = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -30,6 +32,7 @@ export default function Nav() {
     const next = !dark
     setDark(next)
     document.body.dataset.mode = next ? 'dark' : 'light'
+    document.documentElement.style.colorScheme = next ? 'dark' : 'light'
   }
 
   function close() { setMenuOpen(false) }
