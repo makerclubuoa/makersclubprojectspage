@@ -11,7 +11,7 @@ export default function Footer() {
               Submissions for the archive are open all the time. Half-finished, broken or weird is
               welcome — that&rsquo;s usually where the good stuff is.
             </p>
-            <a className="btn btn--gradient" href="#" style={{ marginTop: 14, display: 'inline-flex' }}>
+            <a className="btn btn--gradient" href="/submit" style={{ marginTop: 14, display: 'inline-flex' }}>
               Submit a project <span className="arr">→</span>
             </a>
           </div>

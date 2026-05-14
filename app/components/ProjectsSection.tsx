@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { PROJECTS, CATEGORIES, ALL_TOOLS, type Project } from '@/lib/projects'
+import { useRouter } from 'next/navigation'
+import { CATEGORIES, categoryColor, type Project } from '@/lib/projects'
 
 const TRAIL_COLORS = ['#567dff', '#9f42d1', '#f04ab9', '#ff25c7', '#ff3c6d', '#ff856a']
 
@@ -29,46 +30,40 @@ function burst(x: number, y: number) {
 }
 
 function applyFilters(
+  projects: Project[],
   cat: string,
   tool: string,
   sort: string,
   featured: boolean,
 ): Project[] {
-  let out = PROJECTS.slice()
+  let out = projects.slice()
   if (cat !== 'All') out = out.filter(p => p.category === cat)
-  if (tool !== 'All tools') out = out.filter(p => p.tools.includes(tool))
-  if (featured) out = out.filter(p => p.featured)
-  if (sort === 'newest') out.sort((a, b) => b.date.localeCompare(a.date))
-  if (sort === 'popular') out.sort((a, b) => b.loves - a.loves)
+  if (tool !== 'All tools') out = out.filter(p => (p.tools ?? []).includes(tool))
+  if (featured) out = out.filter(p => p.status?.toLowerCase() === 'featured')
+  if (sort === 'newest') out.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
+  if (sort === 'popular') out.sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))
   if (sort === 'az') out.sort((a, b) => a.title.localeCompare(b.title))
   return out
 }
 
 function ProjectCard({ project, index, total }: { project: Project; index: number; total: number }) {
-  const [squishing, setSquishing] = useState(false)
-  const cardRef = useRef<HTMLAnchorElement>(null)
+  const router = useRouter()
 
   const idx = String(index + 1).padStart(3, '0')
   const totalStr = String(total).padStart(3, '0')
+  const color = categoryColor(project.category)
 
   function handleClick(e: React.MouseEvent) {
     e.preventDefault()
-    setSquishing(true)
     burst(e.clientX, e.clientY)
-    setTimeout(() => {
-      setSquishing(false)
-    }, 200)
+    router.push(`/projects/${project.id}`)
   }
 
   return (
     <a
-      ref={cardRef}
-      className={`card reveal${squishing ? ' is-squishing' : ''}`}
+      className="card reveal"
       href={`/projects/${project.id}`}
       onClick={handleClick}
-      onMouseDown={() => setSquishing(true)}
-      onMouseUp={() => setSquishing(false)}
-      onMouseLeave={() => setSquishing(false)}
       style={{ transitionDelay: `${Math.min(index * 28, 240)}ms` }}
     >
       <div className="card__id">
@@ -77,13 +72,13 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
       <div className="card__media">
         <div
           className="ph"
-          style={{ backgroundImage: project.color }}
+          style={{ backgroundImage: project.image ? `url(${project.image})` : color }}
         >
-          <span className="ph__label">[ {project.title} ]</span>
+          {!project.image && <span className="ph__label">[ {project.title} ]</span>}
         </div>
         <div className="badges">
           <span className="badge">{project.category}</span>
-          {project.featured && (
+          {project.status?.toLowerCase() === 'featured' && (
             <span className="badge badge--featured">★ FEATURED</span>
           )}
         </div>
@@ -93,25 +88,25 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
         <h4 className="card__title">{project.title}</h4>
         <p className="card__blurb">{project.blurb}</p>
         <div className="tags">
-          {project.tools.slice(0, 3).map(t => (
+          {(project.tools ?? []).slice(0, 3).map(t => (
             <span key={t} className="tag">{t}</span>
           ))}
         </div>
         <div className="card__meta">
           <span className="card__makers">
             <span className="avatar-stack">
-              {project.makers.map((m, i) => (
+              {(project.makers ?? []).map((m, i) => (
                 <span
                   key={i}
                   className="avatar"
-                  style={{ background: project.color }}
+                  style={{ background: color }}
                 />
               ))}
             </span>
-            <span>{project.makers.join(' + ')}</span>
+            <span>{(project.makers ?? []).join(' + ')}</span>
           </span>
           <span>
-            {formatDate(project.date)} · ♥{project.loves}
+            {project.date ? formatDate(project.date) : ''}{project.likes != null ? ` · ♥${project.likes}` : ''}
           </span>
         </div>
       </div>
@@ -119,7 +114,13 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
   )
 }
 
-export default function ProjectsSection() {
+export default function ProjectsSection({
+  projects,
+  allTools,
+}: {
+  projects: Project[]
+  allTools: string[]
+}) {
   const [cat, setCat] = useState('All')
   const [tool, setTool] = useState('All tools')
   const [sort, setSort] = useState('newest')
@@ -127,9 +128,8 @@ export default function ProjectsSection() {
   const [bouncingPill, setBouncingPill] = useState<string | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
 
-  const filtered = applyFilters(cat, tool, sort, featured)
+  const filtered = applyFilters(projects, cat, tool, sort, featured)
 
-  // Reveal on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
@@ -164,9 +164,9 @@ export default function ProjectsSection() {
   const categoryCount = useCallback(
     (c: string) =>
       c === 'All'
-        ? PROJECTS.length
-        : PROJECTS.filter(p => p.category === c).length,
-    [],
+        ? projects.length
+        : projects.filter(p => p.category === c).length,
+    [projects],
   )
 
   return (
@@ -193,7 +193,7 @@ export default function ProjectsSection() {
             <div className="select">
               <label>Made_with</label>
               <select value={tool} onChange={e => setTool(e.target.value)}>
-                {ALL_TOOLS.map(t => (
+                {allTools.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>

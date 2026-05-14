@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import AuthProvider from '@/app/components/AuthProvider'
 
 export const metadata: Metadata = {
   title: 'PROJECTS · MAKE_UOA',
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body data-mode="light">{children}</body>
+      <body data-mode="light">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   )
 }

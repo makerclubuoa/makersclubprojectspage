@@ -1,146 +1,185 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import * as THREE from 'three'
 
-const VB_W = 1600
-const VB_H = 900
-const NUM_LINES = 44
-const LOOP_W = VB_W
-
-const STOPS: [number, number, number][] = [
-  [86, 125, 255],
-  [159, 66, 209],
-  [240, 74, 185],
-  [255, 37, 199],
-  [255, 60, 109],
-  [255, 133, 106],
-]
-
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t
-}
-function gradAt(t: number): [number, number, number] {
-  t = Math.max(0, Math.min(1, t))
-  const seg = t * (STOPS.length - 1)
-  const i = Math.floor(seg)
-  const f = seg - i
-  const a = STOPS[i]
-  const b = STOPS[Math.min(i + 1, STOPS.length - 1)]
-  return [lerp(a[0], b[0], f) | 0, lerp(a[1], b[1], f) | 0, lerp(a[2], b[2], f) | 0]
-}
-
-function makeWavePath(amp: number, freq: number, phase: number, y: number): string {
-  const totalW = LOOP_W * 2
-  const step = 16
-  let d = `M -50 ${y.toFixed(1)}`
-  for (let x = -50; x <= totalW + 50; x += step) {
-    const yy =
-      y +
-      Math.sin((x / VB_W) * Math.PI * 2 * freq + phase) * amp +
-      Math.sin((x / VB_W) * Math.PI * 2 * freq * 2.4 + phase * 1.6) * (amp * 0.28)
-    d += ` L ${x} ${yy.toFixed(1)}`
-  }
-  return d
-}
+const GRID_COLS = 24
+const GRID_ROWS = 32
+const GRID_WIDTH = 20
+const GRID_DEPTH = 40
 
 export default function WaveSection() {
-  const groupRef = useRef<SVGGElement>(null)
-  const readoutRef = useRef<HTMLDivElement>(null)
-  const captionRef = useRef<HTMLDivElement>(null)
+  const mountRef = useRef<HTMLDivElement>(null)
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    const group = groupRef.current
-    if (!group) return
+    const mount = mountRef.current
+    if (!mount) return
 
-    interface LineData {
-      y: number
-      ampBase: number
-      freq: number
-      phase: number
-      colorT: number
-      speed: number
-      alpha: number
-      el: SVGGElement
-      path: SVGPathElement
+    // Scene
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0x050008)
+    scene.fog = new THREE.Fog(0x050008, 18, 42)
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(75, mount.clientWidth / mount.clientHeight, 0.1, 100)
+    camera.position.set(0, 1.6, 0)
+    camera.lookAt(0, 0.5, -10)
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setSize(mount.clientWidth, mount.clientHeight)
+    mount.appendChild(renderer.domElement)
+
+    // --- Stars ---
+    const starGeo = new THREE.BufferGeometry()
+    const starCount = 1200
+    const starPos = new Float32Array(starCount * 3)
+    for (let i = 0; i < starCount; i++) {
+      starPos[i * 3] = (Math.random() - 0.5) * 80
+      starPos[i * 3 + 1] = Math.random() * 20 + 2
+      starPos[i * 3 + 2] = (Math.random() - 0.5) * 80
     }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3))
+    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, sizeAttenuation: true })
+    scene.add(new THREE.Points(starGeo, starMat))
 
-    const lineData: LineData[] = []
+    // --- Sun (layered circles for glow) ---
+    const sunGroup = new THREE.Group()
+    sunGroup.position.set(0, 2.2, -22)
+    const sunLayers = [
+      { r: 2.8, color: 0xff2d78, opacity: 0.08 },
+      { r: 2.2, color: 0xff2d78, opacity: 0.12 },
+      { r: 1.6, color: 0xff5577, opacity: 0.25 },
+      { r: 1.2, color: 0xff7777, opacity: 0.5 },
+      { r: 0.9, color: 0xffaacc, opacity: 1.0 },
+    ]
+    sunLayers.forEach(({ r, color, opacity }) => {
+      const geo = new THREE.CircleGeometry(r, 64)
+      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide })
+      sunGroup.add(new THREE.Mesh(geo, mat))
+    })
+    // Horizontal scan lines cutting through sun
+    for (let i = -8; i <= 8; i++) {
+      if (i === 0) continue
+      const y = i * 0.09
+      const lineGeo = new THREE.PlaneGeometry(1.8, 0.03)
+      const lineMat = new THREE.MeshBasicMaterial({ color: 0x050008, transparent: true, opacity: 0.85 })
+      const line = new THREE.Mesh(lineGeo, lineMat)
+      line.position.set(0, y, 0.01)
+      if (Math.abs(y) < 0.9) sunGroup.add(line)
+    }
+    scene.add(sunGroup)
 
-    for (let i = 0; i < NUM_LINES; i++) {
-      const t = i / (NUM_LINES - 1)
-      const y = VB_H * 0.5 + (t - 0.5) * VB_H * 0.36
-      const edgeFall = 1 - Math.pow(Math.abs(t - 0.5) * 2, 2.2)
-      const line = {
-        y,
-        ampBase: 70 * Math.max(0.15, edgeFall),
-        freq: 1.4 + (i % 5) * 0.08 + t * 0.4,
-        phase: t * Math.PI * 2 * 0.9 + Math.random() * 0.3,
-        colorT: t,
-        speed: 1 + t * 0.6,
-        alpha: 0.32 + (1 - Math.abs(t - 0.5) * 2) * 0.55,
+    // --- Horizon glow ---
+    const horizonGeo = new THREE.PlaneGeometry(40, 3)
+    const horizonMat = new THREE.MeshBasicMaterial({
+      color: 0xcc00ff,
+      transparent: true,
+      opacity: 0.07,
+      side: THREE.DoubleSide,
+    })
+    const horizon = new THREE.Mesh(horizonGeo, horizonMat)
+    horizon.position.set(0, 1.0, -21)
+    scene.add(horizon)
+
+    // --- Grid ---
+    function buildGrid(zOffset: number) {
+      const group = new THREE.Group()
+      const matH = new THREE.LineBasicMaterial({ color: 0xff00cc, transparent: true, opacity: 0.55 })
+      const matV = new THREE.LineBasicMaterial({ color: 0x8800ff, transparent: true, opacity: 0.65 })
+
+      // Horizontal lines (rows)
+      for (let row = 0; row <= GRID_ROWS; row++) {
+        const t = row / GRID_ROWS
+        const z = -t * GRID_DEPTH + zOffset
+        const pts = [
+          new THREE.Vector3(-GRID_WIDTH / 2, 0, z),
+          new THREE.Vector3(GRID_WIDTH / 2, 0, z),
+        ]
+        group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matH))
       }
 
-      const [r, g, b] = gradAt(line.colorT)
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-      path.setAttribute('stroke', `rgba(${r},${g},${b},${line.alpha.toFixed(3)})`)
-      path.setAttribute('fill', 'none')
-      path.setAttribute(
-        'stroke-width',
-        (0.9 + (1 - Math.abs(line.colorT - 0.5) * 2) * 0.7).toFixed(2),
-      )
-      path.setAttribute('stroke-linecap', 'round')
-      path.setAttribute('d', makeWavePath(line.ampBase, line.freq, line.phase, line.y))
+      // Vertical lines (cols)
+      for (let col = 0; col <= GRID_COLS; col++) {
+        const x = (col / GRID_COLS - 0.5) * GRID_WIDTH
+        const pts = [
+          new THREE.Vector3(x, 0, zOffset),
+          new THREE.Vector3(x, 0, zOffset - GRID_DEPTH),
+        ]
+        group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matV))
+      }
 
-      const wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-      wrap.appendChild(path)
-      group.appendChild(wrap)
-
-      lineData.push({ ...line, el: wrap, path })
+      return group
     }
 
-    const waveT0 = performance.now()
-    let scrollEnergy = 0
+    const grid1 = buildGrid(2)
+    const grid2 = buildGrid(2 - GRID_DEPTH)
+    scene.add(grid1)
+    scene.add(grid2)
 
-    function updateScrollEnergy() {
-      const section = sectionRef.current
-      if (!section) return
-      const rect = section.getBoundingClientRect()
-      const vh = window.innerHeight
-      const total = section.offsetHeight + vh * 0.5
-      const seen = -rect.top + vh * 0.25
-      scrollEnergy = Math.max(0, Math.min(1, seen / total))
+    // --- Mountains silhouette ---
+    function makeMountain(color: number, points: number[], zPos: number, yOff: number) {
+      const shape = new THREE.Shape()
+      shape.moveTo(points[0], yOff)
+      for (let i = 0; i < points.length; i++) {
+        shape.lineTo(i - points.length / 2, points[i] + yOff)
+      }
+      shape.lineTo(points.length - points.length / 2, yOff)
+      shape.closePath()
+      const geo = new THREE.ShapeGeometry(shape)
+      const mat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.position.z = zPos
+      mesh.position.y = -0.01
+      mesh.scale.x = 2.2
+      return mesh
     }
 
+    const mtnPts1 = [0.3, 0.7, 1.4, 2.1, 1.5, 0.9, 1.8, 2.8, 2.0, 1.1, 0.5, 1.3, 2.4, 1.7, 0.8, 0.2]
+    const mtnPts2 = [0.1, 0.5, 1.0, 0.7, 1.6, 2.2, 1.3, 0.6, 1.9, 1.4, 0.8, 1.1, 0.4, 0.9, 0.3, 0.1]
+    scene.add(makeMountain(0x1a0033, mtnPts1, -16, 0))
+    scene.add(makeMountain(0x0d0022, mtnPts2, -14, 0))
+
+    // Resize handler
+    function onResize() {
+      if (!mount) return
+      camera.aspect = mount.clientWidth / mount.clientHeight
+      camera.updateProjectionMatrix()
+      renderer.setSize(mount.clientWidth, mount.clientHeight)
+    }
+    window.addEventListener('resize', onResize)
+
+    // Animation
+    const SCROLL_SPEED = 1.25
     let rafId: number
 
-    function tick(now: number) {
-      updateScrollEnergy()
-      const dt = (now - waveT0) / 1000
-      const speedScale = 1 + scrollEnergy * 1.8
-      const ampScale = 0.7 + scrollEnergy * 1.6
+    function getScrollProgress() {
+      const section = sectionRef.current
+      if (!section) return 0
+      const rect = section.getBoundingClientRect()
+      const total = section.offsetHeight - window.innerHeight
+      return Math.max(0, Math.min(1, -rect.top / total))
+    }
 
-      lineData.forEach((L, i) => {
-        const drift = ((dt * 70 * L.speed * speedScale) % LOOP_W)
-        L.el.setAttribute('transform', `translate(${-drift.toFixed(2)},0)`)
-        if (i % 2 === Math.floor(dt * 30) % 2) {
-          const amp = L.ampBase * ampScale
-          const phase = L.phase + dt * 0.6 * (1 + L.colorT * 0.4)
-          L.path.setAttribute('d', makeWavePath(amp, L.freq, phase, L.y))
-        }
-      })
+    let t = 0
+    function tick() {
+      t += 0.016
 
-      const readout = readoutRef.current
-      if (readout) {
-        readout.textContent = `amp ${(0.42 * ampScale).toFixed(2)} · phase ${(dt * 0.6 % 6.28).toFixed(3)} · ƒ 0.18Hz`
-      }
+      const scroll = getScrollProgress()
+      const speed = SCROLL_SPEED * (1 + scroll * 1.2)
 
-      const caption = captionRef.current
-      if (caption) {
-        const k = 1 - Math.abs(scrollEnergy - 0.5) * 2
-        caption.style.opacity = String(Math.max(0.2, Math.min(1, 0.35 + k)))
-      }
+      // Scroll both grids forward, wrap when past viewer
+      const shift = (t * speed) % GRID_DEPTH
+      grid1.position.z = shift
+      grid2.position.z = shift - GRID_DEPTH
 
+      // Subtle sun pulse
+      const pulse = 1 + Math.sin(t * 1.2) * 0.012
+      sunGroup.scale.set(pulse, pulse, 1)
+
+      renderer.render(scene, camera)
       rafId = requestAnimationFrame(tick)
     }
 
@@ -148,32 +187,29 @@ export default function WaveSection() {
 
     return () => {
       cancelAnimationFrame(rafId)
-      group.innerHTML = ''
+      window.removeEventListener('resize', onResize)
+      renderer.dispose()
+      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
     }
   }, [])
 
   return (
-    <section className="wave" id="wave" ref={sectionRef}>
+    <section className="wave synthwave" id="wave" ref={sectionRef}>
       <div className="wave__inner">
-        <svg
-          className="wave__svg"
-          viewBox="0 0 1600 900"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <g ref={groupRef} />
-        </svg>
+        <div ref={mountRef} className="synthwave__canvas" />
 
-        <div className="wave__label">
+        <div className="synthwave__label">
           <span className="bar" />
-          [02] / TRANSITION · WAVE_FIELD
-        </div>
-        <div className="wave__readout" ref={readoutRef}>
-          amp 0.42 · phase 0.000 · ƒ 0.18Hz
+          [02] / TRANSITION · SYNTHWAVE
         </div>
 
-        <div className="wave__caption" ref={captionRef}>
+        <div className="synthwave__readout">
+          84 BPM · 1984 · NEON_GRID
+        </div>
+
+        <div className="synthwave__caption">
           <h2>
-            Made with <em className="gradient-text">care.</em>
+            Made with <em className="synthwave-gradient-text">care.</em>
           </h2>
           <p>Scroll on — twelve projects from our members, sorted however you like.</p>
         </div>

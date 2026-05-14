@@ -10,7 +10,9 @@ A Next.js web app that displays Makers Club projects. The stack is React + Next.
 
 ```bash
 npm install          # install dependencies
-npm run dev          # start dev server at http://localhost:3000
+npm run dev 
+
+         # start dev server at http://localhost:3000
 npm run build        # production build
 npm run start        # run production build locally
 npm run lint         # run ESLint
