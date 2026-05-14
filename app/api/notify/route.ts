@@ -23,6 +23,15 @@ export async function POST(req: NextRequest) {
         html: newPostHtml({ projectId, projectTitle, projectBlurb, projectCategory, makers }),
       })
 
+    } else if (type === 'suggestion') {
+      const { idea, eventType, name, contact, detail, size, helpRun, userEmail } = body
+      await resend.emails.send({
+        from: FROM,
+        to: ADMIN_EMAIL,
+        subject: `Event suggestion: ${idea}`,
+        html: suggestionHtml({ idea, eventType, name, contact, detail, size, helpRun, userEmail }),
+      })
+
     } else if (type === 'status-change') {
       const { projectId, change } = body as { projectId: string; change: 'approved' | 'rejected' | 'featured' }
       const { data: project } = await supabaseAdmin
@@ -48,6 +57,27 @@ export async function POST(req: NextRequest) {
     console.error('[notify]', err)
     return NextResponse.json({ ok: false }, { status: 500 })
   }
+}
+
+function suggestionHtml({ idea, eventType, name, contact, detail, size, helpRun, userEmail }: {
+  idea: string; eventType: string; name: string; contact: string
+  detail: string; size: string; helpRun: string; userEmail?: string
+}) {
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:6px 12px 6px 0;color:#888;white-space:nowrap;font-size:12px">${label}</td><td style="padding:6px 0;color:#e0e0e0;font-size:12px">${value || '—'}</td></tr>`
+  return `<div style="font-family:monospace;max-width:580px;margin:0 auto;padding:32px 24px;background:#0d0d0d;color:#e0e0e0;border-radius:8px">
+  <p style="margin:0 0 4px;font-size:11px;letter-spacing:.1em;color:#f04ab9">MAKE_UOA · EVENT SUGGESTION</p>
+  <h2 style="margin:0 0 20px;font-size:20px;color:#fff">${idea}</h2>
+  <table style="border-collapse:collapse;width:100%;margin-bottom:20px">
+    ${row('Type', eventType)}
+    ${row('From', name)}
+    ${row('Contact', contact)}
+    ${row('Account', userEmail ?? '—')}
+    ${row('Size', size)}
+    ${row('Help run?', helpRun)}
+  </table>
+  ${detail ? `<p style="margin:0 0 8px;font-size:11px;letter-spacing:.08em;color:#888">DETAILS</p><p style="margin:0;color:#bbb;line-height:1.6;font-size:13px">${detail}</p>` : ''}
+</div>`
 }
 
 function newPostHtml({ projectId, projectTitle, projectBlurb, projectCategory, makers }: {

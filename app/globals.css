@@ -289,6 +289,49 @@ button {
   transform: translateY(-7px) rotate(-45deg);
 }
 
+/* ─── Pagination ──────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 40px 0 8px;
+  flex-wrap: wrap;
+}
+.pagination__btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'Departure Mono', 'VT323', monospace;
+  letter-spacing: 0.05em;
+  color: var(--ink-2);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.pagination__btn:hover:not(:disabled) {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--paper-2);
+}
+.pagination__btn--active {
+  background: var(--ink);
+  color: var(--paper) !important;
+  border-color: var(--ink);
+}
+.pagination__btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.pagination__ellipsis {
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 34px;
+}
+
 /* Hero */
 .hero {
   position: relative;

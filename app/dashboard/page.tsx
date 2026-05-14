@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Nav from '@/app/components/Nav'
 import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
+import Pagination from '@/app/components/Pagination'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import type { Project } from '@/lib/projects'
@@ -27,6 +28,17 @@ export default function DashboardPage() {
   const [dataLoading, setDataLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [unlikingId, setUnlikingId] = useState<string | null>(null)
+  const [myPage, setMyPage] = useState(1)
+  const [likedPage, setLikedPage] = useState(1)
+  const [pageSize, setPageSize] = useState(12)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setPageSize(mq.matches ? 5 : 12)
+    const handler = (e: MediaQueryListEvent) => setPageSize(e.matches ? 5 : 12)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -126,34 +138,41 @@ export default function DashboardPage() {
                 <Link href="/submit" style={{ textDecoration: 'underline' }}>Submit your first project →</Link>
               </p>
             </div>
-          ) : (
-            <div className="dash-table">
-              {myProjects.map(p => {
-                const { text, cls } = statusLabel(p.status, p.Featured)
-                return (
-                  <div key={p.id} className="dash-row">
-                    <div className="dash-row__main">
-                      <Link href={`/projects/${p.id}`} className="dash-row__title">{p.title}</Link>
-                      <span className="dash-row__meta">
-                        {p.category}
-                        {p.date && <> · {new Date(p.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
-                      </span>
-                    </div>
-                    <span className={`dash-status ${cls}`}>{text}</span>
-                    <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
-                    <button
-                      className="dash-row__delete"
-                      onClick={() => handleDelete(p.id)}
-                      disabled={deletingId === p.id}
-                      title="Remove project"
-                    >
-                      {deletingId === p.id ? '…' : '✕ Remove'}
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          ) : (() => {
+            const myTotalPages = Math.ceil(myProjects.length / pageSize)
+            const myPaginated = myProjects.slice((myPage - 1) * pageSize, myPage * pageSize)
+            return (
+              <>
+                <div className="dash-table">
+                  {myPaginated.map(p => {
+                    const { text, cls } = statusLabel(p.status, p.Featured)
+                    return (
+                      <div key={p.id} className="dash-row">
+                        <div className="dash-row__main">
+                          <Link href={`/projects/${p.id}`} className="dash-row__title">{p.title}</Link>
+                          <span className="dash-row__meta">
+                            {p.category}
+                            {p.date && <> · {new Date(p.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
+                          </span>
+                        </div>
+                        <span className={`dash-status ${cls}`}>{text}</span>
+                        <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
+                        <button
+                          className="dash-row__delete"
+                          onClick={() => handleDelete(p.id)}
+                          disabled={deletingId === p.id}
+                          title="Remove project"
+                        >
+                          {deletingId === p.id ? '…' : '✕ Remove'}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+                <Pagination page={myPage} totalPages={myTotalPages} onChange={setMyPage} />
+              </>
+            )
+          })()}
 
           {/* Liked Projects */}
           <div className="seclabel" style={{ marginTop: 64, marginBottom: 24 }}>
@@ -171,30 +190,37 @@ export default function DashboardPage() {
                 <Link href="/" style={{ textDecoration: 'underline' }}>Browse projects →</Link>
               </p>
             </div>
-          ) : (
-            <div className="dash-table" style={{ marginBottom: 80 }}>
-              {likedProjects.map(p => (
-                <div key={p.id} className="dash-row">
-                  <div className="dash-row__main">
-                    <Link href={`/projects/${p.id}`} className="dash-row__title">{p.title}</Link>
-                    <span className="dash-row__meta">
-                      {p.category}
-                      {p.makers && p.makers.length > 0 && <> · {p.makers.join(', ')}</>}
-                    </span>
-                  </div>
-                  <span className="dash-status dash-status--liked">♥ {p.likes ?? 0}</span>
-                  <button
-                    className="dash-row__delete"
-                    onClick={() => handleUnlike(p.id)}
-                    disabled={unlikingId === p.id}
-                    title="Unlike"
-                  >
-                    {unlikingId === p.id ? '…' : '♡ Unlike'}
-                  </button>
+          ) : (() => {
+            const likedTotalPages = Math.ceil(likedProjects.length / pageSize)
+            const likedPaginated = likedProjects.slice((likedPage - 1) * pageSize, likedPage * pageSize)
+            return (
+              <>
+                <div className="dash-table" style={{ marginBottom: 16 }}>
+                  {likedPaginated.map(p => (
+                    <div key={p.id} className="dash-row">
+                      <div className="dash-row__main">
+                        <Link href={`/projects/${p.id}`} className="dash-row__title">{p.title}</Link>
+                        <span className="dash-row__meta">
+                          {p.category}
+                          {p.makers && p.makers.length > 0 && <> · {p.makers.join(', ')}</>}
+                        </span>
+                      </div>
+                      <span className="dash-status dash-status--liked">♥ {p.likes ?? 0}</span>
+                      <button
+                        className="dash-row__delete"
+                        onClick={() => handleUnlike(p.id)}
+                        disabled={unlikingId === p.id}
+                        title="Unlike"
+                      >
+                        {unlikingId === p.id ? '…' : '♡ Unlike'}
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+                <Pagination page={likedPage} totalPages={likedTotalPages} onChange={setLikedPage} />
+              </>
+            )
+          })()}
 
         </div>
       </main>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { CATEGORIES, categoryColor, type Project } from '@/lib/projects'
+import Pagination from '@/app/components/Pagination'
 
 const TRAIL_COLORS = ['#567dff', '#9f42d1', '#f04ab9', '#ff25c7', '#ff3c6d', '#ff856a']
 
@@ -126,9 +127,21 @@ export default function ProjectsSection({
   const [sort, setSort] = useState('newest')
   const [featured, setFeatured] = useState(false)
   const [bouncingPill, setBouncingPill] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(12)
   const gridRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setPageSize(mq.matches ? 5 : 12)
+    const handler = (e: MediaQueryListEvent) => setPageSize(e.matches ? 5 : 12)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   const filtered = applyFilters(projects, cat, tool, sort, featured)
+  const totalPages = Math.ceil(filtered.length / pageSize)
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -149,6 +162,7 @@ export default function ProjectsSection({
 
   function handleCatClick(c: string) {
     setCat(c)
+    setPage(1)
     setBouncingPill(c)
     setTimeout(() => setBouncingPill(null), 500)
   }
@@ -159,6 +173,12 @@ export default function ProjectsSection({
     setTool('All tools')
     setSort('newest')
     setFeatured(false)
+    setPage(1)
+  }
+
+  function handlePageChange(p: number) {
+    setPage(p)
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const categoryCount = useCallback(
@@ -192,7 +212,7 @@ export default function ProjectsSection({
 
             <div className="select">
               <label>Made_with</label>
-              <select value={tool} onChange={e => setTool(e.target.value)}>
+              <select value={tool} onChange={e => { setTool(e.target.value); setPage(1) }}>
                 {allTools.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
@@ -201,7 +221,7 @@ export default function ProjectsSection({
 
             <div className="select">
               <label>Sort</label>
-              <select value={sort} onChange={e => setSort(e.target.value)}>
+              <select value={sort} onChange={e => { setSort(e.target.value); setPage(1) }}>
                 <option value="newest">Newest</option>
                 <option value="popular">Most loved</option>
                 <option value="az">A — Z</option>
@@ -210,7 +230,7 @@ export default function ProjectsSection({
 
             <button
               className={`toggle${featured ? ' is-on' : ''}`}
-              onClick={() => setFeatured(f => !f)}
+              onClick={() => { setFeatured(f => !f); setPage(1) }}
             >
               <span className="toggle__sw" />
               Featured only
@@ -241,11 +261,14 @@ export default function ProjectsSection({
               </p>
             </div>
           ) : (
-            <div className="grid" ref={gridRef}>
-              {filtered.map((p, i) => (
-                <ProjectCard key={p.id} project={p} index={i} total={filtered.length} />
-              ))}
-            </div>
+            <>
+              <div className="grid" ref={gridRef}>
+                {paginated.map((p, i) => (
+                  <ProjectCard key={p.id} project={p} index={i} total={paginated.length} />
+                ))}
+              </div>
+              <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
+            </>
           )}
         </div>
       </section>

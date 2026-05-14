@@ -9,6 +9,7 @@ import CursorTrail from '@/app/components/CursorTrail'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import type { Project } from '@/lib/projects'
+import Pagination from '@/app/components/Pagination'
 
 const ADMIN_EMAIL = 'makerclubuoa@gmail.com'
 
@@ -29,6 +30,16 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const [actingId, setActingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(12)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    setPageSize(mq.matches ? 5 : 12)
+    const handler = (e: MediaQueryListEvent) => setPageSize(e.matches ? 5 : 12)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     if (loading) return
@@ -115,6 +126,9 @@ export default function AdminPage() {
     : filter === 'featured' ? projects.filter(p => p.Featured === true)
     : projects.filter(p => p.status?.toUpperCase() === 'REJECTED')
 
+  const totalPages = Math.ceil(visible.length / pageSize)
+  const paginated = visible.slice((page - 1) * pageSize, page * pageSize)
+
   return (
     <>
       <CursorTrail />
@@ -147,7 +161,7 @@ export default function AdminPage() {
             {(['all', 'pending', 'live', 'featured', 'rejected'] as Filter[]).map(f => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => { setFilter(f); setPage(1) }}
                 className={`btn ${filter === f ? 'btn--gradient' : 'btn--ghost'}`}
                 style={{ padding: '5px 14px', fontSize: 11 }}
               >
@@ -161,8 +175,9 @@ export default function AdminPage() {
           ) : visible.length === 0 ? (
             <div className="empty-state"><span className="mono">_ nothing here</span></div>
           ) : (
-            <div className="dash-table" style={{ marginBottom: 80 }}>
-              {visible.map(p => {
+            <>
+            <div className="dash-table">
+              {paginated.map(p => {
                 const live = isLive(p)
                 const featured = p.Featured === true
                 const isRejected = p.status?.toUpperCase() === 'REJECTED'
@@ -238,6 +253,8 @@ export default function AdminPage() {
                 )
               })}
             </div>
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            </>
           )}
 
         </div>
