@@ -914,6 +914,74 @@ button {
   color: var(--ink);
 }
 
+.tool-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  align-items: center;
+}
+.tool-tag {
+  padding: 5px 10px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.tool-tag:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.tool-tag--on {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.tool-tag--on:hover {
+  opacity: 0.75;
+}
+.tool-tag-other {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0 4px 0 8px;
+  background: var(--paper);
+}
+.tool-tag-other input {
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  width: 80px;
+  padding: 5px 0;
+  outline: none;
+}
+.tool-tag-other input::placeholder {
+  color: var(--muted);
+}
+.tool-tag-other button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.tool-tag-other button:hover {
+  color: var(--ink);
+}
+
 .submit-success {
   border: 1px solid var(--pop-magenta);
   background: color-mix(in oklab, var(--pop-magenta) 7%, var(--paper));
@@ -1360,6 +1428,25 @@ button {
   color: var(--ink-2);
   font-size: 10px;
   letter-spacing: 0.04em;
+}
+.tag--btn {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tag--btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.badge--btn {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.badge--btn:hover {
+  opacity: 0.75;
 }
 
 /* Photo placeholder */

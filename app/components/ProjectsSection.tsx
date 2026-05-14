@@ -48,7 +48,13 @@ function applyFilters(
   return out
 }
 
-function ProjectCard({ project, index, total }: { project: Project; index: number; total: number }) {
+function ProjectCard({
+  project, index, total, onCatClick, onToolClick,
+}: {
+  project: Project; index: number; total: number
+  onCatClick: (cat: string) => void
+  onToolClick: (tool: string) => void
+}) {
   const router = useRouter()
 
   const idx = String(index + 1).padStart(3, '0')
@@ -79,7 +85,12 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
           {!project.image && <span className="ph__label">[ {project.title} ]</span>}
         </div>
         <div className="badges">
-          <span className="badge">{project.category}</span>
+          <button
+            className="badge badge--btn"
+            onClick={e => { e.preventDefault(); e.stopPropagation(); onCatClick(project.category ?? '') }}
+          >
+            {project.category}
+          </button>
           {project.Featured === true && (
             <span className="badge badge--featured">★ FEATURED</span>
           )}
@@ -91,7 +102,13 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
         <p className="card__blurb">{project.blurb}</p>
         <div className="tags">
           {(project.tools ?? []).slice(0, 3).map(t => (
-            <span key={t} className="tag">{t}</span>
+            <button
+              key={t}
+              className="tag tag--btn"
+              onClick={e => { e.preventDefault(); e.stopPropagation(); onToolClick(t) }}
+            >
+              {t}
+            </button>
           ))}
         </div>
         <div className="card__meta">
@@ -166,6 +183,11 @@ export default function ProjectsSection({
     setPage(1)
     setBouncingPill(c)
     setTimeout(() => setBouncingPill(null), 500)
+  }
+
+  function handleToolClick(t: string) {
+    setTool(prev => prev === t ? 'All tools' : t)
+    setPage(1)
   }
 
   function resetFilters(e: React.MouseEvent) {
@@ -248,7 +270,7 @@ export default function ProjectsSection({
       <section className="grid-section">
         <div className="container">
           <div className="grid-header">
-            <h3>// {cat === 'All' ? 'All projects' : cat}</h3>
+            <h3>// {tool !== 'All' ? tool : cat === 'All' ? 'All projects' : cat}</h3>
             <div className="meta">
               <b>{String(filtered.length).padStart(2, '0')}</b>&nbsp;·&nbsp;results
             </div>
@@ -269,7 +291,7 @@ export default function ProjectsSection({
             <>
               <div className="grid" ref={gridRef}>
                 {paginated.map((p, i) => (
-                  <ProjectCard key={p.id} project={p} index={i} total={paginated.length} />
+                  <ProjectCard key={p.id} project={p} index={i} total={paginated.length} onCatClick={handleCatClick} onToolClick={handleToolClick} />
                 ))}
               </div>
               <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />

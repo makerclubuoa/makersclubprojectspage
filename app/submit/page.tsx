@@ -41,9 +41,11 @@ export default function SubmitPage() {
   const { user, profile, loading } = useAuth()
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState(SUBMIT_CATEGORIES[0])
+  const [otherCategory, setOtherCategory] = useState('')
   const [blurb, setBlurb] = useState('')
   const [description, setDescription] = useState('')
-  const [toolsRaw, setToolsRaw] = useState('')
+  const [tools, setTools] = useState<string[]>([])
+  const [otherTool, setOtherTool] = useState('')
   const [coMakers, setCoMakers] = useState<Array<{ id: string; display_name: string }>>([])
   const [coMakerSearch, setCoMakerSearch] = useState('')
   const [coMakerResults, setCoMakerResults] = useState<Array<{ id: string; display_name: string; email: string | null }>>([])
@@ -140,10 +142,10 @@ export default function SubmitPage() {
     const { error } = await supabase.from('Projects').insert({
       id,
       title: title.trim(),
-      category,
+      category: category === 'Other' ? (otherCategory.trim() || 'Other') : category,
       blurb: blurb.trim(),
       description: description.trim() || null,
-      tools: toolsRaw ? toolsRaw.split(',').map(s => s.trim()).filter(Boolean) : null,
+      tools: tools.length > 0 ? tools : null,
       makers: [
         profile?.display_name ?? user!.email!.split('@')[0],
         ...coMakers.map(m => m.display_name),
@@ -175,11 +177,14 @@ export default function SubmitPage() {
     setSent(true)
   }
 
-  function addTool(t: string) {
-    const current = toolsRaw.trim()
-    if (!current) { setToolsRaw(t); return }
-    const arr = current.split(',').map(s => s.trim())
-    if (!arr.includes(t)) setToolsRaw([...arr, t].join(', '))
+  function toggleTool(t: string) {
+    setTools(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
+  }
+
+  function commitOtherTool() {
+    const v = otherTool.trim()
+    if (v && !tools.includes(v)) setTools(prev => [...prev, v])
+    setOtherTool('')
   }
 
   return (
@@ -294,9 +299,19 @@ export default function SubmitPage() {
                       <label>Category</label>
                       <CustomSelect
                         value={category}
-                        onChange={setCategory}
-                        options={SUBMIT_CATEGORIES.map(c => ({ value: c, label: c }))}
+                        onChange={v => { setCategory(v); if (v !== 'Other') setOtherCategory('') }}
+                        options={[...SUBMIT_CATEGORIES.map(c => ({ value: c, label: c })), { value: 'Other', label: 'Other…' }]}
                       />
+                      {category === 'Other' && (
+                        <input
+                          type="text"
+                          placeholder="Describe the category"
+                          value={otherCategory}
+                          onChange={e => setOtherCategory(e.target.value)}
+                          style={{ marginTop: 8 }}
+                          autoFocus
+                        />
+                      )}
                     </div>
 
                     {/* Makers */}
@@ -402,16 +417,39 @@ export default function SubmitPage() {
                     {/* Tools */}
                     <div className="field">
                       <label>Tools & materials used</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Arduino, 3D printer, Soldering iron"
-                        value={toolsRaw}
-                        onChange={e => setToolsRaw(e.target.value)}
-                      />
-                      <div className="field__hints">
+                      <div className="tool-tags">
                         {TOOL_SUGGESTIONS.map(t => (
-                          <button key={t} type="button" onClick={() => addTool(t)}>+ {t}</button>
+                          <button
+                            key={t}
+                            type="button"
+                            className={`tool-tag${tools.includes(t) ? ' tool-tag--on' : ''}`}
+                            onClick={() => toggleTool(t)}
+                          >
+                            {t}
+                          </button>
                         ))}
+                        {tools.filter(t => !TOOL_SUGGESTIONS.includes(t)).map(t => (
+                          <button
+                            key={t}
+                            type="button"
+                            className="tool-tag tool-tag--on tool-tag--custom"
+                            onClick={() => toggleTool(t)}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                        <span className="tool-tag-other">
+                          <input
+                            type="text"
+                            placeholder="Other…"
+                            value={otherTool}
+                            onChange={e => setOtherTool(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitOtherTool() } }}
+                          />
+                          {otherTool.trim() && (
+                            <button type="button" onClick={commitOtherTool}>+</button>
+                          )}
+                        </span>
                       </div>
                     </div>
 
