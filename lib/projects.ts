@@ -13,6 +13,7 @@ export interface Project {
   makers: string[] | null
   tools: string[] | null
   status: string | null
+  Featured: boolean | null
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -46,6 +47,7 @@ export async function fetchProjects(): Promise<Project[]> {
   const { data, error } = await supabase
     .from('Projects')
     .select('*')
+    .or('status.is.null,and(status.neq.DRAFT,status.neq.REJECTED)')
     .order('date', { ascending: false })
   if (error) throw new Error(error.message)
   return data ?? []

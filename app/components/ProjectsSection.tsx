@@ -39,7 +39,7 @@ function applyFilters(
   let out = projects.slice()
   if (cat !== 'All') out = out.filter(p => p.category === cat)
   if (tool !== 'All tools') out = out.filter(p => (p.tools ?? []).includes(tool))
-  if (featured) out = out.filter(p => p.status?.toLowerCase() === 'featured')
+  if (featured) out = out.filter(p => p.Featured === true)
   if (sort === 'newest') out.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
   if (sort === 'popular') out.sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))
   if (sort === 'az') out.sort((a, b) => a.title.localeCompare(b.title))
@@ -78,7 +78,7 @@ function ProjectCard({ project, index, total }: { project: Project; index: numbe
         </div>
         <div className="badges">
           <span className="badge">{project.category}</span>
-          {project.status?.toLowerCase() === 'featured' && (
+          {project.Featured === true && (
             <span className="badge badge--featured">★ FEATURED</span>
           )}
         </div>

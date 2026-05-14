@@ -12,6 +12,7 @@ VALUES
   '2026-04-11',
   142,
   NULL,
+  
   'https://github.com',
   ARRAY['Aria T.', 'Theo K.'],
   ARRAY['Soldering iron', '3D printer', 'Arduino'],

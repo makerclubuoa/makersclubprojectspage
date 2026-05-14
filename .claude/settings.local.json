@@ -3,7 +3,8 @@
     "allow": [
       "WebSearch",
       "WebFetch(domain:unsplash.com)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(npm install *)"
     ]
   }
 }

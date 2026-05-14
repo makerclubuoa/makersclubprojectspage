@@ -26,6 +26,19 @@
   --radius: 6px;
 }
 
+@media (prefers-color-scheme: dark) {
+  body:not([data-mode='light']) {
+    --paper: #1d1d1d;
+    --paper-2: #262626;
+    --paper-3: #2f2f2f;
+    --ink: #ece8df;
+    --ink-2: #c8c4b9;
+    --muted: #8b877c;
+    --rule: rgba(236, 232, 223, 0.18);
+    --rule-2: rgba(236, 232, 223, 0.08);
+  }
+}
+
 [data-mode='dark'] {
   --paper: #1d1d1d;
   --paper-2: #262626;
@@ -1728,6 +1741,104 @@ button {
   opacity: 0.7;
 }
 
+/* ─── Dashboard ───────────────────────────────────── */
+.dash-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+}
+.dash-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule-2);
+  transition: background 0.15s;
+}
+.dash-row:last-child {
+  border-bottom: none;
+}
+.dash-row:hover {
+  background: var(--paper-2);
+}
+.dash-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dash-row__title {
+  font-family: 'Departure Mono', 'VT323', monospace;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+.dash-row__title:hover {
+  color: var(--pop-magenta);
+}
+.dash-row__meta {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dash-status {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border: 1px solid var(--rule);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dash-status--draft {
+  color: var(--muted);
+}
+.dash-status--live {
+  color: var(--pop-blue);
+  border-color: var(--pop-blue);
+  background: color-mix(in oklab, var(--pop-blue) 8%, var(--paper));
+}
+.dash-status--rejected {
+  color: var(--pop-red);
+  border-color: var(--pop-red);
+  background: color-mix(in oklab, var(--pop-red) 8%, var(--paper));
+}
+.dash-status--liked {
+  color: var(--pop-magenta);
+  border-color: var(--pop-magenta);
+  background: color-mix(in oklab, var(--pop-magenta) 8%, var(--paper));
+}
+.dash-row__edit {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pop-blue);
+  flex-shrink: 0;
+  padding: 4px 8px;
+  transition: color 0.15s;
+}
+.dash-row__edit:hover {
+  color: var(--pop-violet);
+}
+.dash-row__delete {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-shrink: 0;
+  padding: 4px 8px;
+  transition: color 0.15s;
+}
+.dash-row__delete:hover {
+  color: var(--pop-red);
+}
+
 /* ─── Submit gate (auth wall) ─────────────────────── */
 .submit-gate {
   border: 1px solid var(--rule);
@@ -1776,9 +1887,12 @@ button {
   background: color-mix(in oklab, var(--pop-magenta) 10%, transparent) !important;
 }
 
-/* ─── Login form label override ───────────────────── */
+/* ─── Form label overrides ────────────────────────── */
 .form--login .form__inner::before {
   content: 'FIG.05 — ACCOUNT';
+}
+.form--submit .form__inner::before {
+  content: 'FIG.07 — EDIT PROJECT';
 }
 
 /* Cursor trail */
@@ -1830,7 +1944,7 @@ button {
   .footer__row {
     grid-template-columns: 1fr;
   }
-  .nav__links a:not(.nav__cta):not(.nav__mode-btn):not(.nav__auth) {
+  .nav__links a:not(.nav__auth):not(.nav__user-name) {
     display: none;
   }
 }

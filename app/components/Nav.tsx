@@ -11,6 +11,9 @@ export default function Nav() {
   const { user, profile, loading, signOut } = useAuth()
 
   useEffect(() => {
+    const mode = document.body.dataset.mode
+    const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    setDark(mode === 'dark' || (!mode && sysDark))
     const onScroll = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -32,10 +35,11 @@ export default function Nav() {
         <span className="slash">/ projects</span>
       </a>
       <div className="nav__links">
-        <a href="https://makeuoa.nz">About</a>
-        <Link href="/" className="active">Projects</Link>
-        <a href="#suggest">Workshops</a>
-        <a href="#">Journal</a>
+        <a href="https://makeuoa.nz/about/">About</a>
+        <a href="https://makeuoa.nz/code-of-conduct/">Code of conduct</a>
+        <a href="https://makeuoa.nz/tag/updates/">Updates</a>
+        <a href="https://vend.makeuoa.nz/">Vending machine</a>
+        <Link href="/">Projects</Link>
         <Link href="/submit" className="nav__submit-link">Submit_</Link>
         <button className="nav__mode-btn" onClick={toggleDark}>
           {dark ? 'Light_' : 'Dark_'}
@@ -43,14 +47,16 @@ export default function Nav() {
         {!loading && (
           user ? (
             <>
-              <span className="nav__user-name">{displayName}</span>
+              {user.email === 'makerclubuoa@gmail.com' && (
+                <Link href="/admin" className="nav__mode-btn">Admin_</Link>
+              )}
+              <Link href="/dashboard" className="nav__auth nav__user-name">{displayName}</Link>
               <button className="nav__mode-btn" onClick={signOut}>Sign_out</button>
             </>
           ) : (
             <Link href="/login" className="nav__auth">Sign_in</Link>
           )
         )}
-        <a className="nav__cta" href="https://makeuoa.nz">Join_</a>
       </div>
     </nav>
   )

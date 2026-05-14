@@ -129,6 +129,7 @@ export default function SubmitPage() {
         setSubmitting(false)
         return
       }
+      
       const { data: { publicUrl } } = supabase.storage
         .from('Project Images')
         .getPublicUrl(path)
@@ -155,6 +156,20 @@ export default function SubmitPage() {
     })
     setSubmitting(false)
     if (error) { setSubmitError(error.message); return }
+
+    fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'new-post',
+        projectId: id,
+        projectTitle: title.trim(),
+        projectBlurb: blurb.trim(),
+        projectCategory: category,
+        makers: [profile?.display_name ?? user!.email!.split('@')[0], ...coMakers.map(m => m.display_name)],
+      }),
+    })
+
     burst(e.clientX, e.clientY)
     setSent(true)
   }

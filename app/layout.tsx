@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body data-mode="light">
+      <body>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
