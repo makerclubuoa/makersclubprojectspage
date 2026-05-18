@@ -1,5 +1,28 @@
 import { supabase } from './supabase'
 
+export interface BuildLogEntry {
+  date: string
+  title: string
+  body: string
+  milestone?: boolean
+  tag?: string
+  week_label?: string
+}
+
+export interface BOMItem {
+  item: string
+  desc?: string
+  qty: number
+  unit_cost: number
+  src?: string
+}
+
+export interface KudoEntry {
+  who: string
+  role?: string
+  text: string
+}
+
 export interface Project {
   id: string
   title: string
@@ -14,6 +37,15 @@ export interface Project {
   tools: string[] | null
   status: string | null
   Featured: boolean | null
+  // New optional fields
+  start_date: string | null
+  build_time: string | null
+  build_log: BuildLogEntry[] | null
+  gallery_images: string[] | null
+  bom: BOMItem[] | null
+  retro_wins: string[] | null
+  retro_fixes: string[] | null
+  kudos: KudoEntry[] | null
 }
 
 const CATEGORY_COLORS: Record<string, string> = {

@@ -4,7 +4,8 @@
       "WebSearch",
       "WebFetch(domain:unsplash.com)",
       "Bash(node -e ' *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(python *)"
     ]
   }
 }

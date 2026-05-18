@@ -70,23 +70,17 @@ export default function SuggestSection() {
     <div>
       <h2>What should we <em>make</em> next?</h2>
       <p>
-        We run nine-or-so workshops every semester — soldering, sewing, sourdough,
-        screen-printing, whatever the members are into. Tell us what you&rsquo;d show up for
-        and we&rsquo;ll do our best to make it happen.
+        Tell us what you&rsquo;d show up for — a workshop, a meetup, a skill-share, anything.
+        We read every suggestion and the most-asked-for ideas turn into actual events.
       </p>
       <p style={{ color: 'var(--muted)' }}>
-        Submissions go to the committee inbox. We read every one. The most-asked-for ideas
-        turn into actual events within a few weeks.
+        Submissions go to the committee inbox. We review everything and reach out if something
+        looks promising — especially if you&rsquo;re keen to help run it.
       </p>
       <div className="suggest__hints">
         {HINTS.map(h => (
           <button key={h} onClick={() => setIdea(h)}>{h}</button>
         ))}
-      </div>
-      <div className="suggest__stats">
-        <div><div className="k">Suggestions / sem</div><div className="v">63</div></div>
-        <div><div className="k">Run from yours</div><div className="v">17</div></div>
-        <div><div className="k">Next review</div><div className="v">Tue 19</div></div>
       </div>
     </div>
   )

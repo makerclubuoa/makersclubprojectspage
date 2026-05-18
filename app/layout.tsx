@@ -3,7 +3,7 @@ import './globals.css'
 import AuthProvider from '@/app/components/AuthProvider'
 
 export const metadata: Metadata = {
-  title: 'PROJECTS · MAKE_UOA',
+  title: 'PROJECTS · MAKER CLUB',
   icons: { icon: '/logo.png' },
 }
 

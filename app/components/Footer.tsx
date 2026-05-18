@@ -19,22 +19,13 @@ export default function Footer() {
           <div>
             <h5>Hang out</h5>
             <ul>
-              <li><a href="#">Open hours · Tue 6pm</a></li>
-              <li><a href="#suggest">Workshops</a></li>
-              <li><a href="#">Discord</a></li>
-              <li><a href="#">Instagram</a></li>
+              <li><a href="https://makeuoa.nz/">Events</a></li>
+              <li><a href="https://discord.gg/6NFXUU2euN">Discord</a></li>
+              <li><a href="https://www.instagram.com/make.uoa">Instagram</a></li>
             </ul>
           </div>
 
-          <div>
-            <h5>Make_UoA</h5>
-            <ul>
-              <li><a href="#">About</a></li>
-              <li><a href="#">Sponsors</a></li>
-              <li><a href="#">Constitution</a></li>
-              <li><a href="https://makeuoa.nz">makeuoa.nz ↗</a></li>
-            </ul>
-          </div>
+         
 
           <div>
             <h5>Index</h5>

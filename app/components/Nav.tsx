@@ -43,7 +43,7 @@ export default function Nav() {
     <nav className={`nav${scrolled ? ' scrolled' : ''}${menuOpen ? ' nav--open' : ''}`} id="nav">
       <a className="nav__brand" href="https://makeuoa.nz" onClick={close}>
         <Image src="/logo.png" alt="" width={26} height={26} style={{ borderRadius: 4 }} />
-        <span>MAKE_UOA</span>
+        <span>UoA Maker Club</span>
         <span className="slash">/ projects</span>
       </a>
 

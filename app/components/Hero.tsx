@@ -75,7 +75,7 @@ function buildGridGroup() {
   return { group, mat }
 }
 
-export default function Hero() {
+export default function Hero({ projectCount }: { projectCount: number }) {
   const mountRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLElement>(null)
 
@@ -254,17 +254,17 @@ export default function Hero() {
           <div className="hero__lead">
             <div className="hero__eyebrow">
               <span className="pip" />
-              <span>Student-run · University of Auckland · est. 2019</span>
+              <span>Student-run · University of Auckland · est. 2020</span>
             </div>
             <h1 className="hero__title">
-              Things our
+              Everything
               <br />
-              members
+              we&rsquo;ve ever
               <br />
               <em>made.</em>
             </h1>
             <p className="hero__sub">
-              Make_UoA is a student-run maker club at the University of Auckland. This is everything
+              Maker Club is a student-run club at the University of Auckland. This is everything
               we&rsquo;ve built, baked, soldered, woven, printed, coded, sanded and sewn together.
               Borrow ideas. Make your own.
             </p>
@@ -285,22 +285,22 @@ export default function Hero() {
                 <span>01</span>
               </div>
               <div className="v">
-                112<small>active</small>
+                1,278<small>total</small>
               </div>
+            </div>
+            <div className="spec-cell">
+              <div className="k">
+                <span>New in 2026</span>
+                <span>02</span>
+              </div>
+              <div className="v">300</div>
             </div>
             <div className="spec-cell">
               <div className="k">
                 <span>Projects logged</span>
-                <span>02</span>
-              </div>
-              <div className="v">48</div>
-            </div>
-            <div className="spec-cell">
-              <div className="k">
-                <span>Workshops / sem</span>
                 <span>03</span>
               </div>
-              <div className="v">09</div>
+              <div className="v">{projectCount}</div>
             </div>
             <div className="spec-cell">
               <div className="k">
@@ -308,7 +308,7 @@ export default function Hero() {
                 <span>04</span>
               </div>
               <div className="v">
-                TUE<small>6 — 9 pm</small>
+                FRI<small>2 — 4 pm</small>
               </div>
             </div>
           </div>
