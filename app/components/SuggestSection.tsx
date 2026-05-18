@@ -87,17 +87,7 @@ export default function SuggestSection() {
 
   return (
     <section className="suggest" id="suggest">
-      <span className="cross cross--tl" />
-      <span className="cross cross--tr" />
-      <span className="cross cross--bl" />
-      <span className="cross cross--br" />
       <div className="container">
-        <div className="seclabel" style={{ marginBottom: 36 }}>
-          <span className="num">[03]</span>
-          <span>Suggest_</span>
-          <span className="dotline" />
-          <span>OPEN SUBMISSION · ROLLING</span>
-        </div>
 
         <div className="suggest__grid">
           {left}
@@ -118,7 +108,7 @@ export default function SuggestSection() {
           {!loading && user && sent && (
             <div className="form">
               <div className="form__inner" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 300, gap: 12 }}>
-                <p style={{ fontFamily: 'monospace', fontSize: 13, letterSpacing: '0.05em' }}><b>// Filed.</b></p>
+                <p style={{ fontWeight: 700, fontSize: 15 }}>Filed.</p>
                 <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
                   Cheers — your idea&rsquo;s in the queue. We review submissions every Tuesday at 7pm.
                   If something looks promising we&rsquo;ll reach out about running it together.
@@ -197,7 +187,7 @@ export default function SuggestSection() {
                 </div>
 
                 <div className="form__actions">
-                  <span className="small">By submitting you agree we may post your idea (anonymously) on the Journal.</span>
+                  <span className="small">By submitting you agree we may contact you about your idea.</span>
                   <button className="btn btn--gradient" onClick={handleSubmit} disabled={submitting}>
                     {submitting ? 'Sending…' : 'Send it'} <span className="arr">→</span>
                   </button>
