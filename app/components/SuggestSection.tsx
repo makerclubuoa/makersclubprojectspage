@@ -110,8 +110,8 @@ export default function SuggestSection() {
               <div className="form__inner" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 300, gap: 12 }}>
                 <p style={{ fontWeight: 700, fontSize: 15 }}>Filed.</p>
                 <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
-                  Cheers — your idea&rsquo;s in the queue. We review submissions every Tuesday at 7pm.
-                  If something looks promising we&rsquo;ll reach out about running it together.
+                  Cheers — your idea&rsquo;s in the queue.
+                  If something looks promising we might reach out about running it.
                 </p>
                 <button className="btn btn--ghost" style={{ alignSelf: 'flex-start', marginTop: 8 }} onClick={() => { setSent(false); setIdea(''); setDetail('') }}>
                   Send another →

@@ -25,6 +25,20 @@ export default function LoginPage() {
     if (!email.trim()) return
     setSending(true)
     setError('')
+
+    // Gate on Ghost membership
+    const check = await fetch('/api/auth/ghost-signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim() }),
+    })
+    if (!check.ok) {
+      const { error: msg } = await check.json()
+      setError(msg)
+      setSending(false)
+      return
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: `${window.location.origin}/` },
@@ -32,14 +46,6 @@ export default function LoginPage() {
     setSending(false)
     if (error) setError(error.message)
     else setSent(true)
-  }
-
-  async function handleGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/` },
-    })
-    if (error) setError(error.message)
   }
 
   if (loading) return null
@@ -68,7 +74,7 @@ export default function LoginPage() {
             ) : (
               <>
                 <p style={{ color: 'var(--ink-2)', marginBottom: 28, fontSize: 13, lineHeight: 1.65 }}>
-                  Sign in to like projects and submit your own to the archive.
+                  Sign in to like projects and submit your own to the archive. Maker Club members only.
                 </p>
 
                 <form onSubmit={handleMagicLink}>
@@ -95,26 +101,13 @@ export default function LoginPage() {
                     disabled={sending}
                     style={{ width: '100%', justifyContent: 'center', display: 'flex' }}
                   >
-                    {sending ? 'Sending…' : 'Send magic link'} <span className="arr">→</span>
+                    {sending ? 'Checking…' : 'Send magic link'} <span className="arr">→</span>
                   </button>
                 </form>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0', color: 'var(--muted)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  <span style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-                  or
-                  <span style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-                </div>
-
-                <button
-                  className="btn btn--ghost"
-                  onClick={handleGoogle}
-                  style={{ width: '100%', justifyContent: 'center', display: 'flex' }}
-                >
-                  Continue with Google
-                </button>
-
                 <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 20, lineHeight: 1.5, letterSpacing: '0.04em' }}>
-                  No passwords stored. Magic link or Google sign-in via Supabase Auth.
+                  No password needed. We&rsquo;ll send a one-click sign-in link to your inbox.{' '}
+                  <a href="https://makeuoa.nz" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>Not a member yet?</a>
                 </p>
               </>
             )}

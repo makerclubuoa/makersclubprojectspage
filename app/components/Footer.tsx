@@ -39,7 +39,7 @@ export default function Footer() {
 
         <div className="footer__bottom">
           <span>© 2026 Maker Club UoA</span>
-          <span>Built by members, for members.</span>
+          <span>Built by Makers, for Makers.</span>
         </div>
       </div>
     </footer>
