@@ -102,7 +102,6 @@ async function main() {
     const { data: { user }, error } = await supabase.auth.admin.createUser({
       email,
       email_confirm: true,
-      created_at: joined_at,
       user_metadata: { display_name },
     })
 
