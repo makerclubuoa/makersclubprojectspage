@@ -2405,6 +2405,16 @@ input[type='date'] {
   border-color: var(--pop-magenta);
   background: color-mix(in oklab, var(--pop-magenta) 8%, var(--paper));
 }
+.makers-chip--add {
+  border-style: dashed;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.makers-chip--add:hover {
+  color: var(--ink);
+  border-color: var(--ink-2);
+}
 .makers-chip__tag {
   font-size: 9px;
   letter-spacing: 0.1em;

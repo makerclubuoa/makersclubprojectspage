@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Nav from '@/app/components/Nav'
 import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
@@ -19,27 +19,74 @@ const TOOL_SUGGESTIONS = [
   'Inkscape', 'Figma', 'p5.js', 'Python', 'Swift', 'React', 'Oven',
 ]
 
+type LogEntry = { date: string; title: string; body: string; milestone: boolean; tag: string }
+type BomRow   = { item: string; desc: string; qty: string; unit_cost: string; src: string }
+
+const emptyLog = (): LogEntry => ({ date: '', title: '', body: '', milestone: false, tag: '' })
+const emptyBom = (): BomRow  => ({ item: '', desc: '', qty: '1', unit_cost: '', src: '' })
+
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense>
+      <EditForm params={params} />
+    </Suspense>
+  )
+}
+
+function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromAdmin = searchParams.get('from') === 'admin'
+  const backHref  = fromAdmin ? '/admin' : '/dashboard'
+  const backLabel = fromAdmin ? '← Admin' : '← Dashboard'
 
-  const [project, setProject] = useState<Project | null>(null)
+  const [project, setProject]     = useState<Project | null>(null)
   const [notAllowed, setNotAllowed] = useState(false)
-  const [fetching, setFetching] = useState(true)
+  const [fetching, setFetching]   = useState(true)
 
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState(EDIT_CATEGORIES[0])
-  const [blurb, setBlurb] = useState('')
-  const [description, setDescription] = useState('')
-  const [toolsRaw, setToolsRaw] = useState('')
-  const [github, setGithub] = useState('')
+  // Basic
+  const [title, setTitle]               = useState('')
+  const [category, setCategory]         = useState(EDIT_CATEGORIES[0])
+  const [otherCategory, setOtherCategory] = useState('')
+  const [blurb, setBlurb]               = useState('')
+  const [description, setDescription]   = useState('')
+  const [startDate, setStartDate]       = useState('')
+  const [buildTime, setBuildTime]       = useState('')
+  const [github, setGithub]             = useState('')
 
+  // Makers
+  const [coMakers, setCoMakers]                       = useState<Array<{ id: string; display_name: string }>>([])
+  const [coMakerSearch, setCoMakerSearch]             = useState('')
+  const [coMakerResults, setCoMakerResults]           = useState<Array<{ id: string; display_name: string; email: string | null }>>([])
+  const [showCoMakerDropdown, setShowCoMakerDropdown] = useState(false)
+
+  // Tools
+  const [tools, setTools]         = useState<string[]>([])
+  const [otherTool, setOtherTool] = useState('')
+
+  // Cover image
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [clearImage, setClearImage] = useState(false)
+  const [imageFile, setImageFile]       = useState<File | null>(null)
+  const [clearImage, setClearImage]     = useState(false)
 
-  const [saving, setSaving] = useState(false)
+  // Gallery
+  const [existingGallery, setExistingGallery]       = useState<string[]>([])
+  const [newGalleryFiles, setNewGalleryFiles]       = useState<File[]>([])
+  const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([])
+
+  // Build log
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([])
+
+  // BOM
+  const [bomRows, setBomRows] = useState<BomRow[]>([])
+
+  // Retro
+  const [retroWins, setRetroWins]   = useState('')
+  const [retroFixes, setRetroFixes] = useState('')
+
+  const [saving, setSaving]       = useState(false)
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
@@ -61,16 +108,73 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
       setProject(data as Project)
       setTitle(data.title ?? '')
-      setCategory(data.category ?? EDIT_CATEGORIES[0])
+
+      const cat = data.category ?? EDIT_CATEGORIES[0]
+      if (EDIT_CATEGORIES.includes(cat)) {
+        setCategory(cat)
+      } else {
+        setCategory('Other')
+        setOtherCategory(cat)
+      }
+
       setBlurb(data.blurb ?? '')
       setDescription(data.description ?? '')
-      setToolsRaw((data.tools ?? []).join(', '))
+      setStartDate(data.start_date ?? '')
+      setBuildTime(data.build_time ?? '')
       setGithub(data.github ?? '')
+      setCoMakers((data.makers ?? []).map((name: string) => ({ id: `name:${name}`, display_name: name })))
+      setTools(data.tools ?? [])
       setImagePreview(data.image ?? null)
+      setExistingGallery(data.gallery_images ?? [])
+
+      if (data.build_log) {
+        setLogEntries(data.build_log.map((e: { date?: string; title?: string; body?: string; milestone?: boolean; tag?: string }) => ({
+          date:      e.date ?? '',
+          title:     e.title ?? '',
+          body:      e.body ?? '',
+          milestone: e.milestone ?? false,
+          tag:       e.tag ?? '',
+        })))
+      }
+
+      if (data.bom) {
+        setBomRows(data.bom.map((r: { item?: string; desc?: string; qty?: number; unit_cost?: number; src?: string }) => ({
+          item:      r.item ?? '',
+          desc:      r.desc ?? '',
+          qty:       String(r.qty ?? 1),
+          unit_cost: r.unit_cost != null ? String(r.unit_cost) : '',
+          src:       r.src ?? '',
+        })))
+      }
+
+      setRetroWins((data.retro_wins ?? []).join('\n'))
+      setRetroFixes((data.retro_fixes ?? []).join('\n'))
       setFetching(false)
     }
     load()
   }, [user, id, router])
+
+  useEffect(() => {
+    if (!coMakerSearch.trim()) { setCoMakerResults([]); return }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, display_name, email')
+        .ilike('display_name', `%${coMakerSearch}%`)
+        .neq('id', user?.id ?? '')
+        .limit(6)
+      setCoMakerResults(
+        (data ?? []).filter((r: { id: string }) => !coMakers.some(m => m.id === r.id))
+      )
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [coMakerSearch, coMakers, user])
+
+  function addCoMaker(r: { id: string; display_name: string; email: string | null }) {
+    setCoMakers(prev => [...prev, { id: r.id, display_name: r.display_name ?? r.email?.split('@')[0] ?? 'Unknown' }])
+    setCoMakerSearch(''); setCoMakerResults([]); setShowCoMakerDropdown(false)
+  }
+  function removeCoMaker(id: string) { setCoMakers(prev => prev.filter(m => m.id !== id)) }
 
   function handleImageChange(file: File | null) {
     if (!file) return
@@ -88,11 +192,39 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
     setClearImage(true)
   }
 
-  function addTool(t: string) {
-    const current = toolsRaw.trim()
-    if (!current) { setToolsRaw(t); return }
-    const arr = current.split(',').map(s => s.trim())
-    if (!arr.includes(t)) setToolsRaw([...arr, t].join(', '))
+  function toggleTool(t: string) {
+    setTools(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
+  }
+  function commitOtherTool() {
+    const v = otherTool.trim()
+    if (v && !tools.includes(v)) setTools(prev => [...prev, v])
+    setOtherTool('')
+  }
+
+  function addGalleryFiles(files: FileList | null) {
+    if (!files) return
+    const arr = Array.from(files)
+    setNewGalleryFiles(prev => [...prev, ...arr])
+    arr.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = e => setNewGalleryPreviews(prev => [...prev, e.target?.result as string])
+      reader.readAsDataURL(file)
+    })
+  }
+  function removeExistingGallery(url: string) {
+    setExistingGallery(prev => prev.filter(u => u !== url))
+  }
+  function removeNewGallery(i: number) {
+    setNewGalleryFiles(prev => prev.filter((_, idx) => idx !== i))
+    setNewGalleryPreviews(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  function updateLog(i: number, field: keyof LogEntry, value: string | boolean) {
+    setLogEntries(prev => prev.map((e, idx) => idx === i ? { ...e, [field]: value } : e))
+  }
+
+  function updateBom(i: number, field: keyof BomRow, value: string) {
+    setBomRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -122,13 +254,62 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
       imageUrl = publicUrl
     }
 
+    const uploadedGalleryUrls: string[] = []
+    for (let i = 0; i < newGalleryFiles.length; i++) {
+      const file = newGalleryFiles[i]
+      const ext  = file.name.split('.').pop()
+      const path = `${id}/gallery/${Date.now()}-${i}.${ext}`
+      const { error: gErr } = await supabase.storage
+        .from('Project Images')
+        .upload(path, file, { upsert: true })
+      if (gErr) { setSaveError(`Gallery image ${i + 1} failed: ${gErr.message}`); setSaving(false); return }
+      const { data: { publicUrl } } = supabase.storage
+        .from('Project Images')
+        .getPublicUrl(path)
+      uploadedGalleryUrls.push(publicUrl)
+    }
+    const galleryImages = [...existingGallery, ...uploadedGalleryUrls]
+
+    const retro_wins  = retroWins.split('\n').map(l => l.trim()).filter(Boolean)
+    const retro_fixes = retroFixes.split('\n').map(l => l.trim()).filter(Boolean)
+
+    const build_log = logEntries
+      .filter(e => e.title.trim())
+      .map(e => ({
+        date:      e.date || new Date().toISOString().split('T')[0],
+        title:     e.title.trim(),
+        body:      e.body.trim(),
+        milestone: e.milestone,
+        tag:       e.tag.trim() || undefined,
+      }))
+
+    const bom = bomRows
+      .filter(r => r.item.trim())
+      .map(r => ({
+        item:      r.item.trim(),
+        desc:      r.desc.trim() || undefined,
+        qty:       parseFloat(r.qty) || 1,
+        unit_cost: parseFloat(r.unit_cost) || 0,
+        src:       r.src.trim() || undefined,
+      }))
+
+    const finalCategory = category === 'Other' ? (otherCategory.trim() || 'Other') : category
+
     const update: Record<string, unknown> = {
-      title: title.trim(),
-      category,
-      blurb: blurb.trim(),
-      description: description.trim() || null,
-      tools: toolsRaw ? toolsRaw.split(',').map(s => s.trim()).filter(Boolean) : null,
-      github: github.trim() || null,
+      title:          title.trim(),
+      category:       finalCategory,
+      blurb:          blurb.trim(),
+      description:    description.trim() || null,
+      tools:          tools.length > 0 ? tools : null,
+      makers:         coMakers.length > 0 ? coMakers.map(m => m.display_name) : null,
+      github:         github.trim() || null,
+      start_date:     startDate || null,
+      build_time:     buildTime.trim() || null,
+      gallery_images: galleryImages.length > 0 ? galleryImages : null,
+      build_log:      build_log.length > 0 ? build_log : null,
+      bom:            bom.length > 0 ? bom : null,
+      retro_wins:     retro_wins.length > 0 ? retro_wins : null,
+      retro_fixes:    retro_fixes.length > 0 ? retro_fixes : null,
     }
     if (imageUrl !== undefined) update.image = imageUrl
 
@@ -139,7 +320,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
     setSaving(false)
     if (error) { setSaveError(error.message); return }
-    router.push('/dashboard')
+    router.push(backHref)
   }
 
   if (loading || fetching) return null
@@ -166,8 +347,8 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
       <header className="submit-hero">
         <div className="container">
-          <Link href="/dashboard" className="project-back" style={{ color: 'var(--muted)' }}>
-            ← Dashboard
+          <Link href={backHref} className="project-back" style={{ color: 'var(--muted)' }}>
+            {backLabel}
           </Link>
           <div className="seclabel" style={{ marginBottom: 24 }}>
             <span className="num">[07]</span>
@@ -185,6 +366,10 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
           <form className="form form--submit" onSubmit={handleSave}>
             <div className="form__inner">
 
+              <div className="seclabel" style={{ marginBottom: 18 }}>
+                <span className="num">A</span><span>The_basics</span><span className="bar" />
+              </div>
+
               <div className="field">
                 <label>Project title <span className="req">*</span></label>
                 <input type="text" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -194,9 +379,53 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                 <label>Category</label>
                 <CustomSelect
                   value={category}
-                  onChange={setCategory}
-                  options={EDIT_CATEGORIES.map(c => ({ value: c, label: c }))}
+                  onChange={v => { setCategory(v); if (v !== 'Other') setOtherCategory('') }}
+                  options={[...EDIT_CATEGORIES.map(c => ({ value: c, label: c })), { value: 'Other', label: 'Other…' }]}
                 />
+                {category === 'Other' && (
+                  <input type="text" placeholder="Describe the category"
+                    value={otherCategory} onChange={e => setOtherCategory(e.target.value)}
+                    style={{ marginTop: 8 }} autoFocus />
+                )}
+              </div>
+
+              <div className="field">
+                <label>Makers / contributors</label>
+                <div className="makers-chips">
+                  {coMakers.map(m => (
+                    <span key={m.id} className="makers-chip">
+                      {m.display_name}
+                      <button type="button" className="makers-chip__remove" onClick={() => removeCoMaker(m.id)}>✕</button>
+                    </span>
+                  ))}
+                  {(() => {
+                    const myName = profile?.display_name ?? user?.email?.split('@')[0] ?? ''
+                    const alreadyIn = coMakers.some(m => m.display_name === myName)
+                    return !alreadyIn && myName ? (
+                      <button type="button" className="makers-chip makers-chip--add"
+                        onClick={() => setCoMakers(prev => [...prev, { id: `name:${myName}`, display_name: myName }])}>
+                        + Add me
+                      </button>
+                    ) : null
+                  })()}
+                </div>
+                <div className="makers-search">
+                  <input type="text" placeholder="Search for a maker by name… They must have an account to be added" autoComplete="off"
+                    value={coMakerSearch}
+                    onChange={e => { setCoMakerSearch(e.target.value); setShowCoMakerDropdown(true) }}
+                    onFocus={() => setShowCoMakerDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowCoMakerDropdown(false), 150)} />
+                  {showCoMakerDropdown && coMakerSearch.trim() && (
+                    <div className="makers-dropdown">
+                      {coMakerResults.length > 0 ? coMakerResults.map(r => (
+                        <button key={r.id} type="button" className="makers-dropdown__item" onMouseDown={() => addCoMaker(r)}>
+                          <span className="makers-dropdown__name">{r.display_name}</span>
+                          <span className="makers-dropdown__email">{r.email}</span>
+                        </button>
+                      )) : <div className="makers-dropdown__empty">No users found</div>}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="field">
@@ -214,6 +443,18 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                   onChange={e => setDescription(e.target.value)}
                   style={{ minHeight: 140 }}
                 />
+              </div>
+
+              <div className="field__row">
+                <div className="field">
+                  <label>When did it start?</label>
+                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>How long did it take?</label>
+                  <input type="text" placeholder="e.g. ~3 weeks"
+                    value={buildTime} onChange={e => setBuildTime(e.target.value)} />
+                </div>
               </div>
 
               <div className="field">
@@ -247,17 +488,171 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
               <div className="field">
                 <label>Tools &amp; materials used</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Arduino, 3D printer, Soldering iron"
-                  value={toolsRaw}
-                  onChange={e => setToolsRaw(e.target.value)}
-                />
-                <div className="field__hints">
+                <div className="tool-tags">
                   {TOOL_SUGGESTIONS.map(t => (
-                    <button key={t} type="button" onClick={() => addTool(t)}>+ {t}</button>
+                    <button key={t} type="button"
+                      className={`tool-tag${tools.includes(t) ? ' tool-tag--on' : ''}`}
+                      onClick={() => toggleTool(t)}>{t}</button>
+                  ))}
+                  {tools.filter(t => !TOOL_SUGGESTIONS.includes(t)).map(t => (
+                    <button key={t} type="button"
+                      className="tool-tag tool-tag--on tool-tag--custom"
+                      onClick={() => toggleTool(t)}>{t}</button>
+                  ))}
+                  <span className="tool-tag-other">
+                    <input type="text" placeholder="Other…" value={otherTool}
+                      onChange={e => setOtherTool(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitOtherTool() } }} />
+                    {otherTool.trim() && <button type="button" onClick={commitOtherTool}>+</button>}
+                  </span>
+                </div>
+              </div>
+
+              {/* BUILD LOG */}
+              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
+                <span className="num">B</span><span>Build_log</span><span className="bar" />
+                <span>optional · timeline of your process</span>
+              </div>
+
+              {logEntries.length > 0 && (
+                <div className="dyn-list">
+                  {logEntries.map((entry, i) => (
+                    <div key={i} className="dyn-row">
+                      <button type="button" className="dyn-row__remove" onClick={() => setLogEntries(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                      <div className="dyn-row__cols dyn-row__cols--3">
+                        <div className="field" style={{ margin: 0 }}>
+                          <label>Date</label>
+                          <input type="date" value={entry.date} onChange={e => updateLog(i, 'date', e.target.value)} />
+                        </div>
+                        <div className="field" style={{ margin: 0 }}>
+                          <label>Title</label>
+                          <input type="text" placeholder="e.g. First prototype"
+                            value={entry.title} onChange={e => updateLog(i, 'title', e.target.value)} />
+                        </div>
+                        <div className="field" style={{ margin: 0 }}>
+                          <label>Tag</label>
+                          <input type="text" placeholder="e.g. Prototype"
+                            value={entry.tag} onChange={e => updateLog(i, 'tag', e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="field" style={{ margin: 0 }}>
+                        <label>Notes</label>
+                        <textarea placeholder="What happened at this stage?"
+                          value={entry.body} onChange={e => updateLog(i, 'body', e.target.value)}
+                          style={{ minHeight: 64 }} />
+                      </div>
+                      <label className="dyn-row__milestone">
+                        <input type="checkbox" checked={entry.milestone}
+                          onChange={e => updateLog(i, 'milestone', e.target.checked)} />
+                        Mark as milestone
+                      </label>
+                    </div>
                   ))}
                 </div>
+              )}
+              <button type="button" className="dyn-add" onClick={() => setLogEntries(prev => [...prev, emptyLog()])}>
+                + Add log entry
+              </button>
+
+              {/* GALLERY */}
+              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
+                <span className="num">C</span><span>Gallery</span><span className="bar" />
+                <span>optional · process photos</span>
+              </div>
+
+              {(existingGallery.length > 0 || newGalleryPreviews.length > 0) && (
+                <div className="gallery-grid" style={{ marginBottom: 8 }}>
+                  {existingGallery.map((url, i) => (
+                    <div key={url} className="gallery-thumb">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={`Gallery ${i + 1}`} />
+                      <button type="button" className="gallery-thumb__remove" onClick={() => removeExistingGallery(url)}>✕</button>
+                    </div>
+                  ))}
+                  {newGalleryPreviews.map((src, i) => (
+                    <div key={i} className="gallery-thumb">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`New ${i + 1}`} />
+                      <button type="button" className="gallery-thumb__remove" onClick={() => removeNewGallery(i)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className="gallery-upload">
+                ↑ Add photos
+                <input type="file" accept="image/*" multiple style={{ display: 'none' }}
+                  onChange={e => addGalleryFiles(e.target.files)} />
+              </label>
+
+              {/* BOM */}
+              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
+                <span className="num">D</span><span>Bill_of_materials</span><span className="bar" />
+                <span>optional · what did it cost?</span>
+              </div>
+
+              {bomRows.length > 0 && (
+                <div className="dyn-list">
+                  {bomRows.map((row, i) => (
+                    <div key={i} className="dyn-row">
+                      <button type="button" className="dyn-row__remove" onClick={() => setBomRows(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                      <div className="dyn-row__cols dyn-row__cols--4">
+                        <div className="field" style={{ margin: 0 }}>
+                          <label>Item</label>
+                          <input type="text" placeholder="e.g. Arduino Pro Mini"
+                            value={row.item} onChange={e => updateBom(i, 'item', e.target.value)} />
+                        </div>
+                        <div className="field" style={{ margin: 0 }}>
+                          <label>Qty</label>
+                          <input type="number" min="1" value={row.qty}
+                            onChange={e => updateBom(i, 'qty', e.target.value)} />
+                        </div>
+                        <div className="field" style={{ margin: 0 }}>
+                          <label>Unit cost $</label>
+                          <input type="number" min="0" step="0.01" placeholder="0.00"
+                            value={row.unit_cost} onChange={e => updateBom(i, 'unit_cost', e.target.value)} />
+                        </div>
+                        <div className="field" style={{ margin: 0 }}>
+                          <label>Source</label>
+                          <input type="text" placeholder="e.g. Jaycar"
+                            value={row.src} onChange={e => updateBom(i, 'src', e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="field" style={{ margin: 0 }}>
+                        <label>Description</label>
+                        <input type="text" placeholder="e.g. With pin headers"
+                          value={row.desc} onChange={e => updateBom(i, 'desc', e.target.value)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button type="button" className="dyn-add" onClick={() => setBomRows(prev => [...prev, emptyBom()])}>
+                + Add item
+              </button>
+
+              {/* RETRO */}
+              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
+                <span className="num">E</span><span>What_we_learned</span><span className="bar" />
+                <span>optional · one item per line</span>
+              </div>
+              <div className="field__row">
+                <div className="field">
+                  <label>What worked <span style={{ color: '#22c55e' }}>[ + ]</span></label>
+                  <textarea
+                    placeholder={'Pin headers saved hours of debugging.\nPair-building at open hours was faster.'}
+                    value={retroWins} onChange={e => setRetroWins(e.target.value)} style={{ minHeight: 100 }} />
+                </div>
+                <div className="field">
+                  <label>What we&rsquo;d change <span style={{ color: 'var(--pop-red)' }}>[ - ]</span></label>
+                  <textarea
+                    placeholder={'Should have ordered the PCB earlier.\nNeeds a service hatch.'}
+                    value={retroFixes} onChange={e => setRetroFixes(e.target.value)} style={{ minHeight: 100 }} />
+                </div>
+              </div>
+
+              {/* LINKS */}
+              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
+                <span className="num">F</span><span>Links_</span><span className="bar" />
               </div>
 
               <div className="field">
@@ -275,7 +670,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               )}
 
               <div className="form__actions">
-                <Link href="/dashboard" className="btn btn--ghost">Cancel</Link>
+                <Link href={backHref} className="btn btn--ghost">Cancel</Link>
                 <button className="btn btn--gradient" type="submit" disabled={saving}>
                   {saving ? 'Saving…' : 'Save changes'} <span className="arr">→</span>
                 </button>
