@@ -420,7 +420,7 @@ export default function SubmitPage() {
                         ))}
                       </div>
                       <div className="makers-search">
-                        <input type="text" placeholder="Search for a co-maker by name…"
+                        <input type="text" placeholder="Search for a co-maker by name… They must have an account to be added" autoComplete="off"
                           value={coMakerSearch}
                           onChange={e => { setCoMakerSearch(e.target.value); setShowCoMakerDropdown(true) }}
                           onFocus={() => setShowCoMakerDropdown(true)}

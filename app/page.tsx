@@ -19,7 +19,7 @@ export default async function ProjectsPage() {
     <>
       <CursorTrail />
       <Nav />
-      <Hero projectCount={projects.length} projects={projects} />
+      <Hero projectCount={projects.length} />
       <ProjectsSection projects={projects} allTools={allTools} />
       <SuggestSection />
       <Footer />

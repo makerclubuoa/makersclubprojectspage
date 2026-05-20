@@ -208,7 +208,7 @@ export default function AdminPage() {
 
                     <span className={`dash-status ${cls}`}>{text}</span>
 
-                    <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
+                    <Link href={`/projects/${p.id}/edit?from=admin`} className="dash-row__edit">Edit</Link>
 
                     {isDraftOrRejected && (
                       <button
