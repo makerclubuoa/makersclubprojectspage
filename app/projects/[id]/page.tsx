@@ -213,7 +213,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <span className="bar" />
                     <span>Long-form write-up</span>
                   </div>
-                  <h2>The <em>story</em></h2>
                   <div className="pd-body">
                     {(project.description ?? '').split('\n\n').filter(Boolean).map((para, i) => (
                       <p key={i}>{para}</p>
@@ -231,7 +230,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <span className="bar" />
                     <span>{(project.build_log ?? []).length} entries</span>
                   </div>
-                  <h2>Build <em>log</em></h2>
                   <div className="pd-log">
                     {(project.build_log ?? []).map((entry, i) => (
                       <div key={i} className={`pd-log__row${entry.milestone ? ' is-milestone' : ''}`}>
@@ -264,7 +262,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <span className="bar" />
                     <span>{(project.gallery_images ?? []).length} images</span>
                   </div>
-                  <h2>Gallery</h2>
                   <div className="pd-gallery">
                     {(project.gallery_images ?? []).map((src, i) => (
                       <div key={i} className="pd-gallery__item">
@@ -285,7 +282,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <span className="bar" />
                     <span>Materials &amp; sources</span>
                   </div>
-                  <h2>Bill of <em>materials</em></h2>
                   <div className="pd-bom">
                     <table>
                       <thead>
@@ -337,7 +333,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <span className="bar" />
                     <span>Honest notes</span>
                   </div>
-                  <h2>What we&apos;d do <em>differently</em></h2>
                   <div className="pd-retro">
                     {(project.retro_wins ?? []).length > 0 && (
                       <div className="pd-retro__col win">
@@ -372,7 +367,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <span className="dotline" />
                     <span>From the club</span>
                   </div>
-                  <h2>From the <em>club</em></h2>
                   <div className="pd-kudos">
                     {(project.kudos ?? []).map((k, i) => (
                       <div key={i} className="pd-kudo">
@@ -396,7 +390,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <span className="bar" />
                     <span>Three picks</span>
                   </div>
-                  <h2>More from the <em>archive</em></h2>
                   <div className="pd-related">
                     {related.map(r => (
                       <Link key={r.id} href={`/projects/${r.id}`} className="pd-rcard">
