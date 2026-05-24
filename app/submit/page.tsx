@@ -18,10 +18,10 @@ const TOOL_SUGGESTIONS = [
   'Inkscape', 'Figma', 'p5.js', 'Python', 'Swift', 'React', 'Oven',
 ]
 
-type LogEntry = { date: string; title: string; body: string; milestone: boolean; tag: string }
+type LogEntry = { date: string; title: string; body: string; milestone: boolean; tag: string; image: string }
 type BomRow   = { item: string; desc: string; qty: string; unit_cost: string; src: string }
 
-const emptyLog  = (): LogEntry => ({ date: '', title: '', body: '', milestone: false, tag: '' })
+const emptyLog  = (): LogEntry => ({ date: '', title: '', body: '', milestone: false, tag: '', image: '' })
 const emptyBom  = (): BomRow  => ({ item: '', desc: '', qty: '1', unit_cost: '', src: '' })
 
 function burst(x: number, y: number) {
@@ -81,6 +81,8 @@ export default function SubmitPage() {
 
   // Build log
   const [logEntries, setLogEntries] = useState<LogEntry[]>([])
+  const [logEntryFiles, setLogEntryFiles] = useState<(File | null)[]>([])
+  const [logEntryPreviews, setLogEntryPreviews] = useState<(string | null)[]>([])
 
   // BOM
   const [bomRows, setBomRows] = useState<BomRow[]>([])
@@ -176,6 +178,18 @@ export default function SubmitPage() {
   function updateLog(i: number, field: keyof LogEntry, value: string | boolean) {
     setLogEntries(prev => prev.map((e, idx) => idx === i ? { ...e, [field]: value } : e))
   }
+  function handleLogImageChange(i: number, file: File | null) {
+    if (!file) return
+    setLogEntryFiles(prev => prev.map((f, idx) => idx === i ? file : f))
+    const reader = new FileReader()
+    reader.onload = e => setLogEntryPreviews(prev => prev.map((p, idx) => idx === i ? e.target?.result as string : p))
+    reader.readAsDataURL(file)
+  }
+  function removeLogImage(i: number) {
+    setLogEntryFiles(prev => prev.map((f, idx) => idx === i ? null : f))
+    setLogEntryPreviews(prev => prev.map((p, idx) => idx === i ? null : p))
+    updateLog(i, 'image', '')
+  }
 
   // ── BOM ──────────────────────────────────────────────
   function updateBom(i: number, field: keyof BomRow, value: string) {
@@ -231,14 +245,29 @@ export default function SubmitPage() {
     const retro_fixes = retroFixes.split('\n').map(l => l.trim()).filter(Boolean)
 
     // Parse build log
+    const logImageUrls: (string | null)[] = []
+    for (let i = 0; i < logEntries.length; i++) {
+      const file = logEntryFiles[i]
+      if (file) {
+        const ext = file.name.split('.').pop()
+        const path = `${id}/log/${Date.now()}-${i}.${ext}`
+        const { error: lErr } = await supabase.storage.from('Project Images').upload(path, file, { upsert: true })
+        if (lErr) { setSubmitError(`Log image ${i + 1} failed: ${lErr.message}`); setSubmitting(false); return }
+        const { data: { publicUrl } } = supabase.storage.from('Project Images').getPublicUrl(path)
+        logImageUrls.push(publicUrl)
+      } else {
+        logImageUrls.push(null)
+      }
+    }
     const build_log = logEntries
       .filter(e => e.title.trim())
-      .map(e => ({
+      .map((e, i) => ({
         date:      e.date || new Date().toISOString().split('T')[0],
         title:     e.title.trim(),
         body:      e.body.trim(),
         milestone: e.milestone,
         tag:       e.tag.trim() || undefined,
+        image:     logImageUrls[i] || undefined,
       }))
 
     // Parse BOM
@@ -549,7 +578,11 @@ export default function SubmitPage() {
                       <div className="dyn-list">
                         {logEntries.map((entry, i) => (
                           <div key={i} className="dyn-row">
-                            <button type="button" className="dyn-row__remove" onClick={() => setLogEntries(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                            <button type="button" className="dyn-row__remove" onClick={() => {
+                              setLogEntries(prev => prev.filter((_, idx) => idx !== i))
+                              setLogEntryFiles(prev => prev.filter((_, idx) => idx !== i))
+                              setLogEntryPreviews(prev => prev.filter((_, idx) => idx !== i))
+                            }}>✕</button>
                             <div className="dyn-row__cols dyn-row__cols--3">
                               <div className="field" style={{ margin: 0 }}>
                                 <label>Date</label>
@@ -577,11 +610,31 @@ export default function SubmitPage() {
                                 onChange={e => updateLog(i, 'milestone', e.target.checked)} />
                               Mark as milestone
                             </label>
+                            <div className="field" style={{ margin: '8px 0 0' }}>
+                              <label>Photo <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>optional</span></label>
+                              {logEntryPreviews[i] ? (
+                                <div style={{ position: 'relative', display: 'inline-block' }}>
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={logEntryPreviews[i]!} alt="Log entry" style={{ maxWidth: '100%', maxHeight: 200, display: 'block', borderRadius: 4 }} />
+                                  <button type="button" className="img-upload__remove" style={{ position: 'absolute', top: 6, right: 6 }} onClick={() => removeLogImage(i)}>✕ Remove</button>
+                                </div>
+                              ) : (
+                                <label className="gallery-upload" style={{ display: 'inline-flex' }}>
+                                  ↑ Add photo
+                                  <input type="file" accept="image/*" style={{ display: 'none' }}
+                                    onChange={e => handleLogImageChange(i, e.target.files?.[0] ?? null)} />
+                                </label>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
                     )}
-                    <button type="button" className="dyn-add" onClick={() => setLogEntries(prev => [...prev, emptyLog()])}>
+                    <button type="button" className="dyn-add" onClick={() => {
+                      setLogEntries(prev => [...prev, emptyLog()])
+                      setLogEntryFiles(prev => [...prev, null])
+                      setLogEntryPreviews(prev => [...prev, null])
+                    }}>
                       + Add log entry
                     </button>
 

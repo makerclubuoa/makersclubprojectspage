@@ -244,6 +244,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                           <h4>{entry.title}</h4>
                           <p>{entry.body}</p>
                           {entry.tag && <span className="pd-log__tag">{entry.tag}</span>}
+                          {entry.image && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={entry.image} alt={entry.title} className="pd-log__img" loading="lazy" />
+                          )}
                         </div>
                       </div>
                     ))}
