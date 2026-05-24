@@ -10,6 +10,8 @@ function fmtDate(iso: string, opts?: Intl.DateTimeFormatOptions) {
   return new Date(iso).toLocaleDateString('en-NZ', opts ?? { month: 'short', year: 'numeric' }).toUpperCase()
 }
 
+export const dynamic = 'force-dynamic'
+
 export async function generateStaticParams() {
   const ids = await fetchAllIds()
   return ids.map(id => ({ id }))
@@ -25,13 +27,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const { id } = await params
   const [project, allProjects] = await Promise.all([fetchProject(id), fetchProjects()])
   if (!project) notFound()
-
-  const { names: makerNames, anonCount: makerAnonCount } = await fetchMakerDisplay(project)
-  const totalMakers = makerNames.length + makerAnonCount
-  const makerDisplayStr = [
-    ...makerNames,
-    ...(makerAnonCount > 0 ? [`+${makerAnonCount} others`] : []),
-  ].join(' + ')
 
   const color = categoryColor(project.category)
   const idx = allProjects.findIndex(p => p.id === id)
@@ -49,6 +44,17 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const related = pool.length < 3
     ? [...pool, ...others.filter(p => !pool.includes(p)).slice(0, 3 - pool.length)]
     : pool.slice(0, 3)
+
+  const [{ names: makerNames, anonCount: makerAnonCount }, ...relatedDisplays] = await Promise.all([
+    fetchMakerDisplay(project),
+    ...related.map(r => fetchMakerDisplay(r)),
+  ])
+  const relatedMakerDisplays = Object.fromEntries(related.map((r, i) => [r.id, relatedDisplays[i]]))
+  const totalMakers = makerNames.length + makerAnonCount
+  const makerDisplayStr = [
+    ...makerNames,
+    ...(makerAnonCount > 0 ? [`+${makerAnonCount} others`] : []),
+  ].join(' + ')
 
   // Status
 
@@ -399,7 +405,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                           )}
                         </div>
                         <h5>{r.title}</h5>
-                        <p>{r.category} · {(r.makers ?? []).join(' + ')}</p>
+                        <p>{r.category} · {[
+                          ...(relatedMakerDisplays[r.id]?.names ?? r.makers ?? []),
+                          ...((relatedMakerDisplays[r.id]?.anonCount ?? 0) > 0 ? [`+${relatedMakerDisplays[r.id].anonCount} others`] : []),
+                        ].join(' + ')}</p>
                       </Link>
                     ))}
                   </div>

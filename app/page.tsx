@@ -6,6 +6,8 @@ import CTACarousel from './components/CTACarousel'
 import Link from 'next/link'
 import { fetchProjects, fetchMakerDisplay } from '@/lib/projects'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProjectsPage() {
   const projects = await fetchProjects()
 

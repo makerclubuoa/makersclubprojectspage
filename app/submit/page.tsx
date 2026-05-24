@@ -252,14 +252,9 @@ export default function SubmitPage() {
         src:       r.src.trim() || undefined,
       }))
 
-    const submitterName = resolvePublicName({
-      display_name: profile?.display_name,
-      public_name: profile?.public_name,
-      name_preference: profile?.name_preference,
-    })
     const consentedCoMakers = coMakers.filter(m => m.credit_consented)
     const anonCount = coMakers.filter(m => !m.credit_consented).length
-    const makerNames = [submitterName, ...consentedCoMakers.map(m => resolvePublicName(m))]
+    const makerNames = consentedCoMakers.map(m => resolvePublicName(m))
 
     const { error } = await supabase.from('Projects').insert({
       id,

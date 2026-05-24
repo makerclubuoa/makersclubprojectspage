@@ -301,7 +301,11 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
     // Resolve maker names: real profile entries (id not prefixed with 'name:') honour consent
     const realCoMakers = coMakers.filter(m => !m.id.startsWith('name:'))
-    const legacyNames  = coMakers.filter(m => m.id.startsWith('name:')).map(m => m.display_name)
+    const submitterDisplayName = (profile?.display_name ?? '').toLowerCase()
+    const legacyNames = coMakers
+      .filter(m => m.id.startsWith('name:'))
+      .map(m => m.display_name)
+      .filter(n => n.toLowerCase() !== submitterDisplayName)
     const consentedNames = realCoMakers.filter(m => m.credit_consented).map(m => resolvePublicName(m))
     const anonCount = realCoMakers.filter(m => !m.credit_consented).length
     const makerNames = [...legacyNames, ...consentedNames]

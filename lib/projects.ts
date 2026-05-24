@@ -89,9 +89,17 @@ export async function fetchMakerDisplay(project: Project): Promise<{ names: stri
     }
   }
 
-  // If the submitter profile doesn't exist yet, fall back to the stored names
+  // If the submitter profile doesn't exist yet, fall back entirely to stored names
   if (names.length === 0 && anonCount === 0) {
     return { names: project.makers ?? [], anonCount: project.anon_count ?? 0 }
+  }
+
+  // Append legacy co-maker strings from makers[] that aren't covered by profile
+  // resolution. Use set-based filtering so position in the array doesn't matter.
+  if (!project.maker_ids || project.maker_ids.length === 0) {
+    const resolvedSet = new Set(names.map(n => n.toLowerCase()))
+    const extras = (project.makers ?? []).filter(n => !resolvedSet.has(n.toLowerCase()))
+    names.push(...extras)
   }
 
   return { names, anonCount }
