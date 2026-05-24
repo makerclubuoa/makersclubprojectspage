@@ -75,7 +75,7 @@ export default function Nav() {
         <a href="https://makeuoa.nz/tag/updates/" onClick={close}>Updates</a>
         <a href="https://vend.makeuoa.nz/" onClick={close}>Vending machine</a>
         <Link href="/" onClick={close}>Projects</Link>
-      
+        <Link href="/submit" className="nav__mobile-submit" onClick={close}>Submit a project</Link>
 
         {/* Mobile-only footer inside the drawer */}
         <div className="nav__mobile-footer">
@@ -88,13 +88,9 @@ export default function Nav() {
               <>
                 <Link href="/dashboard" className="nav__auth nav__user-name" onClick={close}>{displayName}</Link>
                 <button className="nav__auth" onClick={() => { signOut(); close() }}>Sign out</button>
-                <Link href="/submit" className="nav__submit-link" onClick={close}>Submit a project</Link>
               </>
             ) : (
-              <>
-                <Link href="/login" className="nav__auth" onClick={close}>Sign in</Link>
-                <Link href="/submit" className="nav__submit-link" onClick={close}>Submit a project</Link>
-              </>
+              <Link href="/login" className="nav__auth" onClick={close}>Sign in</Link>
             )
           )}
         </div>

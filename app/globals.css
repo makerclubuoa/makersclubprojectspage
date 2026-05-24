@@ -294,6 +294,9 @@ button {
   transition: opacity 0.2s;
 }
 .nav__submit-link:hover { opacity: 0.8; }
+.nav__mobile-submit {
+  display: none;
+}
 .nav__user-name {
   color: var(--muted) !important;
   font-size: 14px;
@@ -3094,6 +3097,18 @@ input[type='date'] {
   .nav__links a:last-child,
   .nav__links button:last-child {
     border-bottom: none;
+  }
+  .nav__mobile-submit {
+    display: block;
+    margin: 12px 20px 0;
+    padding: 14px 20px !important;
+    border-radius: var(--radius) !important;
+    border-bottom: none !important;
+    background: var(--ink) !important;
+    color: var(--paper) !important;
+    font-weight: 600;
+    text-align: center !important;
+    width: auto !important;
   }
   /* Theme toggle + auth inline at bottom of mobile menu */
   .nav__mobile-footer {
