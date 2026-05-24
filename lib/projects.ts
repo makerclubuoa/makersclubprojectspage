@@ -7,6 +7,7 @@ export interface BuildLogEntry {
   milestone?: boolean
   tag?: string
   week_label?: string
+  image?: string
 }
 
 export interface BOMItem {
