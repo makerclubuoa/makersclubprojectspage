@@ -1,19 +1,23 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 
-let _admin: SupabaseClient | null = null
-
-export function getSupabaseAdmin(): SupabaseClient {
-  if (!_admin) {
-    _admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
+function cfEnv(key: string): string | undefined {
+  try {
+    const { env } = getCloudflareContext()
+    return (env as Record<string, string>)[key]
+  } catch {
+    return undefined
   }
-  return _admin
+}
+
+function makeAdmin(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? cfEnv('NEXT_PUBLIC_SUPABASE_URL')
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? cfEnv('SUPABASE_SERVICE_ROLE_KEY')
+  return createClient(url!, key!)
 }
 
 export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    return (getSupabaseAdmin() as never)[prop]
+    return (makeAdmin() as never)[prop]
   },
 })
