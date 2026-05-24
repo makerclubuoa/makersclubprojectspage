@@ -1310,6 +1310,7 @@ button {
   .pd-layout { grid-template-columns: 1fr; gap: 40px; }
   .pd-side__sticky { position: static; }
   .pd-related { grid-template-columns: 1fr 1fr; }
+  .pd-cover { aspect-ratio: 4/3; }
 }
 @media (max-width: 720px) {
   .pd-log__row { grid-template-columns: 80px 24px 1fr; }
@@ -1323,6 +1324,7 @@ button {
     grid-row: span 1;
     aspect-ratio: 4/3;
   }
+  .pd-bom { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 /* keep back-link style for project pages */
@@ -3149,6 +3151,7 @@ input[type='date'] {
   .pills { flex-wrap: wrap; }
   .filter-divider { display: none; }
   .select { width: 100%; justify-content: space-between; }
+  .toggle { width: 100%; justify-content: space-between; }
 
   /* Projects grid */
   .grid-section { padding: 20px 0 48px; }
@@ -3160,6 +3163,16 @@ input[type='date'] {
 
   /* Cards */
   .card__title { font-size: 16px; }
+
+  /* Dynamic form rows — stack to single column on mobile */
+  .dyn-row__cols--3,
+  .dyn-row__cols--4 { grid-template-columns: 1fr; }
+
+  /* Project detail breadcrumbs */
+  .pd-crumbs { gap: 10px; font-size: 10px; }
+
+  /* Submit / dashboard hero — reduce generous top padding */
+  .submit-hero { padding-top: 88px; }
 }
 
 @media (max-width: 560px) {
@@ -3170,5 +3183,13 @@ input[type='date'] {
     gap: 8px;
     text-align: center;
     margin-top: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Force 2×2 grid for project quick-stats instead of 3+1 wrap */
+  .pd-quickmeta > div {
+    flex: 1 1 calc(50% - 1px);
+    min-width: 0;
   }
 }
