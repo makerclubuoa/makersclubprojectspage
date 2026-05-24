@@ -87,11 +87,16 @@ export default function ProjectCard({
         <div className="card__meta">
           <span className="card__makers">
             <span className="avatar-stack">
-              {(project.makers ?? []).map((m, i) => (
+              {Array.from({ length: (project.makers ?? []).length + (project.anon_count ?? 0) }).map((_, i) => (
                 <span key={i} className="avatar" style={{ background: color }} />
               ))}
             </span>
-            <span>{(project.makers ?? []).join(' + ')}</span>
+            <span>
+              {[
+                ...(project.makers ?? []),
+                ...((project.anon_count ?? 0) > 0 ? [`+${project.anon_count} others`] : []),
+              ].join(' + ')}
+            </span>
           </span>
           <span>
             {project.date ? formatDate(project.date) : ''}

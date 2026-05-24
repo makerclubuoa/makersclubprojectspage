@@ -7,6 +7,9 @@ import { supabase } from '@/lib/supabase'
 interface Profile {
   display_name: string | null
   email: string | null
+  public_name: string | null
+  name_preference: string | null
+  credit_consented: boolean
 }
 
 interface AuthContextType {
@@ -38,7 +41,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string) {
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, email')
+      .select('display_name, email, public_name, name_preference, credit_consented')
       .eq('id', userId)
       .single()
     if (data) setProfile(data as Profile)

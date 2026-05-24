@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use, Suspense } from 'react'
+import { useState, useEffect, useRef, use, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Nav from '@/app/components/Nav'
@@ -8,7 +8,7 @@ import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
-import { CATEGORIES, type Project } from '@/lib/projects'
+import { CATEGORIES, resolvePublicName, type Project } from '@/lib/projects'
 import CustomSelect from '@/app/components/CustomSelect'
 
 const EDIT_CATEGORIES = CATEGORIES.filter(c => c !== 'All')
@@ -57,9 +57,10 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const [github, setGithub]             = useState('')
 
   // Makers
-  const [coMakers, setCoMakers]                       = useState<Array<{ id: string; display_name: string }>>([])
+  type CoMakerProfile = { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }
+  const [coMakers, setCoMakers]                       = useState<CoMakerProfile[]>([])
   const [coMakerSearch, setCoMakerSearch]             = useState('')
-  const [coMakerResults, setCoMakerResults]           = useState<Array<{ id: string; display_name: string; email: string | null }>>([])
+  const [coMakerResults, setCoMakerResults]           = useState<CoMakerProfile[]>([])
   const [showCoMakerDropdown, setShowCoMakerDropdown] = useState(false)
 
   // Tools
@@ -89,12 +90,15 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const [saving, setSaving]       = useState(false)
   const [saveError, setSaveError] = useState('')
 
+  const hasFetched = useRef(false)
+
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
   }, [user, loading, router])
 
   useEffect(() => {
-    if (!user) return
+    if (!user || hasFetched.current) return
+    hasFetched.current = true
     async function load() {
       const { data } = await supabase
         .from('Projects')
@@ -122,7 +126,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       setStartDate(data.start_date ?? '')
       setBuildTime(data.build_time ?? '')
       setGithub(data.github ?? '')
-      setCoMakers((data.makers ?? []).map((name: string) => ({ id: `name:${name}`, display_name: name })))
+      setCoMakers((data.makers ?? []).map((name: string) => ({ id: `name:${name}`, display_name: name, email: null, public_name: null, name_preference: null, credit_consented: true })))
       setTools(data.tools ?? [])
       setImagePreview(data.image ?? null)
       setExistingGallery(data.gallery_images ?? [])
@@ -159,8 +163,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     const timer = setTimeout(async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, display_name, email')
-        .ilike('display_name', `%${coMakerSearch}%`)
+        .select('id, display_name, email, public_name, name_preference, credit_consented')
+        .or(`display_name.ilike.%${coMakerSearch}%,public_name.ilike.%${coMakerSearch}%`)
         .neq('id', user?.id ?? '')
         .limit(6)
       setCoMakerResults(
@@ -170,8 +174,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     return () => clearTimeout(timer)
   }, [coMakerSearch, coMakers, user])
 
-  function addCoMaker(r: { id: string; display_name: string; email: string | null }) {
-    setCoMakers(prev => [...prev, { id: r.id, display_name: r.display_name ?? r.email?.split('@')[0] ?? 'Unknown' }])
+  function addCoMaker(r: { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }) {
+    setCoMakers(prev => [...prev, r])
     setCoMakerSearch(''); setCoMakerResults([]); setShowCoMakerDropdown(false)
   }
   function removeCoMaker(id: string) { setCoMakers(prev => prev.filter(m => m.id !== id)) }
@@ -295,13 +299,22 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
     const finalCategory = category === 'Other' ? (otherCategory.trim() || 'Other') : category
 
+    // Resolve maker names: real profile entries (id not prefixed with 'name:') honour consent
+    const realCoMakers = coMakers.filter(m => !m.id.startsWith('name:'))
+    const legacyNames  = coMakers.filter(m => m.id.startsWith('name:')).map(m => m.display_name)
+    const consentedNames = realCoMakers.filter(m => m.credit_consented).map(m => resolvePublicName(m))
+    const anonCount = realCoMakers.filter(m => !m.credit_consented).length
+    const makerNames = [...legacyNames, ...consentedNames]
+
     const update: Record<string, unknown> = {
       title:          title.trim(),
       category:       finalCategory,
       blurb:          blurb.trim(),
       description:    description.trim() || null,
       tools:          tools.length > 0 ? tools : null,
-      makers:         coMakers.length > 0 ? coMakers.map(m => m.display_name) : null,
+      makers:         makerNames.length > 0 ? makerNames : null,
+      maker_ids:      realCoMakers.length > 0 ? realCoMakers.map(m => m.id) : null,
+      anon_count:     anonCount,
       github:         github.trim() || null,
       start_date:     startDate || null,
       build_time:     buildTime.trim() || null,
@@ -351,8 +364,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
             {backLabel}
           </Link>
           <div className="seclabel" style={{ marginBottom: 24 }}>
-            <span className="num">[07]</span>
-            <span>Edit_</span>
+            <span>Edit</span>
             <span className="bar" />
           </div>
           <h1 className="submit-hero__title">
@@ -367,7 +379,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
             <div className="form__inner">
 
               <div className="seclabel" style={{ marginBottom: 18 }}>
-                <span className="num">A</span><span>The_basics</span><span className="bar" />
+                <span className="num">A</span><span>The basics</span><span className="bar" />
               </div>
 
               <div className="field">
@@ -510,7 +522,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
               {/* BUILD LOG */}
               <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">B</span><span>Build_log</span><span className="bar" />
+                <span className="num">B</span><span>Build log</span><span className="bar" />
                 <span>optional · timeline of your process</span>
               </div>
 
@@ -586,7 +598,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
               {/* BOM */}
               <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">D</span><span>Bill_of_materials</span><span className="bar" />
+                <span className="num">D</span><span>Bill of materials</span><span className="bar" />
                 <span>optional · what did it cost?</span>
               </div>
 
@@ -632,7 +644,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
               {/* RETRO */}
               <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">E</span><span>What_we_learned</span><span className="bar" />
+                <span className="num">E</span><span>What we learned</span><span className="bar" />
                 <span>optional · one item per line</span>
               </div>
               <div className="field__row">
@@ -652,7 +664,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
               {/* LINKS */}
               <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">F</span><span>Links_</span><span className="bar" />
+                <span className="num">F</span><span>Links</span><span className="bar" />
               </div>
 
               <div className="field">

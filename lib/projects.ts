@@ -38,7 +38,10 @@ export interface Project {
   tools: string[] | null
   status: string | null
   Featured: boolean | null
-  // New optional fields
+  submitted_by: string | null
+  maker_ids: string[] | null
+  anon_count: number | null
+  // optional fields
   start_date: string | null
   build_time: string | null
   build_log: BuildLogEntry[] | null
@@ -47,6 +50,46 @@ export interface Project {
   retro_wins: string[] | null
   retro_fixes: string[] | null
   kudos: KudoEntry[] | null
+}
+
+export function resolvePublicName(profile: {
+  display_name?: string | null
+  public_name?: string | null
+  name_preference?: string | null
+}): string {
+  if (profile.name_preference === 'public_name' && profile.public_name) {
+    return profile.public_name
+  }
+  return profile.display_name ?? 'Anonymous'
+}
+
+export async function fetchMakerDisplay(project: Project): Promise<{ names: string[]; anonCount: number }> {
+  if (!project.submitted_by) {
+    return { names: project.makers ?? [], anonCount: project.anon_count ?? 0 }
+  }
+
+  const names: string[] = []
+
+  const { data: submitter } = await supabase
+    .from('profiles')
+    .select('display_name, public_name, name_preference')
+    .eq('id', project.submitted_by)
+    .single()
+  if (submitter) names.push(resolvePublicName(submitter))
+
+  let anonCount = 0
+  if (project.maker_ids && project.maker_ids.length > 0) {
+    const { data: coMakers } = await supabase
+      .from('profiles')
+      .select('display_name, public_name, name_preference, credit_consented')
+      .in('id', project.maker_ids)
+    for (const p of coMakers ?? []) {
+      if (p.credit_consented) names.push(resolvePublicName(p))
+      else anonCount++
+    }
+  }
+
+  return { names, anonCount }
 }
 
 const CATEGORY_COLORS: Record<string, string> = {

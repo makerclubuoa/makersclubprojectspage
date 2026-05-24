@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Nav from '@/app/components/Nav'
 import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
-import { CATEGORIES } from '@/lib/projects'
+import { CATEGORIES, resolvePublicName } from '@/lib/projects'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import CustomSelect from '@/app/components/CustomSelect'
@@ -61,9 +61,10 @@ export default function SubmitPage() {
   const [contact, setContact]               = useState('')
 
   // Makers
-  const [coMakers, setCoMakers]                   = useState<Array<{ id: string; display_name: string }>>([])
+  type CoMakerProfile = { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }
+  const [coMakers, setCoMakers]                   = useState<CoMakerProfile[]>([])
   const [coMakerSearch, setCoMakerSearch]         = useState('')
-  const [coMakerResults, setCoMakerResults]       = useState<Array<{ id: string; display_name: string; email: string | null }>>([])
+  const [coMakerResults, setCoMakerResults]       = useState<CoMakerProfile[]>([])
   const [showCoMakerDropdown, setShowCoMakerDropdown] = useState(false)
 
   // Tools
@@ -120,8 +121,8 @@ export default function SubmitPage() {
     const timer = setTimeout(async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, display_name, email')
-        .ilike('display_name', `%${coMakerSearch}%`)
+        .select('id, display_name, email, public_name, name_preference, credit_consented')
+        .or(`display_name.ilike.%${coMakerSearch}%,public_name.ilike.%${coMakerSearch}%`)
         .neq('id', user?.id ?? '')
         .limit(6)
       setCoMakerResults(
@@ -132,8 +133,8 @@ export default function SubmitPage() {
   }, [coMakerSearch, coMakers, user])
 
   // ── Makers ──────────────────────────────────────────
-  function addCoMaker(r: { id: string; display_name: string; email: string | null }) {
-    setCoMakers(prev => [...prev, { id: r.id, display_name: r.display_name ?? r.email?.split('@')[0] ?? 'Unknown' }])
+  function addCoMaker(r: { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }) {
+    setCoMakers(prev => [...prev, r])
     setCoMakerSearch(''); setCoMakerResults([]); setShowCoMakerDropdown(false)
   }
   function removeCoMaker(id: string) { setCoMakers(prev => prev.filter(m => m.id !== id)) }
@@ -251,6 +252,15 @@ export default function SubmitPage() {
         src:       r.src.trim() || undefined,
       }))
 
+    const submitterName = resolvePublicName({
+      display_name: profile?.display_name,
+      public_name: profile?.public_name,
+      name_preference: profile?.name_preference,
+    })
+    const consentedCoMakers = coMakers.filter(m => m.credit_consented)
+    const anonCount = coMakers.filter(m => !m.credit_consented).length
+    const makerNames = [submitterName, ...consentedCoMakers.map(m => resolvePublicName(m))]
+
     const { error } = await supabase.from('Projects').insert({
       id,
       title:       title.trim(),
@@ -258,7 +268,9 @@ export default function SubmitPage() {
       blurb:       blurb.trim(),
       description: description.trim() || null,
       tools:       tools.length > 0 ? tools : null,
-      makers:      [profile?.display_name ?? user!.email!.split('@')[0], ...coMakers.map(m => m.display_name)],
+      makers:      makerNames,
+      maker_ids:   coMakers.length > 0 ? coMakers.map(m => m.id) : null,
+      anon_count:  anonCount,
       github:      github.trim() || null,
       website:     website.trim() || null,
       image:       imageUrl,
@@ -418,14 +430,19 @@ export default function SubmitPage() {
                           <span className="makers-chip__tag">you</span>
                         </span>
                         {coMakers.map(m => (
-                          <span key={m.id} className="makers-chip">
-                            {m.display_name}
+                          <span key={m.id} className={`makers-chip${!m.credit_consented ? ' makers-chip--anon' : ''}`}>
+                            {resolvePublicName(m)}
+                            {!m.credit_consented && <span className="makers-chip__tag" style={{ color: 'var(--muted)' }}>anon</span>}
                             <button type="button" className="makers-chip__remove" onClick={() => removeCoMaker(m.id)}>✕</button>
                           </span>
                         ))}
                       </div>
+                      <p style={{ fontSize: 11, color: 'var(--muted)', margin: '6px 0 10px', lineHeight: 1.5 }}>
+                        You&rsquo;ll appear as <strong style={{ color: 'var(--ink)' }}>{resolvePublicName({ display_name: profile?.display_name, public_name: profile?.public_name, name_preference: profile?.name_preference })}</strong>.
+                        Co-makers without credit enabled in their profile will show as anonymous.
+                      </p>
                       <div className="makers-search">
-                        <input type="text" placeholder="Search for a co-maker by name… They must have an account to be added" autoComplete="off"
+                        <input type="text" placeholder="Search for a co-maker by name or username… They must have an account to be added" autoComplete="off"
                           value={coMakerSearch}
                           onChange={e => { setCoMakerSearch(e.target.value); setShowCoMakerDropdown(true) }}
                           onFocus={() => setShowCoMakerDropdown(true)}
@@ -434,8 +451,10 @@ export default function SubmitPage() {
                           <div className="makers-dropdown">
                             {coMakerResults.length > 0 ? coMakerResults.map(r => (
                               <button key={r.id} type="button" className="makers-dropdown__item" onMouseDown={() => addCoMaker(r)}>
-                                <span className="makers-dropdown__name">{r.display_name}</span>
-                                <span className="makers-dropdown__email">{r.email}</span>
+                                <span className="makers-dropdown__name">{resolvePublicName(r)}</span>
+                                <span className="makers-dropdown__email" style={{ color: r.credit_consented ? 'var(--muted)' : 'var(--pop-orange)' }}>
+                                  {r.credit_consented ? r.email : 'will appear anonymous'}
+                                </span>
                               </button>
                             )) : <div className="makers-dropdown__empty">No users found</div>}
                           </div>

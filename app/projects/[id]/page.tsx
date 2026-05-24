@@ -4,7 +4,7 @@ import Nav from '@/app/components/Nav'
 import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
 import LikeButton from '@/app/components/LikeButton'
-import { fetchProject, fetchProjects, fetchAllIds, categoryColor } from '@/lib/projects'
+import { fetchProject, fetchProjects, fetchAllIds, fetchMakerDisplay, categoryColor } from '@/lib/projects'
 
 function fmtDate(iso: string, opts?: Intl.DateTimeFormatOptions) {
   return new Date(iso).toLocaleDateString('en-NZ', opts ?? { month: 'short', year: 'numeric' }).toUpperCase()
@@ -25,6 +25,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const { id } = await params
   const [project, allProjects] = await Promise.all([fetchProject(id), fetchProjects()])
   if (!project) notFound()
+
+  const { names: makerNames, anonCount: makerAnonCount } = await fetchMakerDisplay(project)
+  const totalMakers = makerNames.length + makerAnonCount
+  const makerDisplayStr = [
+    ...makerNames,
+    ...(makerAnonCount > 0 ? [`+${makerAnonCount} others`] : []),
+  ].join(' + ')
 
   const color = categoryColor(project.category)
   const idx = allProjects.findIndex(p => p.id === id)
@@ -77,8 +84,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const kudosNum    = hasKudos    ? sn() : null
   const relatedNum  = hasRelated  ? sn() : null
 
-  const makers = project.makers ?? []
-
   return (
     <>
       <CursorTrail />
@@ -91,9 +96,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         <div className="container">
 
           <div className="pd-crumbs">
-            <span><span className="num">{prjNum}</span></span>
-            <span className="sep">/</span>
-            <span>{project.category ?? '—'}_</span>
+            <span>{project.category ?? '—'}</span>
             <span className="sep">/</span>
             <span>STARTED {startedDate}</span>
             <span className="sep">/</span>
@@ -113,17 +116,17 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
               <h1 className="pd-title">{project.title}</h1>
               {project.blurb && <p className="pd-blurb">{project.blurb}</p>}
 
-              {makers.length > 0 && (
+              {totalMakers > 0 && (
                 <div className="pd-makers">
                   <span className="avatar-stack">
-                    {makers.map((_, i) => (
+                    {Array.from({ length: totalMakers }).map((_, i) => (
                       <span key={i} className="avatar" style={{ background: color }} />
                     ))}
                   </span>
                   <div className="pd-makers__text">
-                    <b>{makers.join(' + ')}</b>
+                    <b>{makerDisplayStr}</b>
                     <small>
-                      {makers.length} member{makers.length !== 1 ? 's' : ''} · {loggedDate}
+                      {totalMakers} member{totalMakers !== 1 ? 's' : ''} · {loggedDate}
                     </small>
                   </div>
                 </div>
@@ -200,7 +203,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <section className="pd-section" id="story">
                   <div className="seclabel">
                     <span className="num">{storyNum}</span>
-                    <span>Story_</span>
+                    <span>Story</span>
                     <span className="bar" />
                     <span>Long-form write-up</span>
                   </div>
@@ -218,7 +221,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <section className="pd-section" id="log">
                   <div className="seclabel">
                     <span className="num">{logNum}</span>
-                    <span>Build_log</span>
+                    <span>Build log</span>
                     <span className="bar" />
                     <span>{(project.build_log ?? []).length} entries</span>
                   </div>
@@ -247,7 +250,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <section className="pd-section" id="gallery">
                   <div className="seclabel">
                     <span className="num">{galleryNum}</span>
-                    <span>Gallery_</span>
+                    <span>Gallery</span>
                     <span className="bar" />
                     <span>{(project.gallery_images ?? []).length} images</span>
                   </div>
@@ -268,7 +271,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <section className="pd-section" id="bom">
                   <div className="seclabel">
                     <span className="num">{bomNum}</span>
-                    <span>Bill_of_materials</span>
+                    <span>Bill of materials</span>
                     <span className="bar" />
                     <span>Materials &amp; sources</span>
                   </div>
@@ -320,7 +323,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <section className="pd-section" id="retro">
                   <div className="seclabel">
                     <span className="num">{retroNum}</span>
-                    <span>What_we_learned</span>
+                    <span>What we learned</span>
                     <span className="bar" />
                     <span>Honest notes</span>
                   </div>
@@ -355,7 +358,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <section className="pd-section" id="kudos">
                   <div className="seclabel">
                     <span className="num">{kudosNum}</span>
-                    <span>Shout_outs</span>
+                    <span>Shout outs</span>
                     <span className="dotline" />
                     <span>From the club</span>
                   </div>
@@ -379,7 +382,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <section className="pd-section" id="related">
                   <div className="seclabel">
                     <span className="num">{relatedNum}</span>
-                    <span>More_from_the_archive</span>
+                    <span>More from the archive</span>
                     <span className="bar" />
                     <span>Three picks</span>
                   </div>
@@ -452,10 +455,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                         <span className="v">{project.build_time}</span>
                       </div>
                     )}
-                    {makers.length > 0 && (
+                    {totalMakers > 0 && (
                       <div className="pd-spec-row">
                         <span className="k">Members</span>
-                        <span className="v">{makers.join(', ')}</span>
+                        <span className="v">{makerDisplayStr.replace(/ \+ /g, ', ')}</span>
                       </div>
                     )}
                     <div className="pd-spec-row">
