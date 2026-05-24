@@ -156,7 +156,7 @@ export default function Hero({
           <div className="hero__spec">
             <div className="spec-cell">
               <div className="k"><span>Members</span><span>01</span></div>
-              <div className="v">{memberTotal ?? '—'}<small>total</small></div>
+              <div className="v">{memberTotal ?? '—'}<small>total</small></div>z
             </div>
             <div className="spec-cell">
               <div className="k"><span>New in {new Date().getFullYear()}</span><span>02</span></div>

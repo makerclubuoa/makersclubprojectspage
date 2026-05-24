@@ -2284,8 +2284,8 @@ button {
 }
 .footer__cta {
   padding: 80px 0;
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--paper-2);
+  color: var(--ink);
 }
 .footer__cta-inner {
   display: flex;
@@ -2300,15 +2300,15 @@ button {
   margin: 0 0 14px;
   font-weight: 700;
   line-height: 1.15;
-  color: #fff;
+  color: var(--ink);
 }
 .footer__cta p {
   opacity: 0.65;
   max-width: 44ch;
   font-size: 15px;
   line-height: 1.6;
+  color: var(--ink);
   margin: 0 0 28px;
-  color: #fff;
 }
 .btn--dark {
   display: inline-flex;
@@ -2325,7 +2325,7 @@ button {
   transition: background 0.18s;
 }
 .btn--dark:hover {
-  background: #3a3a3a;
+  opacity: 0.85;
 }
 .footer__cta-img {
   width: 100%;
