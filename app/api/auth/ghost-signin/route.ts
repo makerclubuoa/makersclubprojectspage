@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error('[ghost-signin] url:', process.env.NEXT_PUBLIC_SUPABASE_URL, 'keySet:', !!process.env.SUPABASE_SERVICE_ROLE_KEY, 'err:', err)
+    const supaKeys = Object.keys(process.env).filter(k => k.includes('SUPA') || k.includes('SERVICE'))
+    console.error('[ghost-signin] url:', process.env.NEXT_PUBLIC_SUPABASE_URL, 'keySet:', !!process.env.SUPABASE_SERVICE_ROLE_KEY, 'supaKeys:', supaKeys, 'err:', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }
