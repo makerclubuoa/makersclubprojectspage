@@ -117,10 +117,6 @@ export default function Hero({
 
           {/* ── hero text ── */}
           <div className="hero__lead">
-            <div className="hero__eyebrow">
-              <span className="pip" />
-              <span>Student-run · University of Auckland · est. 2020</span>
-            </div>
             <h1 className="hero__title">
               Everything
               <br />

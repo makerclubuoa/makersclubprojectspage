@@ -111,7 +111,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             )}
             <span style={{ flex: 1 }} />
             <span className={`status${statusIsShipped ? ' status--shipped' : statusIsWip ? ' status--wip' : ''}`}>
-              <span className="pip" />
               {status}
             </span>
           </div>
