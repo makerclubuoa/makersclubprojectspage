@@ -61,7 +61,6 @@ export default function Footer() {
       <div className="footer__legal">
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           <span>© 2026 University of Auckland Makers Club</span>
-          <span>Built by members, for members.</span>
         </div>
       </div>
 
