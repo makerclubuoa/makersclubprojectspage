@@ -57,7 +57,7 @@ export default function SubmitPage() {
   const [startDate, setStartDate]           = useState('')
   const [buildTime, setBuildTime]           = useState('')
   const [github, setGithub]                 = useState('')
-  const [demo, setDemo]                     = useState('')
+  const [website, setWebsite]               = useState('')
   const [contact, setContact]               = useState('')
 
   // Makers
@@ -96,15 +96,19 @@ export default function SubmitPage() {
   // Stats
   const [statsTotal, setStatsTotal]         = useState<number | null>(null)
   const [statsThisYear, setStatsThisYear]   = useState<number | null>(null)
+  const [memberTotal, setMemberTotal]       = useState<number | null>(null)
 
   useEffect(() => {
+    const year = new Date().getFullYear()
     supabase.from('Projects').select('id', { count: 'exact', head: true })
       .or('status.is.null,and(status.neq.DRAFT,status.neq.REJECTED)')
       .then(({ count }) => setStatsTotal(count))
     supabase.from('Projects').select('id', { count: 'exact', head: true })
       .or('status.is.null,and(status.neq.DRAFT,status.neq.REJECTED)')
-      .gte('date', '2026-01-01')
+      .gte('date', `${year}-01-01`)
       .then(({ count }) => setStatsThisYear(count))
+    supabase.from('profiles').select('id', { count: 'exact', head: true })
+      .then(({ count }) => setMemberTotal(count))
   }, [])
 
   useEffect(() => {
@@ -256,6 +260,7 @@ export default function SubmitPage() {
       tools:       tools.length > 0 ? tools : null,
       makers:      [profile?.display_name ?? user!.email!.split('@')[0], ...coMakers.map(m => m.display_name)],
       github:      github.trim() || null,
+      website:     website.trim() || null,
       image:       imageUrl,
       status:      'DRAFT',
       date:        new Date().toISOString().split('T')[0],
@@ -347,7 +352,7 @@ export default function SubmitPage() {
               <div className="submit-stats">
                 <div><div className="k">In the archive</div><div className="v">{statsTotal ?? '—'}</div></div>
                 <div><div className="k">Added this year</div><div className="v">{statsThisYear ?? '—'}</div></div>
-                <div><div className="k">Members</div><div className="v">1,278</div></div>
+                <div><div className="k">Members</div><div className="v">{memberTotal ?? '—'}</div></div>
               </div>
             </div>
 
@@ -665,7 +670,7 @@ export default function SubmitPage() {
                       <div className="field">
                         <label>Demo / site</label>
                         <input type="url" placeholder="https://…"
-                          value={demo} onChange={e => setDemo(e.target.value)} />
+                          value={website} onChange={e => setWebsite(e.target.value)} />
                       </div>
                     </div>
                     <div className="field">

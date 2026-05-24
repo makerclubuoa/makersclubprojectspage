@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Project } from '@/lib/projects'
 import ProjectCard from './ProjectCard'
+import { supabase } from '@/lib/supabase'
 
 const MAX_CARDS = 7
 const SCROLL_H  = '140vh'
@@ -28,6 +29,18 @@ export default function Hero({
   const slotRefs    = useRef<(HTMLDivElement | null)[]>([])
   const cardPs      = projects.slice(0, MAX_CARDS)
   const n           = Math.max(1, cardPs.length)
+
+  const [memberTotal, setMemberTotal]   = useState<number | null>(null)
+  const [memberNew, setMemberNew]       = useState<number | null>(null)
+
+  useEffect(() => {
+    const year = new Date().getFullYear()
+    supabase.from('profiles').select('id', { count: 'exact', head: true })
+      .then(({ count }) => setMemberTotal(count))
+    supabase.from('profiles').select('id', { count: 'exact', head: true })
+      .gte('created_at', `${year}-01-01`)
+      .then(({ count }) => setMemberNew(count))
+  }, [])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -143,11 +156,11 @@ export default function Hero({
           <div className="hero__spec">
             <div className="spec-cell">
               <div className="k"><span>Members</span><span>01</span></div>
-              <div className="v">1,278<small>total</small></div>
+              <div className="v">{memberTotal ?? '—'}<small>total</small></div>
             </div>
             <div className="spec-cell">
-              <div className="k"><span>New in 2026</span><span>02</span></div>
-              <div className="v">300</div>
+              <div className="k"><span>New in {new Date().getFullYear()}</span><span>02</span></div>
+              <div className="v">{memberNew ?? '—'}</div>
             </div>
             <div className="spec-cell">
               <div className="k"><span>Projects logged</span><span>03</span></div>

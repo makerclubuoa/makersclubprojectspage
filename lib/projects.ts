@@ -33,6 +33,7 @@ export interface Project {
   likes: number | null
   image: string | null
   github: string | null
+  website: string | null
   makers: string[] | null
   tools: string[] | null
   status: string | null

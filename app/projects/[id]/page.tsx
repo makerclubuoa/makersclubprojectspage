@@ -28,8 +28,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
   const color = categoryColor(project.category)
   const idx = allProjects.findIndex(p => p.id === id)
-  const prev = idx > 0 ? allProjects[idx - 1] : null
-  const next = idx < allProjects.length - 1 ? allProjects[idx + 1] : null
 
   // Related projects: same category first, then shared tools, then random
   const others = allProjects.filter(p => p.id !== id)
@@ -411,23 +409,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 </section>
               )}
 
-              {/* Prev / Next */}
-              {(prev || next) && (
-                <nav className="pd-pn">
-                  {prev ? (
-                    <Link href={`/projects/${prev.id}`} className="prev">
-                      <small>← Previous</small>
-                      <b>{prev.title}</b>
-                    </Link>
-                  ) : <div />}
-                  {next ? (
-                    <Link href={`/projects/${next.id}`} className="next">
-                      <small>Next →</small>
-                      <b>{next.title}</b>
-                    </Link>
-                  ) : <div />}
-                </nav>
-              )}
             </div>
 
             {/* ── SIDEBAR ─────────────────────────── */}

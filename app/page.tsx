@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import Nav from './components/Nav'
 import ProjectsSection from './components/ProjectsSection'
-import SuggestSection from './components/SuggestSection'
 import Footer from './components/Footer'
 import CTACarousel from './components/CTACarousel'
 import Link from 'next/link'
@@ -38,7 +37,6 @@ export default async function ProjectsPage() {
           />
         </div>
       </div>
-      <SuggestSection />
       <Footer />
     </>
   )

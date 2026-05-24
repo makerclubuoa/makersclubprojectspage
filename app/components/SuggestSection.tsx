@@ -71,10 +71,10 @@ export default function SuggestSection() {
       <h2>What should we <em>make</em> next?</h2>
       <p>
         Tell us what you&rsquo;d show up for — a workshop, a meetup, a skill-share, anything.
-        We read every suggestion and the most-asked-for ideas turn into actual events.
+        We read every suggestion and the most-asked-for ideas can turn into actual events.
       </p>
       <p style={{ color: 'var(--muted)' }}>
-        Submissions go to the committee inbox. We review everything and reach out if something
+        Submissions go to the exec inbox. We review everything and reach out if something
         looks promising — especially if you&rsquo;re keen to help run it.
       </p>
       {!loading && user && (
