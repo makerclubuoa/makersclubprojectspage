@@ -25,8 +25,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    const supaKeys = Object.keys(process.env).filter(k => k.includes('SUPA') || k.includes('SERVICE'))
-    console.error('[ghost-signin] url:', process.env.NEXT_PUBLIC_SUPABASE_URL, 'keySet:', !!process.env.SUPABASE_SERVICE_ROLE_KEY, 'supaKeys:', supaKeys, 'err:', err)
+    let cfDebug = 'not tried'
+    try {
+      const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+      const { env } = getCloudflareContext()
+      const cfKeys = Object.keys(env as object)
+      const cfKey = (env as Record<string, string>).SUPABASE_SERVICE_ROLE_KEY
+      cfDebug = `cfKeys:${cfKeys.join(',')} cfKeySet:${!!cfKey}`
+    } catch (e) { cfDebug = `threw:${e}` }
+    console.error('[ghost-signin] keySet:', !!process.env.SUPABASE_SERVICE_ROLE_KEY, cfDebug, 'err:', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }
