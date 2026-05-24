@@ -44,9 +44,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     : pool.slice(0, 3)
 
   // Status
-  const status = project.status ?? null
-  const statusLabel = status === 'APPROVED' ? 'Live' : null
-  const statusIsShipped = status === 'APPROVED'
 
   // Dates
   const loggedDate = project.date ? fmtDate(project.date) : '—'
@@ -108,11 +105,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
               </>
             )}
             <span style={{ flex: 1 }} />
-            {statusLabel && (
-              <span className={`status${statusIsShipped ? ' status--shipped' : statusIsWip ? ' status--wip' : ''}`}>
-                {statusLabel}
-              </span>
-            )}
           </div>
 
           <div className="pd-hero__grid">
@@ -470,12 +462,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                       <span className="k">Loves</span>
                       <span className="v">♥ {project.likes ?? 0}</span>
                     </div>
-                    {statusLabel && (
-                      <div className="pd-spec-row">
-                        <span className="k">Status</span>
-                        <span className="v">{statusLabel}</span>
-                      </div>
-                    )}
 
                     {(project.tools ?? []).length > 0 && (
                       <>
