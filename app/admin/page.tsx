@@ -16,10 +16,10 @@ const ADMIN_EMAIL = 'makerclubuoa@gmail.com'
 type Filter = 'all' | 'pending' | 'live' | 'featured' | 'rejected'
 
 function statusLabel(status: string | null, featured: boolean | null) {
-  const s = status?.toUpperCase()
-  if (s === 'DRAFT') return { text: 'Pending', cls: 'dash-status--draft' }
-  if (s === 'REJECTED') return { text: 'Rejected', cls: 'dash-status--rejected' }
-  return { text: featured ? 'Live · Featured' : 'Live', cls: 'dash-status--live' }
+  if (status === 'DRAFT') return { text: 'Pending', cls: 'dash-status--draft' }
+  if (status === 'REJECTED') return { text: 'Rejected', cls: 'dash-status--rejected' }
+  if (status === 'APPROVED') return { text: featured ? 'Live · Featured' : 'Live', cls: 'dash-status--live' }
+  return { text: status ?? '—', cls: '' }
 }
 
 export default function AdminPage() {
@@ -75,28 +75,44 @@ export default function AdminPage() {
     })
   }
 
+  async function adminUpdate(id: string, payload: Record<string, unknown>) {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/update-project', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token ?? ''}`,
+      },
+      body: JSON.stringify({ id, ...payload }),
+    })
+    if (!res.ok) {
+      const { error } = await res.json()
+      throw new Error(error ?? 'Unknown error')
+    }
+  }
+
   async function toggleFeatured(id: string, featured: boolean) {
     setActingId(id)
     setActionError(null)
-    const { error } = await supabase.from('Projects').update({ Featured: featured }).eq('id', id)
-    if (error) {
-      setActionError(error.message)
-    } else {
+    try {
+      await adminUpdate(id, { Featured: featured })
       setProjects(prev => prev.map(p => p.id === id ? { ...p, Featured: featured } : p))
       if (featured) sendNotify(id, 'featured')
+    } catch (e) {
+      setActionError((e as Error).message)
     }
     setActingId(null)
   }
 
-  async function setStatus(id: string, status: string | null, change?: 'approved' | 'rejected') {
+  async function setStatus(id: string, status: string, change?: 'approved' | 'rejected') {
     setActingId(id)
     setActionError(null)
-    const { error } = await supabase.from('Projects').update({ status }).eq('id', id)
-    if (error) {
-      setActionError(error.message)
-    } else {
+    try {
+      await adminUpdate(id, { status })
       setProjects(prev => prev.map(p => p.id === id ? { ...p, status } : p))
       if (change) sendNotify(id, change)
+    } catch (e) {
+      setActionError((e as Error).message)
     }
     setActingId(null)
   }
@@ -104,11 +120,11 @@ export default function AdminPage() {
   async function handleDelete(id: string, title: string) {
     setActingId(id)
     setActionError(null)
-    const { error } = await supabase.from('Projects').delete().eq('id', id)
-    if (error) {
-      setActionError(error.message)
-    } else {
+    try {
+      await adminUpdate(id, { _delete: true })
       setProjects(prev => prev.filter(p => p.id !== id))
+    } catch (e) {
+      setActionError((e as Error).message)
     }
     setActingId(null)
   }
@@ -121,21 +137,21 @@ export default function AdminPage() {
 
   if (loading || !user) return null
 
-  const isLive = (p: Project) => !p.status
+  const isLive = (p: Project) => p.status === 'APPROVED'
 
   const counts: Record<Filter, number> = {
     all: projects.length,
-    pending: projects.filter(p => p.status?.toUpperCase() === 'DRAFT').length,
+    pending: projects.filter(p => p.status === 'DRAFT').length,
     live: projects.filter(isLive).length,
     featured: projects.filter(p => p.Featured === true).length,
-    rejected: projects.filter(p => p.status?.toUpperCase() === 'REJECTED').length,
+    rejected: projects.filter(p => p.status === 'REJECTED').length,
   }
 
   const visible = filter === 'all' ? projects
-    : filter === 'pending' ? projects.filter(p => p.status?.toUpperCase() === 'DRAFT')
+    : filter === 'pending' ? projects.filter(p => p.status === 'DRAFT')
     : filter === 'live' ? projects.filter(isLive)
     : filter === 'featured' ? projects.filter(p => p.Featured === true)
-    : projects.filter(p => p.status?.toUpperCase() === 'REJECTED')
+    : projects.filter(p => p.status === 'REJECTED')
 
   const totalPages = Math.ceil(visible.length / pageSize)
   const paginated = visible.slice((page - 1) * pageSize, page * pageSize)
@@ -191,8 +207,8 @@ export default function AdminPage() {
               {paginated.map(p => {
                 const live = isLive(p)
                 const featured = p.Featured === true
-                const isRejected = p.status?.toUpperCase() === 'REJECTED'
-                const isDraftOrRejected = p.status?.toUpperCase() === 'DRAFT' || isRejected
+                const isRejected = p.status === 'REJECTED'
+                const isDraftOrRejected = p.status === 'DRAFT' || isRejected
                 const { text, cls } = statusLabel(p.status, p.Featured)
                 const busy = actingId === p.id
                 return (
@@ -214,7 +230,7 @@ export default function AdminPage() {
                       <button
                         className="dash-row__edit"
                         style={{ color: 'var(--pop-blue)' }}
-                        onClick={() => setPending({ id: p.id, title: p.title, label: 'Approve', action: () => setStatus(p.id, null, 'approved') })}
+                        onClick={() => setPending({ id: p.id, title: p.title, label: 'Approve', action: () => setStatus(p.id, 'APPROVED', 'approved') })}
                         disabled={busy}
                       >
                         {busy ? '…' : '✓ Approve'}

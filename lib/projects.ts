@@ -80,7 +80,7 @@ export async function fetchProjects(): Promise<Project[]> {
   const { data, error } = await supabase
     .from('Projects')
     .select('*')
-    .or('status.is.null,and(status.neq.DRAFT,status.neq.REJECTED)')
+    .eq('status', 'APPROVED')
     .order('date', { ascending: false })
   if (error) throw new Error(error.message)
   return data ?? []

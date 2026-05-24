@@ -101,10 +101,10 @@ export default function SubmitPage() {
   useEffect(() => {
     const year = new Date().getFullYear()
     supabase.from('Projects').select('id', { count: 'exact', head: true })
-      .or('status.is.null,and(status.neq.DRAFT,status.neq.REJECTED)')
+      .eq('status', 'APPROVED')
       .then(({ count }) => setStatsTotal(count))
     supabase.from('Projects').select('id', { count: 'exact', head: true })
-      .or('status.is.null,and(status.neq.DRAFT,status.neq.REJECTED)')
+      .eq('status', 'APPROVED')
       .gte('date', `${year}-01-01`)
       .then(({ count }) => setStatsThisYear(count))
     supabase.from('profiles').select('id', { count: 'exact', head: true })

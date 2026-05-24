@@ -88,9 +88,13 @@ export default function Nav() {
               <>
                 <Link href="/dashboard" className="nav__auth nav__user-name" onClick={close}>{displayName}</Link>
                 <button className="nav__auth" onClick={() => { signOut(); close() }}>Sign out</button>
+                <Link href="/submit" className="nav__submit-link" onClick={close}>Submit a project</Link>
               </>
             ) : (
-              <Link href="/login" className="nav__auth" onClick={close}>Sign in</Link>
+              <>
+                <Link href="/login" className="nav__auth" onClick={close}>Sign in</Link>
+                <Link href="/submit" className="nav__submit-link" onClick={close}>Submit a project</Link>
+              </>
             )
           )}
         </div>
@@ -110,6 +114,7 @@ export default function Nav() {
               )}
               <Link href="/dashboard" className="nav__auth nav__user-name" onClick={close}>{displayName}</Link>
               <button className="nav__auth" onClick={() => { signOut(); close() }}>Sign out</button>
+              <Link href="/submit" className="nav__submit-link" onClick={close}>Submit a project</Link>
             </>
           ) : (
             <>
