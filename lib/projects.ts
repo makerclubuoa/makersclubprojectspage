@@ -89,6 +89,11 @@ export async function fetchMakerDisplay(project: Project): Promise<{ names: stri
     }
   }
 
+  // If the submitter profile doesn't exist yet, fall back to the stored names
+  if (names.length === 0 && anonCount === 0) {
+    return { names: project.makers ?? [], anonCount: project.anon_count ?? 0 }
+  }
+
   return { names, anonCount }
 }
 
