@@ -1554,7 +1554,8 @@ button {
 
 /* Filter bar */
 .filterbar {
-  z-index: 40;
+  position: relative;
+  z-index: 10;
   background: var(--paper);
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
@@ -1662,6 +1663,7 @@ button {
 /* CustomSelect */
 .csel {
   position: relative;
+  z-index: 1;
   width: 100%;
 }
 .csel__trigger {
