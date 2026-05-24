@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:unsplash.com)",
+      "Bash(node -e ' *)",
+      "Bash(npm install *)",
+      "Bash(python *)",
+      "WebFetch(domain:makeuoa.nz)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
