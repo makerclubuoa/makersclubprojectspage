@@ -6,6 +6,11 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "vars": {
+    "GHOST_URL": "https://makeuoa.nz",
+    "RESEND_FROM": "MAKE_UOA <noreply@makeuoa.nz>",
+    "NEXT_PUBLIC_BASE_URL": "https://projects.makeuoa.nz"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
