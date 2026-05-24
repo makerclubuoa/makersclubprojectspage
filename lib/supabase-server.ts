@@ -18,6 +18,8 @@ function makeAdmin(): SupabaseClient {
 
 export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    return (makeAdmin() as never)[prop]
+    const client = makeAdmin()
+    const val = (client as never)[prop]
+    return typeof val === 'function' ? (val as Function).bind(client) : val
   },
 })
