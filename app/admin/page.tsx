@@ -38,6 +38,7 @@ export default function AdminPage() {
   } | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -147,11 +148,19 @@ export default function AdminPage() {
     rejected: projects.filter(p => p.status === 'REJECTED').length,
   }
 
-  const visible = filter === 'all' ? projects
+  const filtered = filter === 'all' ? projects
     : filter === 'pending' ? projects.filter(p => p.status === 'DRAFT')
     : filter === 'live' ? projects.filter(isLive)
     : filter === 'featured' ? projects.filter(p => p.Featured === true)
     : projects.filter(p => p.status === 'REJECTED')
+
+  const q = search.trim().toLowerCase()
+  const visible = q
+    ? filtered.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        (p.makers ?? []).some(m => m.toLowerCase().includes(q))
+      )
+    : filtered
 
   const totalPages = Math.ceil(visible.length / pageSize)
   const paginated = visible.slice((page - 1) * pageSize, page * pageSize)
@@ -183,6 +192,14 @@ export default function AdminPage() {
               Error: {actionError}
             </div>
           )}
+
+          <input
+            type="text"
+            placeholder="Search by project or maker name…"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
+            style={{ width: '100%', marginBottom: 16, padding: '8px 12px', background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontSize: 13, color: 'var(--ink)' }}
+          />
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap' }}>
             {(['all', 'pending', 'live', 'featured', 'rejected'] as Filter[]).map(f => (
