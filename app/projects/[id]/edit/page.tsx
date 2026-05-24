@@ -415,7 +415,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                     const alreadyIn = coMakers.some(m => m.display_name === myName)
                     return !alreadyIn && myName ? (
                       <button type="button" className="makers-chip makers-chip--add"
-                        onClick={() => setCoMakers(prev => [...prev, { id: `name:${myName}`, display_name: myName }])}>
+                        onClick={() => setCoMakers(prev => [...prev, { id: `name:${myName}`, display_name: myName, email: null, public_name: null, name_preference: null, credit_consented: true }])}>
                         + Add me
                       </button>
                     ) : null
