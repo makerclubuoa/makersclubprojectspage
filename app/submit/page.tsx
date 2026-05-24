@@ -438,8 +438,9 @@ export default function SubmitPage() {
                         ))}
                       </div>
                       <p style={{ fontSize: 11, color: 'var(--muted)', margin: '6px 0 10px', lineHeight: 1.5 }}>
-                        You&rsquo;ll appear as <strong style={{ color: 'var(--ink)' }}>{resolvePublicName({ display_name: profile?.display_name, public_name: profile?.public_name, name_preference: profile?.name_preference })}</strong>.
-                        Co-makers without credit enabled in their profile will show as anonymous.
+                        You&rsquo;ll appear as <strong style={{ color: 'var(--ink)' }}>{resolvePublicName({ display_name: profile?.display_name, public_name: profile?.public_name, name_preference: profile?.name_preference })}</strong>.{' '}
+                        Co-makers without credit enabled will show as anonymous.{' '}
+                        <a href="/dashboard" style={{ color: 'var(--ink)', textDecoration: 'underline' }}>Change your name or privacy settings →</a>
                       </p>
                       <div className="makers-search">
                         <input type="text" placeholder="Search for a co-maker by name or username… They must have an account to be added" autoComplete="off"
