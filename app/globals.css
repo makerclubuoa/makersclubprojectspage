@@ -68,21 +68,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Subtle drafting grid texture */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: linear-gradient(to right, var(--rule-2) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--rule-2) 1px, transparent 1px);
-  background-size: 64px 64px;
-  background-position: -1px -1px;
-  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
-  opacity: 0.55;
-}
 
 a {
   color: inherit;
