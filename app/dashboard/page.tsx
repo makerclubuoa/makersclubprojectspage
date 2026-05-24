@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const [creditConsented, setCreditConsented] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
+  const [usernameError, setUsernameError] = useState<string | null>(null)
   const [showNameModal, setShowNameModal] = useState(false)
   const [pendingPreference, setPendingPreference] = useState<'name' | 'public_name' | null>(null)
 
@@ -108,10 +109,24 @@ export default function DashboardPage() {
 
   async function saveProfile() {
     if (!user) return
+    setUsernameError(null)
+    const trimmed = publicName.trim()
+    if (trimmed) {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('public_name', trimmed)
+        .neq('id', user.id)
+        .maybeSingle()
+      if (existing) {
+        setUsernameError('That username is already taken.')
+        return
+      }
+    }
     setProfileSaving(true)
     setProfileSaved(false)
     await supabase.from('profiles').update({
-      public_name: publicName.trim() || null,
+      public_name: trimmed || null,
       name_preference: namePreference,
       credit_consented: creditConsented,
     }).eq('id', user.id)
@@ -212,8 +227,11 @@ export default function DashboardPage() {
                   type="text"
                   placeholder="e.g. maker_ib, tinkerer42, or leave blank"
                   value={publicName}
-                  onChange={e => { setPublicName(e.target.value); if (namePreference === 'public_name' && !e.target.value.trim()) setNamePreference('name') }}
+                  onChange={e => { setPublicName(e.target.value); setUsernameError(null); if (namePreference === 'public_name' && !e.target.value.trim()) setNamePreference('name') }}
                 />
+                {usernameError && (
+                  <span style={{ fontSize: 11, color: 'var(--error, #e53)', marginTop: 4 }}>{usernameError}</span>
+                )}
               </div>
 
               <div className="field">
