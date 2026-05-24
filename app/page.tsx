@@ -4,10 +4,14 @@ import ProjectsSection from './components/ProjectsSection'
 import Footer from './components/Footer'
 import CTACarousel from './components/CTACarousel'
 import Link from 'next/link'
-import { fetchProjects } from '@/lib/projects'
+import { fetchProjects, fetchMakerDisplay } from '@/lib/projects'
 
 export default async function ProjectsPage() {
   const projects = await fetchProjects()
+
+  const makerDisplays = Object.fromEntries(
+    await Promise.all(projects.map(async p => [p.id, await fetchMakerDisplay(p)]))
+  )
 
   const allTools = (() => {
     const s = new Set<string>()
@@ -19,7 +23,7 @@ export default async function ProjectsPage() {
     <>
       <Nav />
       <Suspense fallback={null}>
-        <ProjectsSection projects={projects} allTools={allTools} />
+        <ProjectsSection projects={projects} allTools={allTools} makerDisplays={makerDisplays} />
       </Suspense>
       <div className="footer__cta">
         <div className="container footer__cta-inner">

@@ -32,10 +32,12 @@ export default function ProjectCard({
   project,
   onCatClick,
   onToolClick,
+  makerDisplay,
 }: {
   project: Project
   onCatClick?: (cat: string) => void
   onToolClick?: (tool: string) => void
+  makerDisplay?: { names: string[]; anonCount: number }
 }) {
   const router = useRouter()
   const color = categoryColor(project.category)
@@ -86,17 +88,22 @@ export default function ProjectCard({
         </div>
         <div className="card__meta">
           <span className="card__makers">
-            <span className="avatar-stack">
-              {Array.from({ length: (project.makers ?? []).length + (project.anon_count ?? 0) }).map((_, i) => (
-                <span key={i} className="avatar" style={{ background: color }} />
-              ))}
-            </span>
-            <span>
-              {[
-                ...(project.makers ?? []),
-                ...((project.anon_count ?? 0) > 0 ? [`+${project.anon_count} others`] : []),
-              ].join(' + ')}
-            </span>
+            {(() => {
+              const names = makerDisplay ? makerDisplay.names : (project.makers ?? [])
+              const anon = makerDisplay ? makerDisplay.anonCount : (project.anon_count ?? 0)
+              const total = names.length + anon
+              const label = [...names, ...(anon > 0 ? [`+${anon} others`] : [])].join(' + ')
+              return (
+                <>
+                  <span className="avatar-stack">
+                    {Array.from({ length: total }).map((_, i) => (
+                      <span key={i} className="avatar" style={{ background: color }} />
+                    ))}
+                  </span>
+                  <span>{label}</span>
+                </>
+              )
+            })()}
           </span>
           <span>
             {project.date ? formatDate(project.date) : ''}

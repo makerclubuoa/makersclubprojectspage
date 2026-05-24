@@ -27,9 +27,11 @@ function applyFilters(
 export default function ProjectsSection({
   projects,
   allTools,
+  makerDisplays = {},
 }: {
   projects: Project[]
   allTools: string[]
+  makerDisplays?: Record<string, { names: string[]; anonCount: number }>
 }) {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -203,7 +205,7 @@ export default function ProjectsSection({
             <>
               <div className="bento" ref={gridRef}>
                 {paginated.map((p, i) => (
-                  <ProjectCard key={p.id} project={p} onCatClick={handleCatClick} onToolClick={handleToolClick} />
+                  <ProjectCard key={p.id} project={p} onCatClick={handleCatClick} onToolClick={handleToolClick} makerDisplay={makerDisplays[p.id]} />
                 ))}
               </div>
               <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
