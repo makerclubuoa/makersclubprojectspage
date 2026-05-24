@@ -10,10 +10,11 @@ export default function Nav() {
   const { user, profile, loading, signOut } = useAuth()
 
   useEffect(() => {
-    const mode = document.body.dataset.mode
+    const saved = localStorage.getItem('theme')
     const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const isDark = mode === 'dark' || (!mode && sysDark)
+    const isDark = saved === 'dark' || (!saved && sysDark)
     setDark(isDark)
+    document.body.dataset.mode = isDark ? 'dark' : 'light'
     document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
   }, [])
 
@@ -28,10 +29,12 @@ export default function Nav() {
     setDark(next)
     document.body.dataset.mode = next ? 'dark' : 'light'
     document.documentElement.style.colorScheme = next ? 'dark' : 'light'
+    localStorage.setItem('theme', next ? 'dark' : 'light')
   }
 
   function close() { setMenuOpen(false) }
 
+  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'makerclubuoa@gmail.com').split(',').map(e => e.trim())
   const displayName = profile?.display_name ?? user?.email?.split('@')[0] ?? ''
 
   const SunIcon = () => (
@@ -102,7 +105,7 @@ export default function Nav() {
         {!loading && (
           user ? (
             <>
-              {user.email === 'makerclubuoa@gmail.com' && (
+              {adminEmails.includes(user.email ?? '') && (
                 <Link href="/admin" className="nav__auth" onClick={close}>Admin</Link>
               )}
               <Link href="/dashboard" className="nav__auth nav__user-name" onClick={close}>{displayName}</Link>

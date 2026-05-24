@@ -77,11 +77,13 @@ export default function SuggestSection() {
         Submissions go to the committee inbox. We review everything and reach out if something
         looks promising — especially if you&rsquo;re keen to help run it.
       </p>
-      <div className="suggest__hints">
-        {HINTS.map(h => (
-          <button key={h} onClick={() => setIdea(h)}>{h}</button>
-        ))}
-      </div>
+      {!loading && user && (
+        <div className="suggest__hints">
+          {HINTS.map(h => (
+            <button key={h} onClick={() => setIdea(h)}>{h}</button>
+          ))}
+        </div>
+      )}
     </div>
   )
 

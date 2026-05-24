@@ -1,9 +1,9 @@
+import { Suspense } from 'react'
 import Nav from './components/Nav'
-import Hero from './components/Hero'
 import ProjectsSection from './components/ProjectsSection'
 import SuggestSection from './components/SuggestSection'
 import Footer from './components/Footer'
-import CursorTrail from './components/CursorTrail'
+import CTACarousel from './components/CTACarousel'
 import Link from 'next/link'
 import { fetchProjects } from '@/lib/projects'
 
@@ -18,10 +18,10 @@ export default async function ProjectsPage() {
 
   return (
     <>
-      <CursorTrail />
       <Nav />
-      <Hero projectCount={projects.length} projects={projects} />
-      <ProjectsSection projects={projects} allTools={allTools} />
+      <Suspense fallback={null}>
+        <ProjectsSection projects={projects} allTools={allTools} />
+      </Suspense>
       <div className="footer__cta">
         <div className="container footer__cta-inner">
           <div className="footer__cta-text">
@@ -29,11 +29,13 @@ export default async function ProjectsPage() {
             <p>Submissions are open all the time. Half-finished, broken, or weird is welcome — that&rsquo;s usually where the good stuff is.</p>
             <Link href="/submit" className="btn btn--dark">Submit a project</Link>
           </div>
-          <div className="footer__cta-grid">
-            {projects.filter(p => p.image).slice(0, 4).map(p => (
-              <img key={p.id} src={p.image!} alt={p.title} className="footer__cta-img" />
-            ))}
-          </div>
+          <CTACarousel
+            images={projects.filter(p => p.image).slice(0, 8).map(p => ({
+              id: p.id,
+              src: p.image!,
+              alt: p.title,
+            }))}
+          />
         </div>
       </div>
       <SuggestSection />

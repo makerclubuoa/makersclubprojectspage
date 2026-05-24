@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { CATEGORIES, type Project } from '@/lib/projects'
 import Pagination from '@/app/components/Pagination'
 import CustomSelect from '@/app/components/CustomSelect'
@@ -30,14 +31,29 @@ export default function ProjectsSection({
   projects: Project[]
   allTools: string[]
 }) {
-  const [cat, setCat] = useState('All')
-  const [tool, setTool] = useState('All tools')
-  const [sort, setSort] = useState('newest')
-  const [featured, setFeatured] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [cat, setCat] = useState(() => searchParams.get('cat') ?? 'All')
+  const [tool, setTool] = useState(() => searchParams.get('tool') ?? 'All tools')
+  const [sort, setSort] = useState(() => searchParams.get('sort') ?? 'newest')
+  const [featured, setFeatured] = useState(() => searchParams.get('featured') === '1')
   const [bouncingPill, setBouncingPill] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(() => parseInt(searchParams.get('page') ?? '1', 10))
   const [pageSize, setPageSize] = useState(12)
   const gridRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (cat !== 'All') params.set('cat', cat)
+    if (tool !== 'All tools') params.set('tool', tool)
+    if (sort !== 'newest') params.set('sort', sort)
+    if (featured) params.set('featured', '1')
+    if (page > 1) params.set('page', String(page))
+    const qs = params.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+  }, [cat, tool, sort, featured, page])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -104,8 +120,20 @@ export default function ProjectsSection({
 
   return (
     <>
+      {/* Grid */}
+      <section className="grid-section grid-section--title" id="projects">
+        <div className="container">
+          <div className="grid-header">
+            <h3>{tool !== 'All tools' ? tool : cat === 'All' ? 'All Projects' : cat}</h3>
+            <div className="meta">
+              <b>{String(filtered.length).padStart(2, '0')}</b>&nbsp;·&nbsp;results
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Filter bar */}
-      <div className="filterbar" id="projects">
+      <div className="filterbar">
         <div className="container">
           <div className="filterbar__row">
             <div className="pills">
@@ -156,15 +184,9 @@ export default function ProjectsSection({
         </div>
       </div>
 
-      {/* Grid */}
+      {/* Cards */}
       <section className="grid-section">
         <div className="container">
-          <div className="grid-header">
-            <h3>{tool !== 'All tools' ? tool : cat === 'All' ? 'All projects' : cat}</h3>
-            <div className="meta">
-              <b>{String(filtered.length).padStart(2, '0')}</b>&nbsp;·&nbsp;results
-            </div>
-          </div>
 
           {filtered.length === 0 ? (
             <div className="empty-state">

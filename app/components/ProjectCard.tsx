@@ -80,6 +80,9 @@ export default function ProjectCard({
               {t}
             </button>
           ))}
+          {(project.tools ?? []).length > 3 && (
+            <span className="tag tag--more">+{(project.tools ?? []).length - 3}</span>
+          )}
         </div>
         <div className="card__meta">
           <span className="card__makers">

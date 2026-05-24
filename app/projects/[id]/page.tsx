@@ -169,7 +169,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   <a className="btn btn--ghost" href="#bom">BOM ↓</a>
                 )}
                 <Link href="/#projects" className="btn btn--ghost" style={{ marginLeft: 'auto' }}>
-                  ← All projects
+                  ← All Projects
                 </Link>
               </div>
             </div>

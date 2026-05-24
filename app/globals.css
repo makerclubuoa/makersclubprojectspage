@@ -1783,11 +1783,17 @@ button {
 .grid-section {
   padding: 40px 0 80px;
 }
+.grid-section--title {
+  padding-top: 97px;
+  padding-bottom: 24px;
+}
 .grid-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: 20px;
+  user-select: none;
+  cursor: default;
 }
 .grid-header h3 {
   font-family: inherit;
@@ -1997,6 +2003,10 @@ button {
   background: var(--ink);
   color: var(--paper);
 }
+.tag--more {
+  color: var(--muted);
+  pointer-events: none;
+}
 .badge--btn {
   border: none;
   font: inherit;
@@ -2045,11 +2055,7 @@ button {
   padding: 80px 0;
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--paper) 100%, transparent),
-    color-mix(in oklab, var(--paper-2) 100%, transparent)
-  );
+  background: var(--paper-2);
 }
 .suggest .cross--tl {
   left: 24px;
@@ -2316,17 +2322,46 @@ button {
 .btn--dark:hover {
   background: #3a3a3a;
 }
-.footer__cta-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
 .footer__cta-img {
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
   border-radius: 10px;
+  display: block;
+}
+
+/* CTA carousel */
+.cta-carousel {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  height: 360px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+.cta-carousel__col {
+  flex: 1;
+  overflow: hidden;
+}
+.cta-carousel__track {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@keyframes scroll-up {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+@keyframes scroll-down {
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0); }
+}
+.cta-carousel__track--up {
+  animation: scroll-up 12s linear infinite;
+}
+.cta-carousel__track--down {
+  animation: scroll-down 12s linear infinite;
 }
 @media (max-width: 768px) {
   .footer__cta-inner {
@@ -2336,8 +2371,9 @@ button {
   .footer__cta-text {
     flex: none;
   }
-  .footer__cta-grid {
+  .cta-carousel {
     width: 100%;
+    height: 240px;
   }
 }
 .footer__main {
@@ -2363,9 +2399,9 @@ button {
   font-size: 16px;
 }
 .footer__brand-logo img {
-  width: 28px;
-  height: 28px;
-  border-radius: 5px;
+  height: 32px;
+  width: auto;
+  display: block;
 }
 .footer__tagline {
   font-size: 14px;

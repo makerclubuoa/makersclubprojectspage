@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 export default function Footer() {
@@ -13,8 +12,10 @@ export default function Footer() {
             {/* Brand + tagline + socials */}
             <div className="footer__brand">
               <a className="footer__brand-logo" href="https://makeuoa.nz">
-                <Image src="/logo.png" alt="" width={28} height={28} style={{ borderRadius: 5 }} />
-                <span>UoA Maker Club</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/aumc-logo.svg" alt="UoA Maker Club" className="nav__logo-light" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo_h_w.svg" alt="UoA Maker Club" className="nav__logo-dark" />
               </a>
               <p className="footer__tagline">A community of creators.</p>
               <div className="footer__socials">
