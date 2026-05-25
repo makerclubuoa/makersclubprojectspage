@@ -755,11 +755,11 @@ export default function SubmitPage() {
                     <div className="submit-notice">
                       <p className="submit-notice__line">
                         <span className="submit-notice__icon">⚠</span>
-                        <strong>Your submission will be reviewed before it goes live.</strong> We check submissions every Tuesday — if anything&rsquo;s unclear we&rsquo;ll reach out on the contact you provided.
+                        <strong>Your submission will be reviewed before it goes live.</strong> 
                       </p>
                       <p className="submit-notice__line">
                         <span className="submit-notice__icon">◈</span>
-                        By submitting you consent to your project and name being displayed publicly on the Makers Club archive.
+                        By submitting you consent to your project and name or username being displayed publicly on the Makers Club archive. Your preference can be changed in your profile settings. If you have any questions or concerns, please <a href="/contact" style={{ color: 'var(--ink)', textDecoration: 'underline' }}>contact us</a>.
                       </p>
                     </div>
                     <div className="form__actions">
