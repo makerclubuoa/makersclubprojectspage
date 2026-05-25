@@ -503,16 +503,19 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                       )}
                     </span>
                   ))}
-                  {(() => {
-                    const myName = profile?.display_name ?? user?.email?.split('@')[0] ?? ''
-                    const alreadyIn = coMakers.some(m => m.display_name === myName)
-                    return !alreadyIn && myName ? (
-                      <button type="button" className="makers-chip makers-chip--add"
-                        onClick={() => setCoMakers(prev => [...prev, { id: `name:${myName}`, display_name: myName, email: null, public_name: null, name_preference: null, credit_consented: true }])}>
-                        + Add me
-                      </button>
-                    ) : null
-                  })()}
+                  {!coMakers.some(m => m.id === user?.id) && (
+                    <button type="button" className="makers-chip makers-chip--add"
+                      onClick={() => setCoMakers(prev => [...prev, {
+                        id: user!.id,
+                        display_name: profile?.display_name ?? user!.email?.split('@')[0] ?? '',
+                        email: profile?.email ?? user!.email ?? null,
+                        public_name: profile?.public_name ?? null,
+                        name_preference: profile?.name_preference ?? null,
+                        credit_consented: profile?.credit_consented ?? true,
+                      }])}>
+                      + Add me
+                    </button>
+                  )}
                 </div>
                 <div className="makers-search">
                   <input type="text" placeholder="Search for a maker by name… They must have an account to be added" autoComplete="off"
