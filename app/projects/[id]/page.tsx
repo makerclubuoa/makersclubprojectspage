@@ -383,7 +383,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 </section>
               )}
 
-              <CommentsSection projectId={project.id} projectTitle={project.title} sectionNum={commentsNum} />
+              <CommentsSection projectId={project.id} projectTitle={project.title} projectOwnerId={project.submitted_by ?? null} sectionNum={commentsNum} />
 
               {/* Related */}
               {hasRelated && (

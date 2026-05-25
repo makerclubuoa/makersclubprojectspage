@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('comments')
-    .select('id, author_name, body, created_at')
+    .select('id, user_id, author_name, body, created_at')
     .eq('project_id', projectId)
     .order('created_at', { ascending: true })
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   const { data: comment, error: insertError } = await supabaseAdmin
     .from('comments')
     .insert({ project_id, user_id: user.id, author_name: authorName, body: body.trim() })
-    .select('id, author_name, body, created_at')
+    .select('id, user_id, author_name, body, created_at')
     .single()
 
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })

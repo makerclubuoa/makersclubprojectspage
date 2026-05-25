@@ -7,6 +7,7 @@ import { useAuth } from '@/app/components/AuthProvider'
 
 interface Comment {
   id: string
+  user_id: string
   author_name: string
   body: string
   created_at: string
@@ -15,14 +16,17 @@ interface Comment {
 interface Props {
   projectId: string
   projectTitle: string
+  projectOwnerId: string | null
   sectionNum: string
 }
+
+const ADMIN_EMAIL = 'makerclubuoa@gmail.com'
 
 function fmtCommentDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function CommentsSection({ projectId, projectTitle, sectionNum }: Props) {
+export default function CommentsSection({ projectId, projectTitle, projectOwnerId, sectionNum }: Props) {
   const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,6 +36,7 @@ export default function CommentsSection({ projectId, projectTitle, sectionNum }:
   const [showSignIn, setShowSignIn] = useState(false)
   const [reported, setReported] = useState<Set<string>>(new Set())
   const [confirmReport, setConfirmReport] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -65,6 +70,19 @@ export default function CommentsSection({ projectId, projectTitle, sectionNum }:
       setSubmitError(data.error ?? 'Failed to post comment')
     }
     setSubmitting(false)
+  }
+
+  async function handleDelete(commentId: string) {
+    if (confirmDelete !== commentId) { setConfirmDelete(commentId); return }
+    setConfirmDelete(null)
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    if (!token) return
+    const res = await fetch(`/api/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.ok) setComments(prev => prev.filter(c => c.id !== commentId))
   }
 
   async function handleReport(comment: Comment) {
@@ -103,13 +121,33 @@ export default function CommentsSection({ projectId, projectTitle, sectionNum }:
           <p className="pd-comments__empty">No comments yet. Be the first!</p>
         )}
 
-        {comments.map(c => (
+        {comments.map(c => {
+          const canDelete = !!user && (
+            c.user_id === user.id ||
+            user.id === projectOwnerId ||
+            user.email === ADMIN_EMAIL
+          )
+          return (
           <div key={c.id} className="pd-comment">
             <div className="pd-comment__meta">
               <span className="pd-comment__author">{c.author_name}</span>
               <span className="pd-comment__date">{fmtCommentDate(c.created_at)}</span>
               <span style={{ flex: 1 }} />
-              {reported.has(c.id) ? (
+              {canDelete && (
+                confirmDelete === c.id ? (
+                  <span className="pd-comment__confirm">
+                    Delete?{' '}
+                    <button onClick={() => handleDelete(c.id)}>Yes</button>
+                    {' / '}
+                    <button onClick={() => setConfirmDelete(null)}>No</button>
+                  </span>
+                ) : (
+                  <button className="pd-comment__report" onClick={() => handleDelete(c.id)}>
+                    Delete
+                  </button>
+                )
+              )}
+              {!canDelete && (reported.has(c.id) ? (
                 <span className="pd-comment__reported">Reported</span>
               ) : confirmReport === c.id ? (
                 <span className="pd-comment__confirm">
@@ -122,11 +160,12 @@ export default function CommentsSection({ projectId, projectTitle, sectionNum }:
                 <button className="pd-comment__report" onClick={() => handleReport(c)}>
                   Report
                 </button>
-              )}
+              ))}
             </div>
             <p className="pd-comment__body">{c.body}</p>
           </div>
-        ))}
+          )
+        })}
 
         <form className="pd-comment-form" onSubmit={handleSubmit}>
           <textarea
