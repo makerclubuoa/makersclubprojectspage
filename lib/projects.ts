@@ -70,23 +70,30 @@ export async function fetchMakerDisplay(project: Project): Promise<{ names: stri
   }
 
   const names: string[] = []
+  let anonCount = 0
 
   const { data: submitter } = await supabase
     .from('profiles')
-    .select('display_name, public_name, name_preference')
+    .select('display_name, public_name, name_preference, credit_consented')
     .eq('id', project.submitted_by)
     .single()
-  if (submitter) names.push(resolvePublicName(submitter))
+  if (submitter) {
+    if (submitter.credit_consented) names.push(resolvePublicName(submitter))
+    else anonCount++
+  }
 
-  let anonCount = 0
   if (project.maker_ids && project.maker_ids.length > 0) {
-    const { data: coMakers } = await supabase
-      .from('profiles')
-      .select('display_name, public_name, name_preference, credit_consented')
-      .in('id', project.maker_ids)
-    for (const p of coMakers ?? []) {
-      if (p.credit_consented) names.push(resolvePublicName(p))
-      else anonCount++
+    // Exclude submitted_by — already handled above
+    const coMakerIds = project.maker_ids.filter(id => id !== project.submitted_by)
+    if (coMakerIds.length > 0) {
+      const { data: coMakers } = await supabase
+        .from('profiles')
+        .select('display_name, public_name, name_preference, credit_consented')
+        .in('id', coMakerIds)
+      for (const p of coMakers ?? []) {
+        if (p.credit_consented) names.push(resolvePublicName(p))
+        else anonCount++
+      }
     }
   }
 
