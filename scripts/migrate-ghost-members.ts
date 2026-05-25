@@ -29,7 +29,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE) {
   process.exit(1)
 }
 
-const csvPath = process.argv[2] ?? resolve(process.cwd(), 'scripts/members.csv')
+const csvPath = process.argv.find(a => !a.startsWith('--') && a.endsWith('.csv')) ?? resolve(process.cwd(), 'scripts/members.csv')
 
 let csvContent: string
 try {
@@ -65,9 +65,20 @@ function splitCsvLine(line: string): string[] {
   return result
 }
 
-const rows = parseCsv(csvContent)
+const sinceArg = process.argv.find(a => a.startsWith('--since='))
+const sinceDate = sinceArg ? new Date(sinceArg.slice(8)) : null
+
+let rows = parseCsv(csvContent)
 console.log(`Parsed ${rows.length} rows from CSV`)
 console.log(`Columns: ${Object.keys(rows[0] ?? {}).join(', ')}`)
+
+if (sinceDate) {
+  rows = rows.filter(r => {
+    const d = new Date(r.created_at ?? '')
+    return !isNaN(d.getTime()) && d >= sinceDate
+  })
+  console.log(`Filtered to ${rows.length} rows created after ${sinceDate.toISOString()}`)
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE)
 
@@ -78,7 +89,6 @@ async function main() {
     // Only use these three fields from the CSV — everything else is ignored
     const email        = (row.email      ?? '').toLowerCase().trim()
     const display_name = (row.name       ?? '').trim() || email.split('@')[0]
-    const joined_at    = (row.created_at ?? '').trim() || new Date().toISOString()
 
     if (!email) continue
 

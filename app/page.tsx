@@ -21,11 +21,16 @@ export default async function ProjectsPage() {
     return ['All tools', ...[...s].sort()]
   })()
 
+  const allCategories = [
+    'All',
+    ...[...new Set(projects.map(p => p.category).filter(Boolean) as string[])].sort(),
+  ]
+
   return (
     <>
       <Nav />
       <Suspense fallback={null}>
-        <ProjectsSection projects={projects} allTools={allTools} makerDisplays={makerDisplays} />
+        <ProjectsSection projects={projects} allTools={allTools} allCategories={allCategories} makerDisplays={makerDisplays} />
       </Suspense>
       <div className="footer__cta">
         <div className="container footer__cta-inner">

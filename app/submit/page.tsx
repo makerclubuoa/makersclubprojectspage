@@ -5,12 +5,10 @@ import Link from 'next/link'
 import Nav from '@/app/components/Nav'
 import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
-import { CATEGORIES, resolvePublicName } from '@/lib/projects'
+import { resolvePublicName } from '@/lib/projects'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import CustomSelect from '@/app/components/CustomSelect'
-
-const SUBMIT_CATEGORIES = CATEGORIES.filter(c => c !== 'All')
 
 const TOOL_SUGGESTIONS = [
   'Arduino', 'Raspberry Pi', '3D printer', 'Laser cutter', 'Soldering iron',
@@ -51,7 +49,8 @@ export default function SubmitPage() {
   const [blurb, setBlurb]       = useState('')
 
   // Basic optional
-  const [category, setCategory]             = useState(SUBMIT_CATEGORIES[0])
+  const [categories, setCategories]         = useState<string[]>([])
+  const [category, setCategory]             = useState('')
   const [otherCategory, setOtherCategory]   = useState('')
   const [description, setDescription]       = useState('')
   const [startDate, setStartDate]           = useState('')
@@ -115,6 +114,12 @@ export default function SubmitPage() {
       .then(({ count }) => setStatsThisYear(count))
     supabase.from('profiles').select('id', { count: 'exact', head: true })
       .then(({ count }) => setMemberTotal(count))
+    supabase.from('Projects').select('category').eq('status', 'APPROVED')
+      .then(({ data }) => {
+        const cats = [...new Set((data ?? []).map(r => r.category).filter(Boolean))].sort() as string[]
+        setCategories(cats)
+        setCategory(prev => prev || cats[0] || '')
+      })
   }, [])
 
   useEffect(() => {
@@ -445,7 +450,7 @@ export default function SubmitPage() {
                       <CustomSelect
                         value={category}
                         onChange={v => { setCategory(v); if (v !== 'Other') setOtherCategory('') }}
-                        options={[...SUBMIT_CATEGORIES.map(c => ({ value: c, label: c })), { value: 'Other', label: 'Other…' }]}
+                        options={[...categories.map(c => ({ value: c, label: c })), { value: 'Other', label: 'Other…' }]}
                       />
                       {category === 'Other' && (
                         <input type="text" placeholder="Describe the category"

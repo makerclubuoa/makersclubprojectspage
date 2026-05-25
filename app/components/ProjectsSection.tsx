@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { CATEGORIES, type Project } from '@/lib/projects'
+import { type Project } from '@/lib/projects'
 import Pagination from '@/app/components/Pagination'
 import CustomSelect from '@/app/components/CustomSelect'
 import ProjectCard from '@/app/components/ProjectCard'
@@ -27,10 +27,12 @@ function applyFilters(
 export default function ProjectsSection({
   projects,
   allTools,
+  allCategories,
   makerDisplays = {},
 }: {
   projects: Project[]
   allTools: string[]
+  allCategories: string[]
   makerDisplays?: Record<string, { names: string[]; anonCount: number }>
 }) {
   const searchParams = useSearchParams()
@@ -139,7 +141,7 @@ export default function ProjectsSection({
         <div className="container">
           <div className="filterbar__row">
             <div className="pills">
-              {CATEGORIES.map(c => (
+              {allCategories.map(c => (
                 <button
                   key={c}
                   className={`pill${c === cat ? ' is-active is-gradient' : ''}${bouncingPill === c ? ' is-bouncing' : ''}`}
