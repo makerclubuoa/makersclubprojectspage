@@ -92,7 +92,7 @@ export default function ProjectCard({
               const names = makerDisplay ? makerDisplay.names : (project.makers ?? [])
               const anon = makerDisplay ? makerDisplay.anonCount : (project.anon_count ?? 0)
               const total = names.length + anon
-              const label = [...names, ...(anon > 0 ? [`+${anon} others`] : [])].join(' + ')
+              const label = [...names, ...(anon > 0 ? [`+${anon} Makers`] : [])].join(' + ')
               return (
                 <>
                   <span className="avatar-stack">
