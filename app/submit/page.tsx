@@ -752,8 +752,17 @@ export default function SubmitPage() {
                         {submitError}
                       </p>
                     )}
+                    <div className="submit-notice">
+                      <p className="submit-notice__line">
+                        <span className="submit-notice__icon">⚠</span>
+                        <strong>Your submission will be reviewed before it goes live.</strong> We check submissions every Tuesday — if anything&rsquo;s unclear we&rsquo;ll reach out on the contact you provided.
+                      </p>
+                      <p className="submit-notice__line">
+                        <span className="submit-notice__icon">◈</span>
+                        By submitting you consent to your project and name being displayed publicly on the Makers Club archive.
+                      </p>
+                    </div>
                     <div className="form__actions">
-                      <span className="small">We&rsquo;ll review within a couple of days and add it to the archive.</span>
                       <button className="btn btn--gradient" onClick={handleSubmit} disabled={submitting}>
                         {submitting ? 'Submitting…' : 'Submit it'} <span className="arr">→</span>
                       </button>
