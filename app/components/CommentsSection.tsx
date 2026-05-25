@@ -147,11 +147,11 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
                   </button>
                 )
               )}
-              {!canDelete && (reported.has(c.id) ? (
+              {reported.has(c.id) ? (
                 <span className="pd-comment__reported">Reported</span>
               ) : confirmReport === c.id ? (
                 <span className="pd-comment__confirm">
-                  Flag this comment?{' '}
+                  Flag?{' '}
                   <button onClick={() => handleReport(c)}>Yes</button>
                   {' / '}
                   <button onClick={() => setConfirmReport(null)}>No</button>
@@ -160,7 +160,7 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
                 <button className="pd-comment__report" onClick={() => handleReport(c)}>
                   Report
                 </button>
-              ))}
+              )}
             </div>
             <p className="pd-comment__body">{c.body}</p>
           </div>
