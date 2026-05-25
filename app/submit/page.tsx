@@ -91,6 +91,9 @@ export default function SubmitPage() {
   const [retroWins, setRetroWins]   = useState('')
   const [retroFixes, setRetroFixes] = useState('')
 
+  // Name visibility (mirrors credit_consented)
+  const [hideName, setHideName] = useState(false)
+
   // Submit state
   const [sent, setSent]             = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -116,6 +119,7 @@ export default function SubmitPage() {
 
   useEffect(() => {
     if (profile?.email && !contact) setContact(profile.email)
+    if (profile) setHideName(!(profile.credit_consented ?? true))
   }, [profile])
 
   useEffect(() => {
@@ -313,8 +317,10 @@ export default function SubmitPage() {
     setSubmitting(false)
     if (error) { setSubmitError(error.message); return }
 
-    // Submitting a project implies public credit consent
-    supabase.from('profiles').update({ credit_consented: true }).eq('id', user!.id)
+    // Persist consent preference change
+    if (profile && !hideName !== (profile.credit_consented ?? true)) {
+      supabase.from('profiles').update({ credit_consented: !hideName }).eq('id', user!.id)
+    }
 
     fetch('/api/notify', {
       method: 'POST',
@@ -758,12 +764,23 @@ export default function SubmitPage() {
                     <div className="submit-notice">
                       <p className="submit-notice__line">
                         <span className="submit-notice__icon">⚠</span>
-                        <strong>Your submission will be reviewed before it goes live.</strong> 
+                        <strong>Your submission will be reviewed before it goes live.</strong> We check submissions every Tuesday — if anything&rsquo;s unclear we&rsquo;ll reach out on the contact you provided.
                       </p>
                       <p className="submit-notice__line">
                         <span className="submit-notice__icon">◈</span>
-                        By submitting you consent to your project and name or username being displayed publicly on the Makers Club archive. Your preference can be changed in your profile settings. 
+                        By submitting you consent to your project being displayed publicly on the Makers Club archive.
                       </p>
+                      <label className="submit-notice__consent">
+                        <input
+                          type="checkbox"
+                          checked={hideName}
+                          onChange={e => setHideName(e.target.checked)}
+                        />
+                        <span>
+                          Hide my name on posts
+                          <small>Check to be listed anonymously. This updates your global name preference.</small>
+                        </span>
+                      </label>
                     </div>
                     <div className="form__actions">
                       <button className="btn btn--gradient" onClick={handleSubmit} disabled={submitting}>

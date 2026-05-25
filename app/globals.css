@@ -3331,3 +3331,29 @@ input[type='date'] {
   color: var(--accent);
   font-size: 13px;
 }
+
+.submit-notice__consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule);
+  margin-top: 4px;
+}
+.submit-notice__consent input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: auto;
+}
+.submit-notice__consent span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.submit-notice__consent small {
+  font-size: 11px;
+  color: var(--muted);
+}
