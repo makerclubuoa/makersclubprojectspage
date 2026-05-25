@@ -4,6 +4,7 @@ import Nav from '@/app/components/Nav'
 import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
 import LikeButton from '@/app/components/LikeButton'
+import CommentsSection from '@/app/components/CommentsSection'
 import { fetchProject, fetchProjects, fetchAllIds, fetchMakerDisplay, categoryColor } from '@/lib/projects'
 
 function fmtDate(iso: string, opts?: Intl.DateTimeFormatOptions) {
@@ -89,6 +90,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const retroNum    = hasRetro    ? sn() : null
   const kudosNum    = hasKudos    ? sn() : null
   const relatedNum  = hasRelated  ? sn() : null
+  const commentsNum = sn()
 
   return (
     <>
@@ -381,6 +383,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 </section>
               )}
 
+              <CommentsSection projectId={project.id} projectTitle={project.title} sectionNum={commentsNum} />
+
               {/* Related */}
               {hasRelated && (
                 <section className="pd-section" id="related">
@@ -429,6 +433,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     {hasRetro    && <a href="#retro">   <span className="ix">{retroNum}</span>    What we learned</a>}
                     {hasKudos    && <a href="#kudos">   <span className="ix">{kudosNum}</span>    Shout-outs</a>}
                     {hasRelated  && <a href="#related"> <span className="ix">{relatedNum}</span>  More archive</a>}
+                    <a href="#comments"><span className="ix">{commentsNum}</span>  Comments</a>
                   </div>
                 </div>
 

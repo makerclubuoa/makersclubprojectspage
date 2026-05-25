@@ -3186,3 +3186,113 @@ input[type='date'] {
     min-width: 0;
   }
 }
+
+/* ─── Comments section ──────────────────────────────── */
+.pd-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pd-comments__empty {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 24px;
+}
+.pd-comment {
+  border-top: 1px solid var(--rule);
+  padding: 16px 0;
+}
+.pd-comment:last-of-type {
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 28px;
+}
+.pd-comment__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.pd-comment__author {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--ink);
+}
+.pd-comment__date {
+  font-size: 11px;
+  color: var(--muted);
+}
+.pd-comment__report {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  letter-spacing: .04em;
+}
+.pd-comment__report:hover {
+  color: var(--pop-red);
+}
+.pd-comment__reported {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .04em;
+}
+.pd-comment__confirm {
+  font-size: 11px;
+  color: var(--ink-2);
+  letter-spacing: .02em;
+}
+.pd-comment__confirm button {
+  padding: 0;
+  font-size: 11px;
+  color: var(--pop-red);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.pd-comment__body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.pd-comment-form {
+  margin-top: 8px;
+}
+.pd-comment-form__input {
+  width: 100%;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: 14px/1.5 inherit;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.pd-comment-form__input:focus {
+  border-color: var(--accent);
+}
+.pd-comment-form__input[readonly] {
+  cursor: pointer;
+  opacity: 0.7;
+}
+.pd-comment-form__footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.pd-comment-form__count {
+  font-size: 11px;
+  color: var(--muted);
+}
+.pd-comment-form__error {
+  font-size: 12px;
+  color: var(--pop-red);
+}

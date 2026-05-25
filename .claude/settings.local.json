@@ -10,7 +10,8 @@
       "Bash(npx tsc *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ibrah\\\\OneDrive\\\\Documents\\\\GitHub\\\\Makers-Club-Projects-Page\" -Force | Select-Object Name, @{Name=\"Type\"; Expression={if \\($_.PSIsContainer\\) {\"DIR\"} else {\"FILE\"}}} | Format-Table -AutoSize)"
     ]
   }
 }
