@@ -277,10 +277,10 @@ export default function DashboardPage() {
                       onChange={e => setCreditConsented(e.target.checked)}
                       style={{ width: 'auto', margin: 0 }}
                     />
-                    <span>Credit me on collaborative projects</span>
+                    <span>Show my name on projects</span>
                   </span>
                   <span style={{ fontSize: 11, color: 'var(--muted)', paddingLeft: 24 }}>
-                    When someone adds you as a co-maker, your {namePreference === 'public_name' && publicName.trim() ? 'username' : 'name'} will appear publicly on that project. Leave unchecked to stay anonymous.
+                    Controls whether your {namePreference === 'public_name' && publicName.trim() ? 'username' : 'name'} appears publicly on projects you submit or are added to as a co-maker. Leave unchecked to stay anonymous.
                   </span>
                 </label>
               </div>

@@ -313,6 +313,9 @@ export default function SubmitPage() {
     setSubmitting(false)
     if (error) { setSubmitError(error.message); return }
 
+    // Submitting a project implies public credit consent
+    supabase.from('profiles').update({ credit_consented: true }).eq('id', user!.id)
+
     fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
