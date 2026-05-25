@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
 
-  const [myProjects, setMyProjects] = useState<Project[]>([])
+  const [myProjects, setMyProjects] = useState<(Project & { _role: 'owner' | 'co-maker' })[]>([])
   const [likedProjects, setLikedProjects] = useState<Project[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -65,11 +65,17 @@ export default function DashboardPage() {
     if (!user) return
     async function load() {
       setDataLoading(true)
-      const [{ data: mine }, { data: likeRows }] = await Promise.all([
+      const [{ data: mine }, { data: coMakerOf }, { data: likeRows }] = await Promise.all([
         supabase
           .from('Projects')
           .select('*')
           .eq('submitted_by', user!.id)
+          .order('date', { ascending: false }),
+        supabase
+          .from('Projects')
+          .select('*')
+          .contains('maker_ids', [user!.id])
+          .neq('submitted_by', user!.id)
           .order('date', { ascending: false }),
         supabase
           .from('user_likes')
@@ -77,7 +83,9 @@ export default function DashboardPage() {
           .eq('user_id', user!.id),
       ])
 
-      setMyProjects((mine ?? []) as Project[])
+      const owned = (mine ?? []).map((p: Project) => ({ ...p, _role: 'owner' as const }))
+      const coMade = (coMakerOf ?? []).map((p: Project) => ({ ...p, _role: 'co-maker' as const }))
+      setMyProjects([...owned, ...coMade])
 
       if (likeRows && likeRows.length > 0) {
         const ids = likeRows.map((r: { project_id: string }) => r.project_id)
@@ -136,6 +144,8 @@ export default function DashboardPage() {
   }
 
   async function handleDelete(id: string) {
+    const p = myProjects.find(p => p.id === id)
+    if (p?._role !== 'owner') return
     if (!confirm('Remove this project? This cannot be undone.')) return
     setDeletingId(id)
     await supabase.from('Projects').delete().eq('id', id).eq('submitted_by', user!.id)
@@ -314,6 +324,7 @@ export default function DashboardPage() {
                 <div className="dash-table">
                   {myPaginated.map(p => {
                     const { text, cls } = statusLabel(p.status, p.Featured)
+                    const isOwner = p._role === 'owner'
                     return (
                       <div key={p.id} className="dash-row">
                         <div className="dash-row__main">
@@ -323,16 +334,24 @@ export default function DashboardPage() {
                             {p.date && <> · {new Date(p.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
                           </span>
                         </div>
-                        <span className={`dash-status ${cls}`}>{text}</span>
-                        <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
-                        <button
-                          className="dash-row__delete"
-                          onClick={() => handleDelete(p.id)}
-                          disabled={deletingId === p.id}
-                          title="Remove project"
-                        >
-                          {deletingId === p.id ? '…' : '✕ Remove'}
-                        </button>
+                        {isOwner ? (
+                          <span className={`dash-status ${cls}`}>{text}</span>
+                        ) : (
+                          <span className="dash-status dash-status--comaker">Co-maker</span>
+                        )}
+                        {isOwner && (
+                          <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
+                        )}
+                        {isOwner && (
+                          <button
+                            className="dash-row__delete"
+                            onClick={() => handleDelete(p.id)}
+                            disabled={deletingId === p.id}
+                            title="Remove project"
+                          >
+                            {deletingId === p.id ? '…' : '✕ Remove'}
+                          </button>
+                        )}
                       </div>
                     )
                   })}

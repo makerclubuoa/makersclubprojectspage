@@ -2848,6 +2848,11 @@ input[type='date'] {
   border-color: var(--pop-magenta);
   background: color-mix(in oklab, var(--pop-magenta) 8%, var(--paper));
 }
+.dash-status--comaker {
+  color: var(--pop-violet);
+  border-color: var(--pop-violet);
+  background: color-mix(in oklab, var(--pop-violet) 8%, var(--paper));
+}
 .dash-row__edit {
   font-size: 10.5px;
   letter-spacing: 0.08em;
