@@ -91,6 +91,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
   const [saving, setSaving]       = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [showRemoveSelfModal, setShowRemoveSelfModal] = useState(false)
+  const [pendingRemoveId, setPendingRemoveId]         = useState<string | null>(null)
 
   const hasFetched = useRef(false)
 
@@ -109,8 +111,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         .single()
 
       if (!data) { router.replace('/dashboard'); return }
-      const isAdmin = user!.email === 'makerclubuoa@gmail.com'
-      if (!isAdmin && data.submitted_by !== user!.id) { setNotAllowed(true); setFetching(false); return }
+      if (user!.email !== 'makerclubuoa@gmail.com' && data.submitted_by !== user!.id) { setNotAllowed(true); setFetching(false); return }
 
       setProject(data as Project)
       setTitle(data.title ?? '')
@@ -128,7 +129,36 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       setStartDate(data.start_date ?? '')
       setBuildTime(data.build_time ?? '')
       setGithub(data.github ?? '')
-      setCoMakers((data.makers ?? []).map((name: string) => ({ id: `name:${name}`, display_name: name, email: null, public_name: null, name_preference: null, credit_consented: true })))
+      // Load real profiles for submitted_by + maker_ids
+      const submittedBy = data.submitted_by as string | null
+      const makerIds = (data.maker_ids ?? []) as string[]
+      const allIds = Array.from(new Set([...(submittedBy ? [submittedBy] : []), ...makerIds]))
+      let realProfiles: CoMakerProfile[] = []
+      if (allIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, display_name, email, public_name, name_preference, credit_consented')
+          .in('id', allIds)
+        realProfiles = (profiles ?? []) as CoMakerProfile[]
+      }
+      // Order: submitted_by first, then remaining maker_ids
+      const orderedProfiles: CoMakerProfile[] = []
+      if (submittedBy) {
+        const found = realProfiles.find(p => p.id === submittedBy)
+        if (found) orderedProfiles.push(found)
+      }
+      for (const mid of makerIds) {
+        if (!orderedProfiles.some(p => p.id === mid)) {
+          const found = realProfiles.find(p => p.id === mid)
+          if (found) orderedProfiles.push(found)
+        }
+      }
+      // Legacy names: strings in `makers` with no matching real profile
+      const realNameSet = new Set(orderedProfiles.map(p => resolvePublicName(p).toLowerCase()))
+      const legacyEntries = (data.makers ?? [])
+        .filter((n: string) => !realNameSet.has(n.toLowerCase()))
+        .map((n: string) => ({ id: `name:${n}`, display_name: n, email: null, public_name: null, name_preference: null, credit_consented: true }))
+      setCoMakers([...orderedProfiles, ...legacyEntries])
       setTools(data.tools ?? [])
       setImagePreview(data.image ?? null)
       setExistingGallery(data.gallery_images ?? [])
@@ -180,11 +210,34 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     return () => clearTimeout(timer)
   }, [coMakerSearch, coMakers, user])
 
+  const isAdmin = user?.email === 'makerclubuoa@gmail.com'
+  const isProjectOwner = project?.submitted_by === user?.id
+
+  function canRemoveMaker(makerId: string): boolean {
+    if (isAdmin || isProjectOwner) return true
+    if (makerId.startsWith('name:')) return false
+    return makerId === user?.id
+  }
+
+  function handleRemoveMaker(makerId: string) {
+    if (makerId === user?.id) {
+      setPendingRemoveId(makerId)
+      setShowRemoveSelfModal(true)
+      return
+    }
+    setCoMakers(prev => prev.filter(m => m.id !== makerId))
+  }
+
+  function confirmRemoveSelf() {
+    if (pendingRemoveId) setCoMakers(prev => prev.filter(m => m.id !== pendingRemoveId))
+    setPendingRemoveId(null)
+    setShowRemoveSelfModal(false)
+  }
+
   function addCoMaker(r: { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }) {
     setCoMakers(prev => [...prev, r])
     setCoMakerSearch(''); setCoMakerResults([]); setShowCoMakerDropdown(false)
   }
-  function removeCoMaker(id: string) { setCoMakers(prev => prev.filter(m => m.id !== id)) }
 
   function handleImageChange(file: File | null) {
     if (!file) return
@@ -365,7 +418,6 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     }
     if (imageUrl !== undefined) update.image = imageUrl
 
-    const isAdmin = user!.email === 'makerclubuoa@gmail.com'
     let query = supabase.from('Projects').update(update).eq('id', id)
     if (!isAdmin) query = query.eq('submitted_by', user!.id)
     const { error } = await query
@@ -445,8 +497,10 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                 <div className="makers-chips">
                   {coMakers.map(m => (
                     <span key={m.id} className="makers-chip">
-                      {m.display_name}
-                      <button type="button" className="makers-chip__remove" onClick={() => removeCoMaker(m.id)}>✕</button>
+                      {m.id.startsWith('name:') ? m.display_name : resolvePublicName(m)}
+                      {canRemoveMaker(m.id) && (
+                        <button type="button" className="makers-chip__remove" onClick={() => handleRemoveMaker(m.id)}>✕</button>
+                      )}
                     </span>
                   ))}
                   {(() => {
@@ -757,6 +811,19 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       </main>
 
       <Footer />
+
+      {showRemoveSelfModal && (
+        <div className="modal-backdrop" onClick={() => setShowRemoveSelfModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <p className="modal__label">Remove yourself?</p>
+            <p className="modal__title">Are you sure you want to remove yourself from this project&apos;s makers list?</p>
+            <div className="modal__actions">
+              <button className="btn btn--ghost" onClick={() => setShowRemoveSelfModal(false)}>Cancel</button>
+              <button className="btn btn--danger" onClick={confirmRemoveSelf}>Remove me</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
