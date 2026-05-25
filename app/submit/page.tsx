@@ -759,7 +759,7 @@ export default function SubmitPage() {
                       </p>
                       <p className="submit-notice__line">
                         <span className="submit-notice__icon">◈</span>
-                        By submitting you consent to your project and name or username being displayed publicly on the Makers Club archive. Your preference can be changed in your profile settings. If you have any questions or concerns, please <a href="/contact" style={{ color: 'var(--ink)', textDecoration: 'underline' }}>contact us</a>.
+                        By submitting you consent to your project and name or username being displayed publicly on the Makers Club archive. Your preference can be changed in your profile settings. 
                       </p>
                     </div>
                     <div className="form__actions">
