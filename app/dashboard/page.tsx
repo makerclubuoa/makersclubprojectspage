@@ -339,9 +339,7 @@ export default function DashboardPage() {
                         ) : (
                           <span className="dash-status dash-status--comaker">Co-maker</span>
                         )}
-                        {isOwner && (
-                          <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
-                        )}
+                        <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
                         {isOwner && (
                           <button
                             className="dash-row__delete"

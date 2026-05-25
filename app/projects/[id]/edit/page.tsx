@@ -111,7 +111,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         .single()
 
       if (!data) { router.replace('/dashboard'); return }
-      if (user!.email !== 'makerclubuoa@gmail.com' && data.submitted_by !== user!.id) { setNotAllowed(true); setFetching(false); return }
+      const isMaker = data.submitted_by === user!.id || (data.maker_ids ?? []).includes(user!.id)
+      if (user!.email !== 'makerclubuoa@gmail.com' && !isMaker) { setNotAllowed(true); setFetching(false); return }
 
       setProject(data as Project)
       setTitle(data.title ?? '')
@@ -419,7 +420,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     if (imageUrl !== undefined) update.image = imageUrl
 
     let query = supabase.from('Projects').update(update).eq('id', id)
-    if (!isAdmin) query = query.eq('submitted_by', user!.id)
+    if (!isAdmin && !isProjectOwner) query = query.contains('maker_ids', [user!.id])
     const { error } = await query
 
     setSaving(false)
