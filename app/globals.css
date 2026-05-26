@@ -1849,6 +1849,9 @@ button {
 
 @media (max-width: 1024px) {
   .bento { grid-template-columns: repeat(2, 1fr); }
+  /* Hide the visual divider between pills and selects — it wraps to a
+     new line on tablet widths and appears as a stray separator */
+  .filter-divider { display: none; }
 }
 @media (max-width: 640px) {
   .bento { grid-template-columns: 1fr; }
@@ -2362,19 +2365,6 @@ button {
 }
 .cta-carousel__track--down {
   animation: scroll-down 12s linear infinite;
-}
-@media (max-width: 768px) {
-  .footer__cta-inner {
-    flex-direction: column;
-    gap: 40px;
-  }
-  .footer__cta-text {
-    flex: none;
-  }
-  .cta-carousel {
-    width: 100%;
-    height: 240px;
-  }
 }
 .footer__main {
   padding: 40px 0;
@@ -3043,6 +3033,18 @@ input[type='date'] {
     grid-template-columns: 1fr;
     gap: 28px;
   }
+  /* Footer CTA: stack text + carousel vertically on iPad portrait and below */
+  .footer__cta-inner {
+    flex-direction: column;
+    gap: 40px;
+  }
+  .footer__cta-text {
+    flex: none;
+  }
+  .cta-carousel {
+    width: 100%;
+    height: 240px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -3153,6 +3155,8 @@ input[type='date'] {
 
   /* Projects grid */
   .grid-section { padding: 20px 0 48px; }
+  /* Restore enough top padding to clear the fixed nav (overridden by .grid-section rule above) */
+  .grid-section--title { padding-top: 80px; }
   .grid-header h3 { font-size: 20px; }
 
   /* Suggest form */
