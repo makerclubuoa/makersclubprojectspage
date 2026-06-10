@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
 function verifySignature(body: string, header: string | null, secret: string): boolean {
   if (!header) return false
-  const sigPart = header.split(', ').find(s => s.startsWith('sha256='))
-  if (!sigPart) return false
+  const parts = header.split(', ')
+  const sigPart = parts.find(s => s.startsWith('sha256='))
+  const tPart = parts.find(s => s.startsWith('t='))
+  if (!sigPart || !tPart) return false
   const received = sigPart.slice(7)
-  const expected = createHmac('sha256', secret).update(body).digest('hex')
-  return received === expected
+  const timestamp = tPart.slice(2)
+  // Ghost signs the body concatenated with the timestamp it sends in the header.
+  const expected = createHmac('sha256', secret).update(`${body}${timestamp}`).digest('hex')
+  const receivedBuf = Buffer.from(received, 'hex')
+  const expectedBuf = Buffer.from(expected, 'hex')
+  return receivedBuf.length === expectedBuf.length && timingSafeEqual(receivedBuf, expectedBuf)
 }
 
 export async function POST(req: NextRequest) {
