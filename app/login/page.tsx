@@ -26,19 +26,8 @@ export default function LoginPage() {
     setSending(true)
     setError('')
 
-    // Gate on Ghost membership
-    const check = await fetch('/api/auth/ghost-signin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim() }),
-    })
-    if (!check.ok) {
-      const { error: msg } = await check.json()
-      setError(msg)
-      setSending(false)
-      return
-    }
-
+    // Open signup: Supabase creates the user on first sign-in (shouldCreateUser
+    // defaults true); the post-login ensure-ghost sync mirrors them into Ghost.
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: `${window.location.origin}/` },

@@ -47,19 +47,40 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     if (data) setProfile(data as Profile)
   }
 
+  // Mirror the signed-in user into Ghost (two-way sync during the Ghost transition).
+  // Idempotent server-side; guarded here so it runs at most once per browser session.
+  async function ensureGhostSync(session: Session) {
+    const key = `ghost-synced-${session.user.id}`
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key)) return
+    try {
+      await fetch('/api/auth/ensure-ghost', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, '1')
+    } catch {
+      // best-effort; will retry on next login
+    }
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+      if (session?.user) {
+        fetchProfile(session.user.id)
+        ensureGhostSync(session)
+      }
       setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setProfile(null)
+      if (session?.user) {
+        fetchProfile(session.user.id)
+        ensureGhostSync(session)
+      } else setProfile(null)
     })
 
     return () => subscription.unsubscribe()
