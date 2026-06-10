@@ -64,7 +64,10 @@ export async function POST(req: NextRequest) {
         user_metadata: { display_name },
       })
       if (user && !error) {
-        await supabaseAdmin.from('profiles').insert({ id: user.id, email, display_name })
+        // A trigger on auth.users auto-creates the profiles row (with display_name
+        // defaulted to the email prefix), so update it with the real name instead of
+        // inserting — an insert would collide on the primary key.
+        await supabaseAdmin.from('profiles').update({ display_name }).eq('id', user.id)
       } else if (error) {
         console.error('[ghost-webhook] createUser error for', email, error.message)
       }
