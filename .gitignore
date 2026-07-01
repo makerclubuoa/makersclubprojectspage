@@ -4,6 +4,9 @@ node_modules/
 out/
 scripts/*
 
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+
 # OpenNext
 .open-next
 
