@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 import CTACarousel from './components/CTACarousel'
 import Link from 'next/link'
 import { fetchProjects, fetchMakerDisplay } from '@/lib/projects'
+import { container, btnDark } from '@/lib/ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,12 +33,12 @@ export default async function ProjectsPage() {
       <Suspense fallback={null}>
         <ProjectsSection projects={projects} allTools={allTools} allCategories={allCategories} makerDisplays={makerDisplays} />
       </Suspense>
-      <div className="footer__cta">
-        <div className="container footer__cta-inner">
-          <div className="footer__cta-text">
-            <h4>Got a thing you <em style={{ fontStyle: 'normal' }}>made</em>?</h4>
-            <p>Submissions are open all the time. Half-finished, broken, or weird is welcome — that&rsquo;s usually where the good stuff is.</p>
-            <Link href="/submit" className="btn btn--dark">Submit a project</Link>
+      <div className="py-20 bg-paper-2 text-ink">
+        <div className={`${container} flex items-center gap-16 max-[900px]:flex-col max-[900px]:gap-10`}>
+          <div className="flex-[0_0_380px] max-[900px]:flex-none">
+            <h4 className="text-[clamp(24px,3vw,36px)] mt-0 mb-3.5 font-bold leading-[1.15] text-ink">Got a thing you <em className="not-italic">made</em>?</h4>
+            <p className="opacity-65 max-w-[44ch] text-[15px] leading-[1.6] text-ink mt-0 mb-7">Submissions are open all the time. Half-finished, broken, or weird is welcome — that&rsquo;s usually where the good stuff is.</p>
+            <Link href="/submit" className={btnDark}>Submit a project</Link>
           </div>
           <CTACarousel
             images={projects.filter(p => p.image).slice(0, 8).map(p => ({

@@ -10,13 +10,25 @@ import Pagination from '@/app/components/Pagination'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { resolvePublicName, type Project } from '@/lib/projects'
+import {
+  container, seclabel, seclabelNum, seclabelBar,
+  submitHero, submitHeroTitle, submitHeroSub, submitMain,
+  modalBackdrop, modal, modalLabel, modalTitle, modalWarn, modalActions,
+  btn, btnGradient, btnArr,
+  form, formInner, formFig, formActions, formActionsSmall,
+  field, fieldLabel, fieldInput,
+  emptyState, emptyStateMono,
+  dashTable, dashRow, dashRowMain, dashRowTitle, dashRowMeta,
+  dashStatus, dashStatusLive, dashStatusDraft, dashStatusRejected, dashStatusLiked, dashStatusComaker,
+  dashRowEdit, dashRowDelete,
+} from '@/lib/ui'
 
 function statusLabel(status: string | null, featured: boolean | null) {
   const s = status?.toUpperCase()
-  if (!status) return { text: featured ? 'Live · Featured' : 'Live', cls: 'dash-status--live' }
-  if (s === 'DRAFT') return { text: 'Pending review', cls: 'dash-status--draft' }
-  if (s === 'REJECTED') return { text: 'Rejected', cls: 'dash-status--rejected' }
-  return { text: status, cls: '' }
+  if (!status) return { text: featured ? 'Live · Featured' : 'Live', cls: dashStatusLive }
+  if (s === 'DRAFT') return { text: 'Pending review', cls: dashStatusDraft }
+  if (s === 'REJECTED') return { text: 'Rejected', cls: dashStatusRejected }
+  return { text: status, cls: 'border-rule' }
 }
 
 export default function DashboardPage() {
@@ -169,128 +181,129 @@ export default function DashboardPage() {
       <CursorTrail />
       <Nav />
 
-      <header className="submit-hero">
-        <div className="container">
-          <div className="seclabel" style={{ marginBottom: 24 }}>
-            <span className="num">[06]</span>
+      <header className={submitHero}>
+        <div className={container}>
+          <div className={`${seclabel} mb-6`}>
+            <span className={seclabelNum}>[06]</span>
             <span>Dashboard_</span>
-            <span className="bar" />
+            <span className={seclabelBar} />
           </div>
-          <h1 className="submit-hero__title">
-            Hey, <em className="gradient-text">{displayName}.</em>
+          <h1 className={submitHeroTitle}>
+            Hey, <em className="text-ink">{displayName}.</em>
           </h1>
-          <p className="submit-hero__sub">Your submissions and liked projects.</p>
+          <p className={submitHeroSub}>Your submissions and liked projects.</p>
         </div>
       </header>
 
       {/* Name preference modal */}
       {showNameModal && (
-        <div className="modal-backdrop" onClick={() => setShowNameModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <p className="modal__label">Confirm change</p>
-            <p className="modal__title">
-              Switch to showing your <em>{pendingPreference === 'public_name' ? 'username' : 'real name'}</em>?
+        <div className={modalBackdrop} onClick={() => setShowNameModal(false)}>
+          <div className={modal} onClick={e => e.stopPropagation()}>
+            <p className={modalLabel}>Confirm change</p>
+            <p className={modalTitle}>
+              Switch to showing your <em className="not-italic text-ink-2">{pendingPreference === 'public_name' ? 'username' : 'real name'}</em>?
             </p>
-            <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 4px' }}>
+            <p className="text-[13px] text-ink-2 m-0 mb-1">
               Project detail pages will show you as <strong>
                 {pendingPreference === 'public_name'
                   ? (publicName.trim() || profile?.display_name)
                   : profile?.display_name}
               </strong> going forward.
             </p>
-            <p className="modal__warn">Remember to hit Save after closing this.</p>
-            <div className="modal__actions">
-              <button className="btn" onClick={() => setShowNameModal(false)}>Cancel</button>
-              <button className="btn btn--gradient" onClick={confirmNamePreference}>Confirm</button>
+            <p className={modalWarn}>Remember to hit Save after closing this.</p>
+            <div className={modalActions}>
+              <button className={btn} onClick={() => setShowNameModal(false)}>Cancel</button>
+              <button className={btnGradient} onClick={confirmNamePreference}>Confirm</button>
             </div>
           </div>
         </div>
       )}
 
-      <main className="submit-main">
-        <div className="container">
+      <main className={submitMain}>
+        <div className={container}>
 
           {/* Profile settings */}
-          <div className="seclabel" style={{ marginBottom: 24 }}>
-            <span className="num">00</span>
+          <div className={`${seclabel} mb-6`}>
+            <span className={seclabelNum}>00</span>
             <span>Profile_</span>
-            <span className="bar" />
+            <span className={seclabelBar} />
           </div>
 
-          <div className="form" style={{ marginBottom: 48 }}>
-            <div className="form__inner">
+          <div className={`${form} mb-12`}>
+            <div className={formInner}>
+              <span className={formFig}>FIG.02 — EVENT PROPOSAL FORM</span>
 
-              <div className="field">
-                <label>
+              <div className={field}>
+                <label className={fieldLabel}>
                   Legal name
-                  <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--muted)' }}>read-only</span>
+                  <span className="font-normal normal-case tracking-normal text-muted">read-only</span>
                 </label>
-                <input type="text" value={profile?.display_name ?? ''} disabled style={{ opacity: 0.5 }} />
+                <input className={`${fieldInput} opacity-50`} type="text" value={profile?.display_name ?? ''} disabled />
               </div>
 
-              <div className="field">
-                <label>
+              <div className={field}>
+                <label className={fieldLabel}>
                   Public username
-                  <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>optional — alias shown instead of your name</span>
+                  <span className="font-normal normal-case tracking-normal">optional — alias shown instead of your name</span>
                 </label>
                 <input
+                  className={fieldInput}
                   type="text"
                   placeholder="e.g. maker_ib, tinkerer42, or leave blank"
                   value={publicName}
                   onChange={e => { setPublicName(e.target.value); setUsernameError(null); if (namePreference === 'public_name' && !e.target.value.trim()) setNamePreference('name') }}
                 />
                 {usernameError && (
-                  <span style={{ fontSize: 11, color: 'var(--error, #e53)', marginTop: 4 }}>{usernameError}</span>
+                  <span className="text-[11px] text-[#e53] mt-1">{usernameError}</span>
                 )}
               </div>
 
-              <div className="field">
-                <label>Show me as</label>
-                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <div className={field}>
+                <label className={fieldLabel}>Show me as</label>
+                <div className="flex gap-2 mt-1">
                   <button
                     type="button"
-                    className={`typepick button${namePreference === 'name' ? ' is-on' : ''}`}
-                    style={{ padding: '7px 14px', border: '1px solid var(--rule)', background: namePreference === 'name' ? 'var(--ink)' : 'var(--paper)', color: namePreference === 'name' ? 'var(--paper)' : 'var(--ink-2)', fontSize: 12, letterSpacing: '0.06em', cursor: 'pointer' }}
+                    className={`px-3.5 py-[7px] border border-rule text-xs tracking-[0.06em] cursor-pointer ${namePreference === 'name' ? 'bg-ink text-paper' : 'bg-paper text-ink-2'}`}
                     onClick={() => requestNamePreference('name')}
                   >
-                    My name · <em style={{ fontStyle: 'normal', opacity: 0.7 }}>{profile?.display_name}</em>
+                    My name · <em className="not-italic opacity-70">{profile?.display_name}</em>
                   </button>
                   <button
                     type="button"
-                    style={{ padding: '7px 14px', border: '1px solid var(--rule)', background: namePreference === 'public_name' ? 'var(--ink)' : 'var(--paper)', color: namePreference === 'public_name' ? 'var(--paper)' : 'var(--ink-2)', fontSize: 12, letterSpacing: '0.06em', cursor: publicName.trim() ? 'pointer' : 'not-allowed', opacity: publicName.trim() ? 1 : 0.4 }}
+                    className={`px-3.5 py-[7px] border border-rule text-xs tracking-[0.06em] ${namePreference === 'public_name' ? 'bg-ink text-paper' : 'bg-paper text-ink-2'} ${publicName.trim() ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-40'}`}
                     onClick={() => publicName.trim() && requestNamePreference('public_name')}
                   >
-                    My username · <em style={{ fontStyle: 'normal', opacity: 0.7 }}>{publicName.trim() || '—'}</em>
+                    My username · <em className="not-italic opacity-70">{publicName.trim() || '—'}</em>
                   </button>
                 </div>
                 {!publicName.trim() && (
-                  <span style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>Set a username above to enable this option.</span>
+                  <span className="text-[11px] text-muted mt-1.5">Set a username above to enable this option.</span>
                 )}
               </div>
 
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 6, textTransform: 'none', letterSpacing: 0, fontSize: 13, color: 'var(--ink)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className={`${field} mb-0`}>
+                <label className="flex flex-col gap-1.5 normal-case tracking-normal text-[13px] text-ink">
+                  <span className="flex items-center gap-2.5">
                     <input
                       type="checkbox"
                       checked={creditConsented}
                       onChange={e => setCreditConsented(e.target.checked)}
-                      style={{ width: 'auto', margin: 0 }}
+                      className="w-auto m-0"
                     />
                     <span>Show my name on projects</span>
                   </span>
-                  <span style={{ fontSize: 11, color: 'var(--muted)', paddingLeft: 24 }}>
+                  <span className="text-[11px] text-muted pl-6">
                     Controls whether your {namePreference === 'public_name' && publicName.trim() ? 'username' : 'name'} appears publicly on projects you submit or are added to as a co-maker. Leave unchecked to stay anonymous.
                   </span>
                 </label>
               </div>
 
-              <div className="form__actions">
-                <span className="small">
+              <div className={formActions}>
+                <span className={formActionsSmall}>
                   Currently showing as: <strong>{resolvePublicName({ display_name: profile?.display_name, public_name: profile?.public_name, name_preference: profile?.name_preference })}</strong>
                 </span>
-                <button type="button" className="btn btn--gradient" onClick={saveProfile} disabled={profileSaving}>
-                  {profileSaving ? 'Saving…' : profileSaved ? '✓ Saved' : 'Save profile'} <span className="arr">→</span>
+                <button type="button" className={btnGradient} onClick={saveProfile} disabled={profileSaving}>
+                  {profileSaving ? 'Saving…' : profileSaved ? '✓ Saved' : 'Save profile'} <span className={btnArr}>→</span>
                 </button>
               </div>
 
@@ -298,22 +311,22 @@ export default function DashboardPage() {
           </div>
 
           {/* My Projects */}
-          <div className="seclabel" style={{ marginBottom: 24 }}>
-            <span className="num">01</span>
+          <div className={`${seclabel} mb-6`}>
+            <span className={seclabelNum}>01</span>
             <span>My_submissions</span>
-            <span className="bar" />
-            <Link href="/submit" className="btn btn--ghost" style={{ padding: '5px 12px', fontSize: 11 }}>
+            <span className={seclabelBar} />
+            <Link href="/submit" className="inline-flex items-center gap-2.5 rounded-full font-semibold border border-transparent bg-accent text-white hover:opacity-85 active:scale-[0.97] px-3 py-[5px] text-[11px] [transition:transform_0.12s_ease,background_0.2s,color_0.2s,border-color_0.2s,opacity_0.2s]">
               + New
             </Link>
           </div>
 
           {dataLoading ? (
-            <div className="empty-state"><span className="mono">Loading…</span></div>
+            <div className={emptyState}><span className={emptyStateMono}>Loading…</span></div>
           ) : myProjects.length === 0 ? (
-            <div className="empty-state">
-              <div className="mono">_ no submissions yet</div>
-              <p style={{ marginTop: 8 }}>
-                <Link href="/submit" style={{ textDecoration: 'underline' }}>Submit your first project →</Link>
+            <div className={emptyState}>
+              <div className={emptyStateMono}>_ no submissions yet</div>
+              <p className="mt-2">
+                <Link href="/submit" className="underline">Submit your first project →</Link>
               </p>
             </div>
           ) : (() => {
@@ -321,28 +334,28 @@ export default function DashboardPage() {
             const myPaginated = myProjects.slice((myPage - 1) * pageSize, myPage * pageSize)
             return (
               <>
-                <div className="dash-table">
+                <div className={dashTable}>
                   {myPaginated.map(p => {
                     const { text, cls } = statusLabel(p.status, p.Featured)
                     const isOwner = p._role === 'owner'
                     return (
-                      <div key={p.id} className="dash-row">
-                        <div className="dash-row__main">
-                          <Link href={`/projects/${p.id}`} className="dash-row__title">{p.title}</Link>
-                          <span className="dash-row__meta">
+                      <div key={p.id} className={dashRow}>
+                        <div className={dashRowMain}>
+                          <Link href={`/projects/${p.id}`} className={dashRowTitle}>{p.title}</Link>
+                          <span className={dashRowMeta}>
                             {p.category}
                             {p.date && <> · {new Date(p.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
                           </span>
                         </div>
                         {isOwner ? (
-                          <span className={`dash-status ${cls}`}>{text}</span>
+                          <span className={`${dashStatus} ${cls}`}>{text}</span>
                         ) : (
-                          <span className="dash-status dash-status--comaker">Co-maker</span>
+                          <span className={`${dashStatus} ${dashStatusComaker}`}>Co-maker</span>
                         )}
-                        <Link href={`/projects/${p.id}/edit`} className="dash-row__edit">Edit</Link>
+                        <Link href={`/projects/${p.id}/edit`} className={dashRowEdit}>Edit</Link>
                         {isOwner && (
                           <button
-                            className="dash-row__delete"
+                            className={dashRowDelete}
                             onClick={() => handleDelete(p.id)}
                             disabled={deletingId === p.id}
                             title="Remove project"
@@ -360,19 +373,19 @@ export default function DashboardPage() {
           })()}
 
           {/* Liked Projects */}
-          <div className="seclabel" style={{ marginTop: 64, marginBottom: 24 }}>
-            <span className="num">02</span>
+          <div className={`${seclabel} mt-16 mb-6`}>
+            <span className={seclabelNum}>02</span>
             <span>Liked_</span>
-            <span className="bar" />
+            <span className={seclabelBar} />
           </div>
 
           {dataLoading ? (
-            <div className="empty-state"><span className="mono">Loading…</span></div>
+            <div className={emptyState}><span className={emptyStateMono}>Loading…</span></div>
           ) : likedProjects.length === 0 ? (
-            <div className="empty-state">
-              <div className="mono">_ nothing liked yet</div>
-              <p style={{ marginTop: 8 }}>
-                <Link href="/" style={{ textDecoration: 'underline' }}>Browse projects →</Link>
+            <div className={emptyState}>
+              <div className={emptyStateMono}>_ nothing liked yet</div>
+              <p className="mt-2">
+                <Link href="/" className="underline">Browse projects →</Link>
               </p>
             </div>
           ) : (() => {
@@ -380,19 +393,19 @@ export default function DashboardPage() {
             const likedPaginated = likedProjects.slice((likedPage - 1) * pageSize, likedPage * pageSize)
             return (
               <>
-                <div className="dash-table" style={{ marginBottom: 16 }}>
+                <div className={`${dashTable} mb-4`}>
                   {likedPaginated.map(p => (
-                    <div key={p.id} className="dash-row">
-                      <div className="dash-row__main">
-                        <Link href={`/projects/${p.id}`} className="dash-row__title">{p.title}</Link>
-                        <span className="dash-row__meta">
+                    <div key={p.id} className={dashRow}>
+                      <div className={dashRowMain}>
+                        <Link href={`/projects/${p.id}`} className={dashRowTitle}>{p.title}</Link>
+                        <span className={dashRowMeta}>
                           {p.category}
                           {p.makers && p.makers.length > 0 && <> · {p.makers.join(', ')}</>}
                         </span>
                       </div>
-                      <span className="dash-status dash-status--liked">♥ {p.likes ?? 0}</span>
+                      <span className={`${dashStatus} ${dashStatusLiked}`}>♥ {p.likes ?? 0}</span>
                       <button
-                        className="dash-row__delete"
+                        className={dashRowDelete}
                         onClick={() => handleUnlike(p.id)}
                         disabled={unlikingId === p.id}
                         title="Unlike"

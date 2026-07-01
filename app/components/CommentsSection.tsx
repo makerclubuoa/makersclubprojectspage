@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/components/AuthProvider'
+import { seclabel, seclabelNum, seclabelBar, modalBackdrop, modal, modalLabel, modalTitle, modalActions, btnGhost, btnGradient } from '@/lib/ui'
 
 interface Comment {
   id: string
@@ -21,6 +22,9 @@ interface Props {
 }
 
 const ADMIN_EMAIL = 'makerclubuoa@gmail.com'
+const META_BTN = 'text-[11px] text-muted p-0 cursor-pointer tracking-[.04em] hover:text-pop-red'
+const CONFIRM = 'text-[11px] text-ink-2 tracking-[.02em]'
+const CONFIRM_BTN = 'p-0 text-[11px] text-pop-red underline cursor-pointer'
 
 function fmtCommentDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -106,19 +110,19 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
   }
 
   return (
-    <section className="pd-section" id="comments">
-      <div className="seclabel">
-        <span className="num">{sectionNum}</span>
+    <section className="mb-[60px]" id="comments">
+      <div className={seclabel}>
+        <span className={seclabelNum}>{sectionNum}</span>
         <span>Comments</span>
-        <span className="bar" />
+        <span className={seclabelBar} />
         <span>{comments.length} {comments.length === 1 ? 'comment' : 'comments'}</span>
       </div>
 
-      <div className="pd-comments">
-        {loading && <p className="pd-comments__empty">Loading...</p>}
+      <div className="flex flex-col gap-0">
+        {loading && <p className="text-muted text-[13px] m-0 mb-6">Loading...</p>}
 
         {!loading && comments.length === 0 && (
-          <p className="pd-comments__empty">No comments yet. Be the first!</p>
+          <p className="text-muted text-[13px] m-0 mb-6">No comments yet. Be the first!</p>
         )}
 
         {comments.map(c => {
@@ -128,49 +132,49 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
             user.email === ADMIN_EMAIL
           )
           return (
-          <div key={c.id} className="pd-comment">
-            <div className="pd-comment__meta">
-              <span className="pd-comment__author">{c.author_name}</span>
-              <span className="pd-comment__date">{fmtCommentDate(c.created_at)}</span>
-              <span style={{ flex: 1 }} />
+          <div key={c.id} className="border-t border-rule py-4 last-of-type:border-b last-of-type:border-rule last-of-type:mb-7">
+            <div className="flex items-baseline gap-2.5 mb-1.5">
+              <span className="text-xs font-semibold tracking-[.04em] text-ink">{c.author_name}</span>
+              <span className="text-[11px] text-muted">{fmtCommentDate(c.created_at)}</span>
+              <span className="flex-1" />
               {canDelete && (
                 confirmDelete === c.id ? (
-                  <span className="pd-comment__confirm">
+                  <span className={CONFIRM}>
                     Delete?{' '}
-                    <button onClick={() => handleDelete(c.id)}>Yes</button>
+                    <button className={CONFIRM_BTN} onClick={() => handleDelete(c.id)}>Yes</button>
                     {' / '}
-                    <button onClick={() => setConfirmDelete(null)}>No</button>
+                    <button className={CONFIRM_BTN} onClick={() => setConfirmDelete(null)}>No</button>
                   </span>
                 ) : (
-                  <button className="pd-comment__report" onClick={() => handleDelete(c.id)}>
+                  <button className={META_BTN} onClick={() => handleDelete(c.id)}>
                     Delete
                   </button>
                 )
               )}
               {reported.has(c.id) ? (
-                <span className="pd-comment__reported">Reported</span>
+                <span className="text-[11px] text-muted tracking-[.04em]">Reported</span>
               ) : confirmReport === c.id ? (
-                <span className="pd-comment__confirm">
+                <span className={CONFIRM}>
                   Flag?{' '}
-                  <button onClick={() => handleReport(c)}>Yes</button>
+                  <button className={CONFIRM_BTN} onClick={() => handleReport(c)}>Yes</button>
                   {' / '}
-                  <button onClick={() => setConfirmReport(null)}>No</button>
+                  <button className={CONFIRM_BTN} onClick={() => setConfirmReport(null)}>No</button>
                 </span>
               ) : (
-                <button className="pd-comment__report" onClick={() => handleReport(c)}>
+                <button className={META_BTN} onClick={() => handleReport(c)}>
                   Report
                 </button>
               )}
             </div>
-            <p className="pd-comment__body">{c.body}</p>
+            <p className="text-sm leading-[1.6] text-ink-2 m-0 whitespace-pre-wrap break-words">{c.body}</p>
           </div>
           )
         })}
 
-        <form className="pd-comment-form" onSubmit={handleSubmit}>
+        <form className="mt-2" onSubmit={handleSubmit}>
           <textarea
             ref={textareaRef}
-            className="pd-comment-form__input"
+            className="w-full bg-paper-2 border border-rule rounded-base text-ink text-[14px] leading-[1.5] px-3.5 py-3 resize-y min-h-[80px] outline-none transition-[border-color] duration-150 focus:border-accent read-only:cursor-pointer read-only:opacity-70"
             placeholder={user ? 'Leave a comment…' : 'Sign in to leave a comment'}
             value={body}
             onChange={e => setBody(e.target.value)}
@@ -179,14 +183,14 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
             onClick={() => { if (!user) setShowSignIn(true) }}
             readOnly={!user}
           />
-          <div className="pd-comment-form__footer">
-            {submitError && <span className="pd-comment-form__error">{submitError}</span>}
+          <div className="flex items-center gap-3 mt-2">
+            {submitError && <span className="text-xs text-pop-red">{submitError}</span>}
             <span style={{ flex: 1 }} />
-            <span className="pd-comment-form__count">{body.length}/1000</span>
+            <span className="text-[11px] text-muted">{body.length}/1000</span>
             {user ? (
               <button
                 type="submit"
-                className="btn btn--gradient"
+                className={btnGradient}
                 disabled={submitting || !body.trim()}
               >
                 {submitting ? 'Posting…' : 'Post comment'}
@@ -194,7 +198,7 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
             ) : (
               <button
                 type="button"
-                className="btn btn--gradient"
+                className={btnGradient}
                 onClick={() => setShowSignIn(true)}
               >
                 Sign in to comment
@@ -205,13 +209,13 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
       </div>
 
       {showSignIn && (
-        <div className="modal-backdrop" onClick={() => setShowSignIn(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <p className="modal__label">Sign in required</p>
-            <p className="modal__title">You need an account to leave a comment.</p>
-            <div className="modal__actions">
-              <button className="btn btn--ghost" onClick={() => setShowSignIn(false)}>Cancel</button>
-              <Link href="/login" className="btn btn--gradient">Sign in →</Link>
+        <div className={modalBackdrop} onClick={() => setShowSignIn(false)}>
+          <div className={modal} onClick={e => e.stopPropagation()}>
+            <p className={modalLabel}>Sign in required</p>
+            <p className={modalTitle}>You need an account to leave a comment.</p>
+            <div className={modalActions}>
+              <button className={btnGhost} onClick={() => setShowSignIn(false)}>Cancel</button>
+              <Link href="/login" className={btnGradient}>Sign in →</Link>
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/components/AuthProvider'
+import { modalBackdrop, modal, modalLabel, modalTitle, modalActions, btnGhost, btnGradient } from '@/lib/ui'
 
 interface LikeButtonProps {
   projectId: string
@@ -44,24 +45,24 @@ export default function LikeButton({ projectId, initialLikes }: LikeButtonProps)
   return (
     <>
       <button
-        className={`like-btn${liked ? ' like-btn--active' : ''}`}
+        className={`flex items-center gap-2 w-full px-4 py-[11px] border text-xs tracking-[0.08em] uppercase cursor-pointer transition-colors duration-200 disabled:opacity-60 disabled:cursor-default ${liked ? 'border-pop-magenta text-pop-magenta bg-[color-mix(in_oklab,var(--pop-magenta)_8%,var(--paper))]' : 'border-rule bg-paper-2 text-ink-2 hover:border-pop-magenta hover:text-pop-magenta'}`}
         onClick={handleLike}
         disabled={loading}
         title={user ? (liked ? 'Unlike this project' : 'Like this project') : 'Sign in to like'}
       >
-        <span className="like-btn__heart">♥</span>
-        <span className="like-btn__count">{likes}</span>
-        <span className="like-btn__label">{liked ? 'Liked' : 'Like'}</span>
+        <span className={`text-sm leading-none transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]${liked ? ' scale-125' : ''}`}>♥</span>
+        <span className="text-sm">{likes}</span>
+        <span className="ml-auto text-[10px] opacity-70">{liked ? 'Liked' : 'Like'}</span>
       </button>
 
       {showModal && (
-        <div className="modal-backdrop" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <p className="modal__label">Sign in required</p>
-            <p className="modal__title">You need an account to <em>love</em> a project.</p>
-            <div className="modal__actions">
-              <button className="btn btn--ghost" onClick={() => setShowModal(false)}>Cancel</button>
-              <Link href="/login" className="btn btn--gradient">Sign in →</Link>
+        <div className={modalBackdrop} onClick={() => setShowModal(false)}>
+          <div className={modal} onClick={e => e.stopPropagation()}>
+            <p className={modalLabel}>Sign in required</p>
+            <p className={modalTitle}>You need an account to <em className="not-italic text-ink-2">love</em> a project.</p>
+            <div className={modalActions}>
+              <button className={btnGhost} onClick={() => setShowModal(false)}>Cancel</button>
+              <Link href="/login" className={btnGradient}>Sign in →</Link>
             </div>
           </div>
         </div>

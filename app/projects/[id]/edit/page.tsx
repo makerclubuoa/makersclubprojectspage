@@ -10,6 +10,23 @@ import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES, resolvePublicName, type Project } from '@/lib/projects'
 import CustomSelect from '@/app/components/CustomSelect'
+import {
+  seclabel, seclabelNum, seclabelBar,
+  submitHero, submitHeroTitle, submitMain,
+  form, formInner, formFig, formActions,
+  field, fieldTight, fieldLabel, fieldReq, fieldInput, fieldTextarea, fieldRow,
+  btnGhost, btnGradient, btnDanger, btnArr,
+  modalBackdrop, modal, modalLabel, modalTitle, modalActions,
+  makersChips, makersChip, makersChipAdd, makersChipRemove,
+  makersSearch, makersDropdown, makersDropdownItem, makersDropdownName, makersDropdownEmail, makersDropdownEmpty,
+  imgUploadBase, imgUploadIdle, imgUploadPreview, imgUploadInner, imgUploadIcon, imgUploadHint, imgUploadRemove,
+  toolTags, toolTag, toolTagOn, toolTagOther, toolTagOtherInput, toolTagOtherBtn,
+  dynList, dynRow, dynRowRemove, dynRowCols3, dynRowCols4, dynRowMilestone, dynRowMilestoneInput, dynAdd,
+  galleryUpload, galleryGrid, galleryThumb, galleryThumbImg, galleryThumbRemove,
+} from '@/lib/ui'
+
+const CONTAINER_760 = 'max-w-[760px] mx-auto px-7 max-[640px]:px-4 relative z-[1]'
+const BACK_LINK = 'inline-flex items-center gap-2 text-[10.5px] tracking-[0.14em] uppercase text-muted mb-7 no-underline transition-colors duration-200 hover:text-ink'
 
 const EDIT_CATEGORIES = CATEGORIES.filter(c => c !== 'All')
 
@@ -434,10 +451,10 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     return (
       <>
         <Nav />
-        <main style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'var(--muted)', marginBottom: 16 }}>You can only edit your own projects.</p>
-            <Link href="/dashboard" className="btn btn--ghost">← Back to dashboard</Link>
+        <main className="min-h-[80vh] flex items-center justify-center p-10">
+          <div className="text-center">
+            <p className="text-muted mb-4">You can only edit your own projects.</p>
+            <Link href="/dashboard" className={btnGhost}>← Back to dashboard</Link>
           </div>
         </main>
         <Footer />
@@ -450,62 +467,63 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       <CursorTrail />
       <Nav />
 
-      <header className="submit-hero">
-        <div className="container">
-          <Link href={backHref} className="project-back" style={{ color: 'var(--muted)' }}>
+      <header className={submitHero}>
+        <div className={CONTAINER_760}>
+          <Link href={backHref} className={BACK_LINK}>
             {backLabel}
           </Link>
-          <div className="seclabel" style={{ marginBottom: 24 }}>
+          <div className={`${seclabel} mb-6`}>
             <span>Edit</span>
-            <span className="bar" />
+            <span className={seclabelBar} />
           </div>
-          <h1 className="submit-hero__title">
-            Edit <em className="gradient-text">{project?.title}</em>
+          <h1 className={submitHeroTitle}>
+            Edit <em className="text-ink">{project?.title}</em>
           </h1>
         </div>
       </header>
 
-      <main className="submit-main">
-        <div className="container" style={{ maxWidth: 760 }}>
-          <form className="form form--submit" onSubmit={handleSave}>
-            <div className="form__inner">
+      <main className={submitMain}>
+        <div className={CONTAINER_760}>
+          <form className={form} onSubmit={handleSave}>
+            <div className={formInner}>
+              <span className={formFig}>FIG.07 — EDIT PROJECT</span>
 
-              <div className="seclabel" style={{ marginBottom: 18 }}>
-                <span className="num">A</span><span>The basics</span><span className="bar" />
+              <div className={`${seclabel} mb-[18px]`}>
+                <span className={seclabelNum}>A</span><span>The basics</span><span className={seclabelBar} />
               </div>
 
-              <div className="field">
-                <label>Project title <span className="req">*</span></label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required />
+              <div className={field}>
+                <label className={fieldLabel}>Project title <span className={fieldReq}>*</span></label>
+                <input className={fieldInput} type="text" value={title} onChange={e => setTitle(e.target.value)} required />
               </div>
 
-              <div className="field">
-                <label>Category</label>
+              <div className={field}>
+                <label className={fieldLabel}>Category</label>
                 <CustomSelect
                   value={category}
                   onChange={v => { setCategory(v); if (v !== 'Other') setOtherCategory('') }}
                   options={[...EDIT_CATEGORIES.map(c => ({ value: c, label: c })), { value: 'Other', label: 'Other…' }]}
                 />
                 {category === 'Other' && (
-                  <input type="text" placeholder="Describe the category"
+                  <input className={`${fieldInput} mt-2`} type="text" placeholder="Describe the category"
                     value={otherCategory} onChange={e => setOtherCategory(e.target.value)}
-                    style={{ marginTop: 8 }} autoFocus />
+                    autoFocus />
                 )}
               </div>
 
-              <div className="field">
-                <label>Makers / contributors</label>
-                <div className="makers-chips">
+              <div className={field}>
+                <label className={fieldLabel}>Makers / contributors</label>
+                <div className={makersChips}>
                   {coMakers.map(m => (
-                    <span key={m.id} className="makers-chip">
+                    <span key={m.id} className={makersChip}>
                       {m.id.startsWith('name:') ? m.display_name : resolvePublicName(m)}
                       {canRemoveMaker(m.id) && (
-                        <button type="button" className="makers-chip__remove" onClick={() => handleRemoveMaker(m.id)}>✕</button>
+                        <button type="button" className={makersChipRemove} onClick={() => handleRemoveMaker(m.id)}>✕</button>
                       )}
                     </span>
                   ))}
                   {!coMakers.some(m => m.id === user?.id) && (
-                    <button type="button" className="makers-chip makers-chip--add"
+                    <button type="button" className={makersChipAdd}
                       onClick={() => setCoMakers(prev => [...prev, {
                         id: user!.id,
                         display_name: profile?.display_name ?? user!.email?.split('@')[0] ?? '',
@@ -518,159 +536,158 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                     </button>
                   )}
                 </div>
-                <div className="makers-search">
-                  <input type="text" placeholder="Search for a maker by name… They must have an account to be added" autoComplete="off"
+                <div className={makersSearch}>
+                  <input className={fieldInput} type="text" placeholder="Search for a maker by name… They must have an account to be added" autoComplete="off"
                     value={coMakerSearch}
                     onChange={e => { setCoMakerSearch(e.target.value); setShowCoMakerDropdown(true) }}
                     onFocus={() => setShowCoMakerDropdown(true)}
                     onBlur={() => setTimeout(() => setShowCoMakerDropdown(false), 150)} />
                   {showCoMakerDropdown && coMakerSearch.trim() && (
-                    <div className="makers-dropdown">
+                    <div className={makersDropdown}>
                       {coMakerResults.length > 0 ? coMakerResults.map(r => (
-                        <button key={r.id} type="button" className="makers-dropdown__item" onMouseDown={() => addCoMaker(r)}>
-                          <span className="makers-dropdown__name">{r.display_name}</span>
-                          <span className="makers-dropdown__email">{r.email}</span>
+                        <button key={r.id} type="button" className={makersDropdownItem} onMouseDown={() => addCoMaker(r)}>
+                          <span className={makersDropdownName}>{r.display_name}</span>
+                          <span className={makersDropdownEmail}>{r.email}</span>
                         </button>
-                      )) : <div className="makers-dropdown__empty">No users found</div>}
+                      )) : <div className={makersDropdownEmpty}>No users found</div>}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="field">
-                <label>
-                  One-line description <span className="req">*</span>
-                  <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>max 140 chars</span>
+              <div className={field}>
+                <label className={fieldLabel}>
+                  One-line description <span className={fieldReq}>*</span>
+                  <span className="font-normal normal-case tracking-normal">max 140 chars</span>
                 </label>
-                <input type="text" maxLength={140} value={blurb} onChange={e => setBlurb(e.target.value)} required />
+                <input className={fieldInput} type="text" maxLength={140} value={blurb} onChange={e => setBlurb(e.target.value)} required />
               </div>
 
-              <div className="field">
-                <label>Full story</label>
+              <div className={field}>
+                <label className={fieldLabel}>Full story</label>
                 <textarea
+                  className={`${fieldTextarea} min-h-[140px]`}
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  style={{ minHeight: 140 }}
                 />
               </div>
 
-              <div className="field__row">
-                <div className="field">
-                  <label>When did it start?</label>
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <div className={fieldRow}>
+                <div className={field}>
+                  <label className={fieldLabel}>When did it start?</label>
+                  <input className={fieldInput} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
                 </div>
-                <div className="field">
-                  <label>How long did it take?</label>
-                  <input type="text" placeholder="e.g. ~3 weeks"
+                <div className={field}>
+                  <label className={fieldLabel}>How long did it take?</label>
+                  <input className={fieldInput} type="text" placeholder="e.g. ~3 weeks"
                     value={buildTime} onChange={e => setBuildTime(e.target.value)} />
                 </div>
               </div>
 
-              <div className="field">
-                <label>Project photo</label>
+              <div className={field}>
+                <label className={fieldLabel}>Project photo</label>
                 <label
-                  className={`img-upload${imagePreview ? ' img-upload--has-preview' : ''}`}
+                  className={`${imgUploadBase} ${imagePreview ? imgUploadPreview : imgUploadIdle}`}
                   style={imagePreview ? { backgroundImage: `url(${imagePreview})` } : undefined}
                   onDragOver={e => e.preventDefault()}
                   onDrop={e => { e.preventDefault(); handleImageChange(e.dataTransfer.files[0] ?? null) }}
                 >
                   {!imagePreview && (
-                    <span className="img-upload__inner">
-                      <span className="img-upload__icon">↑</span>
+                    <span className={imgUploadInner}>
+                      <span className={imgUploadIcon}>↑</span>
                       <span>Drop an image or click to browse</span>
-                      <span className="img-upload__hint">JPG, PNG, WEBP · max 5 MB</span>
+                      <span className={imgUploadHint}>JPG, PNG, WEBP · max 5 MB</span>
                     </span>
                   )}
                   <input
                     type="file"
                     accept="image/*"
-                    style={{ display: 'none' }}
+                    className="hidden"
                     onChange={e => handleImageChange(e.target.files?.[0] ?? null)}
                   />
                   {imagePreview && (
-                    <button type="button" className="img-upload__remove" onClick={handleClearImage}>
+                    <button type="button" className={`${imgUploadRemove} top-2 right-2`} onClick={handleClearImage}>
                       ✕ Remove
                     </button>
                   )}
                 </label>
               </div>
 
-              <div className="field">
-                <label>Tools &amp; materials used</label>
-                <div className="tool-tags">
+              <div className={field}>
+                <label className={fieldLabel}>Tools &amp; materials used</label>
+                <div className={toolTags}>
                   {TOOL_SUGGESTIONS.map(t => (
                     <button key={t} type="button"
-                      className={`tool-tag${tools.includes(t) ? ' tool-tag--on' : ''}`}
+                      className={tools.includes(t) ? toolTagOn : toolTag}
                       onClick={() => toggleTool(t)}>{t}</button>
                   ))}
                   {tools.filter(t => !TOOL_SUGGESTIONS.includes(t)).map(t => (
                     <button key={t} type="button"
-                      className="tool-tag tool-tag--on tool-tag--custom"
+                      className={toolTagOn}
                       onClick={() => toggleTool(t)}>{t}</button>
                   ))}
-                  <span className="tool-tag-other">
-                    <input type="text" placeholder="Other…" value={otherTool}
+                  <span className={toolTagOther}>
+                    <input className={toolTagOtherInput} type="text" placeholder="Other…" value={otherTool}
                       onChange={e => setOtherTool(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitOtherTool() } }} />
-                    {otherTool.trim() && <button type="button" onClick={commitOtherTool}>+</button>}
+                    {otherTool.trim() && <button type="button" className={toolTagOtherBtn} onClick={commitOtherTool}>+</button>}
                   </span>
                 </div>
               </div>
 
               {/* BUILD LOG */}
-              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">B</span><span>Build log</span><span className="bar" />
+              <div className={`${seclabel} mt-7 mb-[18px]`}>
+                <span className={seclabelNum}>B</span><span>Build log</span><span className={seclabelBar} />
                 <span>optional · timeline of your process</span>
               </div>
 
               {logEntries.length > 0 && (
-                <div className="dyn-list">
+                <div className={dynList}>
                   {logEntries.map((entry, i) => (
-                    <div key={i} className="dyn-row">
-                      <button type="button" className="dyn-row__remove" onClick={() => {
+                    <div key={i} className={dynRow}>
+                      <button type="button" className={dynRowRemove} onClick={() => {
                         setLogEntries(prev => prev.filter((_, idx) => idx !== i))
                         setLogEntryFiles(prev => prev.filter((_, idx) => idx !== i))
                         setLogEntryPreviews(prev => prev.filter((_, idx) => idx !== i))
                       }}>✕</button>
-                      <div className="dyn-row__cols dyn-row__cols--3">
-                        <div className="field" style={{ margin: 0 }}>
-                          <label>Date</label>
-                          <input type="date" value={entry.date} onChange={e => updateLog(i, 'date', e.target.value)} />
+                      <div className={dynRowCols3}>
+                        <div className={fieldTight}>
+                          <label className={fieldLabel}>Date</label>
+                          <input className={fieldInput} type="date" value={entry.date} onChange={e => updateLog(i, 'date', e.target.value)} />
                         </div>
-                        <div className="field" style={{ margin: 0 }}>
-                          <label>Title</label>
-                          <input type="text" placeholder="e.g. First prototype"
+                        <div className={fieldTight}>
+                          <label className={fieldLabel}>Title</label>
+                          <input className={fieldInput} type="text" placeholder="e.g. First prototype"
                             value={entry.title} onChange={e => updateLog(i, 'title', e.target.value)} />
                         </div>
-                        <div className="field" style={{ margin: 0 }}>
-                          <label>Tag</label>
-                          <input type="text" placeholder="e.g. Prototype"
+                        <div className={fieldTight}>
+                          <label className={fieldLabel}>Tag</label>
+                          <input className={fieldInput} type="text" placeholder="e.g. Prototype"
                             value={entry.tag} onChange={e => updateLog(i, 'tag', e.target.value)} />
                         </div>
                       </div>
-                      <div className="field" style={{ margin: 0 }}>
-                        <label>Notes</label>
-                        <textarea placeholder="What happened at this stage?"
-                          value={entry.body} onChange={e => updateLog(i, 'body', e.target.value)}
-                          style={{ minHeight: 64 }} />
+                      <div className={fieldTight}>
+                        <label className={fieldLabel}>Notes</label>
+                        <textarea className={`${fieldTextarea} min-h-[64px]`} placeholder="What happened at this stage?"
+                          value={entry.body} onChange={e => updateLog(i, 'body', e.target.value)} />
                       </div>
-                      <label className="dyn-row__milestone">
-                        <input type="checkbox" checked={entry.milestone}
+                      <label className={dynRowMilestone}>
+                        <input className={dynRowMilestoneInput} type="checkbox" checked={entry.milestone}
                           onChange={e => updateLog(i, 'milestone', e.target.checked)} />
                         Mark as milestone
                       </label>
-                      <div className="field" style={{ margin: '8px 0 0' }}>
-                        <label>Photo <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>optional</span></label>
+                      <div className={`${fieldTight} mt-2`}>
+                        <label className={fieldLabel}>Photo <span className="font-normal normal-case tracking-normal">optional</span></label>
                         {logEntryPreviews[i] ? (
-                          <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <div className="relative inline-block">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={logEntryPreviews[i]!} alt="Log entry" style={{ maxWidth: '100%', maxHeight: 200, display: 'block', borderRadius: 4 }} />
-                            <button type="button" className="img-upload__remove" style={{ position: 'absolute', top: 6, right: 6 }} onClick={() => removeLogImage(i)}>✕ Remove</button>
+                            <img src={logEntryPreviews[i]!} alt="Log entry" className="max-w-full max-h-[200px] block rounded" />
+                            <button type="button" className={`${imgUploadRemove} top-1.5 right-1.5`} onClick={() => removeLogImage(i)}>✕ Remove</button>
                           </div>
                         ) : (
-                          <label className="gallery-upload" style={{ display: 'inline-flex' }}>
+                          <label className={`${galleryUpload} inline-flex`}>
                             ↑ Add photo
-                            <input type="file" accept="image/*" style={{ display: 'none' }}
+                            <input type="file" accept="image/*" className="hidden"
                               onChange={e => handleLogImageChange(i, e.target.files?.[0] ?? null)} />
                           </label>
                         )}
@@ -679,7 +696,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                   ))}
                 </div>
               )}
-              <button type="button" className="dyn-add" onClick={() => {
+              <button type="button" className={dynAdd} onClick={() => {
                 setLogEntries(prev => [...prev, emptyLog()])
                 setLogEntryFiles(prev => [...prev, null])
                 setLogEntryPreviews(prev => [...prev, null])
@@ -688,109 +705,112 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </button>
 
               {/* GALLERY */}
-              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">C</span><span>Gallery</span><span className="bar" />
+              <div className={`${seclabel} mt-7 mb-[18px]`}>
+                <span className={seclabelNum}>C</span><span>Gallery</span><span className={seclabelBar} />
                 <span>optional · process photos</span>
               </div>
 
               {(existingGallery.length > 0 || newGalleryPreviews.length > 0) && (
-                <div className="gallery-grid" style={{ marginBottom: 8 }}>
+                <div className={galleryGrid}>
                   {existingGallery.map((url, i) => (
-                    <div key={url} className="gallery-thumb">
+                    <div key={url} className={galleryThumb}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt={`Gallery ${i + 1}`} />
-                      <button type="button" className="gallery-thumb__remove" onClick={() => removeExistingGallery(url)}>✕</button>
+                      <img src={url} alt={`Gallery ${i + 1}`} className={galleryThumbImg} />
+                      <button type="button" className={galleryThumbRemove} onClick={() => removeExistingGallery(url)}>✕</button>
                     </div>
                   ))}
                   {newGalleryPreviews.map((src, i) => (
-                    <div key={i} className="gallery-thumb">
+                    <div key={i} className={galleryThumb}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt={`New ${i + 1}`} />
-                      <button type="button" className="gallery-thumb__remove" onClick={() => removeNewGallery(i)}>✕</button>
+                      <img src={src} alt={`New ${i + 1}`} className={galleryThumbImg} />
+                      <button type="button" className={galleryThumbRemove} onClick={() => removeNewGallery(i)}>✕</button>
                     </div>
                   ))}
                 </div>
               )}
-              <label className="gallery-upload">
+              <label className={galleryUpload}>
                 ↑ Add photos
-                <input type="file" accept="image/*" multiple style={{ display: 'none' }}
+                <input type="file" accept="image/*" multiple className="hidden"
                   onChange={e => addGalleryFiles(e.target.files)} />
               </label>
 
               {/* BOM */}
-              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">D</span><span>Bill of materials</span><span className="bar" />
+              <div className={`${seclabel} mt-7 mb-[18px]`}>
+                <span className={seclabelNum}>D</span><span>Bill of materials</span><span className={seclabelBar} />
                 <span>optional · what did it cost?</span>
               </div>
 
               {bomRows.length > 0 && (
-                <div className="dyn-list">
+                <div className={dynList}>
                   {bomRows.map((row, i) => (
-                    <div key={i} className="dyn-row">
-                      <button type="button" className="dyn-row__remove" onClick={() => setBomRows(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
-                      <div className="dyn-row__cols dyn-row__cols--4">
-                        <div className="field" style={{ margin: 0 }}>
-                          <label>Item</label>
-                          <input type="text" placeholder="e.g. Arduino Pro Mini"
+                    <div key={i} className={dynRow}>
+                      <button type="button" className={dynRowRemove} onClick={() => setBomRows(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                      <div className={dynRowCols4}>
+                        <div className={fieldTight}>
+                          <label className={fieldLabel}>Item</label>
+                          <input className={fieldInput} type="text" placeholder="e.g. Arduino Pro Mini"
                             value={row.item} onChange={e => updateBom(i, 'item', e.target.value)} />
                         </div>
-                        <div className="field" style={{ margin: 0 }}>
-                          <label>Qty</label>
-                          <input type="number" min="1" value={row.qty}
+                        <div className={fieldTight}>
+                          <label className={fieldLabel}>Qty</label>
+                          <input className={fieldInput} type="number" min="1" value={row.qty}
                             onChange={e => updateBom(i, 'qty', e.target.value)} />
                         </div>
-                        <div className="field" style={{ margin: 0 }}>
-                          <label>Unit cost $</label>
-                          <input type="number" min="0" step="0.01" placeholder="0.00"
+                        <div className={fieldTight}>
+                          <label className={fieldLabel}>Unit cost $</label>
+                          <input className={fieldInput} type="number" min="0" step="0.01" placeholder="0.00"
                             value={row.unit_cost} onChange={e => updateBom(i, 'unit_cost', e.target.value)} />
                         </div>
-                        <div className="field" style={{ margin: 0 }}>
-                          <label>Source</label>
-                          <input type="text" placeholder="e.g. Jaycar"
+                        <div className={fieldTight}>
+                          <label className={fieldLabel}>Source</label>
+                          <input className={fieldInput} type="text" placeholder="e.g. Jaycar"
                             value={row.src} onChange={e => updateBom(i, 'src', e.target.value)} />
                         </div>
                       </div>
-                      <div className="field" style={{ margin: 0 }}>
-                        <label>Description</label>
-                        <input type="text" placeholder="e.g. With pin headers"
+                      <div className={fieldTight}>
+                        <label className={fieldLabel}>Description</label>
+                        <input className={fieldInput} type="text" placeholder="e.g. With pin headers"
                           value={row.desc} onChange={e => updateBom(i, 'desc', e.target.value)} />
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-              <button type="button" className="dyn-add" onClick={() => setBomRows(prev => [...prev, emptyBom()])}>
+              <button type="button" className={dynAdd} onClick={() => setBomRows(prev => [...prev, emptyBom()])}>
                 + Add item
               </button>
 
               {/* RETRO */}
-              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">E</span><span>What we learned</span><span className="bar" />
+              <div className={`${seclabel} mt-7 mb-[18px]`}>
+                <span className={seclabelNum}>E</span><span>What we learned</span><span className={seclabelBar} />
                 <span>optional · one item per line</span>
               </div>
-              <div className="field__row">
-                <div className="field">
-                  <label>What worked <span style={{ color: '#22c55e' }}>[ + ]</span></label>
+              <div className={fieldRow}>
+                <div className={field}>
+                  <label className={fieldLabel}>What worked <span className="text-[#22c55e]">[ + ]</span></label>
                   <textarea
+                    className={`${fieldTextarea} min-h-[100px]`}
                     placeholder={'Pin headers saved hours of debugging.\nPair-building at open hours was faster.'}
-                    value={retroWins} onChange={e => setRetroWins(e.target.value)} style={{ minHeight: 100 }} />
+                    value={retroWins} onChange={e => setRetroWins(e.target.value)} />
                 </div>
-                <div className="field">
-                  <label>What we&rsquo;d change <span style={{ color: 'var(--pop-red)' }}>[ - ]</span></label>
+                <div className={field}>
+                  <label className={fieldLabel}>What we&rsquo;d change <span className="text-pop-red">[ - ]</span></label>
                   <textarea
+                    className={`${fieldTextarea} min-h-[100px]`}
                     placeholder={'Should have ordered the PCB earlier.\nNeeds a service hatch.'}
-                    value={retroFixes} onChange={e => setRetroFixes(e.target.value)} style={{ minHeight: 100 }} />
+                    value={retroFixes} onChange={e => setRetroFixes(e.target.value)} />
                 </div>
               </div>
 
               {/* LINKS */}
-              <div className="seclabel" style={{ margin: '28px 0 18px' }}>
-                <span className="num">F</span><span>Links</span><span className="bar" />
+              <div className={`${seclabel} mt-7 mb-[18px]`}>
+                <span className={seclabelNum}>F</span><span>Links</span><span className={seclabelBar} />
               </div>
 
-              <div className="field">
-                <label>GitHub / source</label>
+              <div className={field}>
+                <label className={fieldLabel}>GitHub / source</label>
                 <input
+                  className={fieldInput}
                   type="url"
                   placeholder="https://github.com/…"
                   value={github}
@@ -799,13 +819,13 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               {saveError && (
-                <p style={{ color: '#ff3c6d', fontSize: 12, letterSpacing: '0.04em' }}>{saveError}</p>
+                <p className="text-pop-red text-xs tracking-[0.04em]">{saveError}</p>
               )}
 
-              <div className="form__actions">
-                <Link href={backHref} className="btn btn--ghost">Cancel</Link>
-                <button className="btn btn--gradient" type="submit" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save changes'} <span className="arr">→</span>
+              <div className={formActions}>
+                <Link href={backHref} className={btnGhost}>Cancel</Link>
+                <button className={btnGradient} type="submit" disabled={saving}>
+                  {saving ? 'Saving…' : 'Save changes'} <span className={btnArr}>→</span>
                 </button>
               </div>
 
@@ -817,13 +837,13 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       <Footer />
 
       {showRemoveSelfModal && (
-        <div className="modal-backdrop" onClick={() => setShowRemoveSelfModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <p className="modal__label">Remove yourself?</p>
-            <p className="modal__title">Are you sure you want to remove yourself from this project&apos;s makers list?</p>
-            <div className="modal__actions">
-              <button className="btn btn--ghost" onClick={() => setShowRemoveSelfModal(false)}>Cancel</button>
-              <button className="btn btn--danger" onClick={confirmRemoveSelf}>Remove me</button>
+        <div className={modalBackdrop} onClick={() => setShowRemoveSelfModal(false)}>
+          <div className={modal} onClick={e => e.stopPropagation()}>
+            <p className={modalLabel}>Remove yourself?</p>
+            <p className={modalTitle}>Are you sure you want to remove yourself from this project&apos;s makers list?</p>
+            <div className={modalActions}>
+              <button className={btnGhost} onClick={() => setShowRemoveSelfModal(false)}>Cancel</button>
+              <button className={btnDanger} onClick={confirmRemoveSelf}>Remove me</button>
             </div>
           </div>
         </div>

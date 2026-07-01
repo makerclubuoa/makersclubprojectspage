@@ -12,9 +12,12 @@ export default function CursorTrail() {
       lastTrail = now
 
       const d = document.createElement('span')
-      d.className = 'trail-dot'
       const s = 3 + Math.random() * 3
       d.style.cssText = `
+        position:fixed;
+        pointer-events:none;
+        z-index:9999;
+        transform:translate(-50%,-50%);
         width:${s}px;height:${s}px;
         left:${e.clientX}px;top:${e.clientY}px;
         background:currentColor;

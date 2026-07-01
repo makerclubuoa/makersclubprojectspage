@@ -7,6 +7,7 @@ import Footer from '@/app/components/Footer'
 import CursorTrail from '@/app/components/CursorTrail'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/components/AuthProvider'
+import { form, formInner, formFig, seclabel, seclabelNum, seclabelBar, field, fieldLabel, fieldReq, fieldInput, btnGradient, btnArr } from '@/lib/ui'
 
 export default function LoginPage() {
   const { user, loading } = useAuth()
@@ -43,35 +44,37 @@ export default function LoginPage() {
     <>
       <CursorTrail />
       <Nav />
-      <main style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '100px 20px' }}>
-        <div className="form form--login" style={{ maxWidth: 420, width: '100%' }}>
-          <div className="form__inner">
-            <div className="seclabel" style={{ marginBottom: 28 }}>
-              <span className="num">[05]</span>
+      <main className="min-h-[80vh] flex items-center justify-center px-5 py-[100px]">
+        <div className={`${form} max-w-[420px] w-full`}>
+          <div className={formInner}>
+            <span className={formFig}>FIG.05 — ACCOUNT</span>
+            <div className={`${seclabel} mb-7`}>
+              <span className={seclabelNum}>[05]</span>
               <span>Sign_in</span>
-              <span className="bar" />
+              <span className={seclabelBar} />
             </div>
 
             {sent ? (
-              <div className="submit-success">
-                <div className="submit-success__icon">✉</div>
-                <h2>// Check your inbox.</h2>
-                <p>
+              <div className="border border-pop-magenta py-12 px-9 text-center bg-[color-mix(in_oklab,var(--pop-magenta)_7%,var(--paper))]">
+                <div className="text-[36px] text-pop-magenta mb-4">✉</div>
+                <h2 className="text-[32px] font-normal mt-0 mb-3">// Check your inbox.</h2>
+                <p className="text-ink-2 text-sm max-w-[44ch] mx-auto leading-[1.6]">
                   We sent a magic link to <strong>{email}</strong>. Click it to finish signing in.
                 </p>
               </div>
             ) : (
               <>
-                <p style={{ color: 'var(--ink-2)', marginBottom: 28, fontSize: 13, lineHeight: 1.65 }}>
+                <p className="text-ink-2 mb-7 text-[13px] leading-[1.65]">
                   Sign in to like projects and submit your own to the archive. Maker Club members only.
                 </p>
 
                 <form onSubmit={handleMagicLink}>
-                  <div className="field">
-                    <label>
-                      Email <span className="req">*</span>
+                  <div className={field}>
+                    <label className={fieldLabel}>
+                      Email <span className={fieldReq}>*</span>
                     </label>
                     <input
+                      className={fieldInput}
                       type="email"
                       placeholder="you@example.com"
                       value={email}
@@ -80,23 +83,22 @@ export default function LoginPage() {
                     />
                   </div>
                   {error && (
-                    <p style={{ color: '#ff3c6d', fontSize: 12, marginBottom: 12, letterSpacing: '0.04em' }}>
+                    <p className="text-pop-red text-xs mb-3 tracking-[0.04em]">
                       {error}
                     </p>
                   )}
                   <button
-                    className="btn btn--gradient"
+                    className={`${btnGradient} w-full justify-center flex`}
                     type="submit"
                     disabled={sending}
-                    style={{ width: '100%', justifyContent: 'center', display: 'flex' }}
                   >
-                    {sending ? 'Checking…' : 'Send magic link'} <span className="arr">→</span>
+                    {sending ? 'Checking…' : 'Send magic link'} <span className={btnArr}>→</span>
                   </button>
                 </form>
 
-                <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 20, lineHeight: 1.5, letterSpacing: '0.04em' }}>
+                <p className="text-[11px] text-muted mt-5 leading-[1.5] tracking-[0.04em]">
                   No password needed. We&rsquo;ll send a one-click sign-in link to your inbox.{' '}
-                  <a href="https://makeuoa.nz" style={{ color: 'var(--ink-2)', textDecoration: 'underline' }}>Not a member yet?</a>
+                  <a href="https://makeuoa.nz" className="text-ink-2 underline">Not a member yet?</a>
                 </p>
               </>
             )}

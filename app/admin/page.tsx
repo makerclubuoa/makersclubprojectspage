@@ -10,16 +10,32 @@ import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import type { Project } from '@/lib/projects'
 import Pagination from '@/app/components/Pagination'
+import {
+  container, seclabel, seclabelNum, seclabelBar,
+  submitHero, submitHeroTitle, submitHeroSub, submitMain,
+  emptyState, emptyStateMono,
+  dashTable, dashRow, dashRowMain, dashRowTitle, dashRowMeta,
+  dashStatus, dashStatusDraft, dashStatusRejected, dashStatusLive,
+  dashRowEdit, dashRowDelete,
+  modalBackdrop, modal, modalLabel, modalTitle, modalWarn, modalActions,
+  btnGhost, btnGradient, btnDanger,
+} from '@/lib/ui'
 
 const ADMIN_EMAIL = 'makerclubuoa@gmail.com'
+
+// Small accent pill used for the status filters.
+const FILTER_BTN =
+  'inline-flex items-center gap-2.5 rounded-full font-semibold border border-transparent bg-accent text-white active:scale-[0.97] px-3.5 py-[5px] text-[11px] [transition:transform_0.12s_ease,background_0.2s,color_0.2s,border-color_0.2s,opacity_0.2s]'
+// Row action link (like a dash-row edit link but with a pinned colour, no hover shift).
+const DASH_ACTION = 'text-[10.5px] tracking-[0.08em] uppercase shrink-0 px-2 py-1 transition-colors duration-150'
 
 type Filter = 'all' | 'pending' | 'live' | 'featured' | 'rejected'
 
 function statusLabel(status: string | null, featured: boolean | null) {
-  if (status === 'DRAFT') return { text: 'Pending', cls: 'dash-status--draft' }
-  if (status === 'REJECTED') return { text: 'Rejected', cls: 'dash-status--rejected' }
-  if (status === 'APPROVED') return { text: featured ? 'Live · Featured' : 'Live', cls: 'dash-status--live' }
-  return { text: status ?? '—', cls: '' }
+  if (status === 'DRAFT') return { text: 'Pending', cls: dashStatusDraft }
+  if (status === 'REJECTED') return { text: 'Rejected', cls: dashStatusRejected }
+  if (status === 'APPROVED') return { text: featured ? 'Live · Featured' : 'Live', cls: dashStatusLive }
+  return { text: status ?? '—', cls: 'border-rule' }
 }
 
 export default function AdminPage() {
@@ -170,25 +186,25 @@ export default function AdminPage() {
       <CursorTrail />
       <Nav />
 
-      <header className="submit-hero">
-        <div className="container">
-          <div className="seclabel" style={{ marginBottom: 24 }}>
-            <span className="num">[08]</span>
+      <header className={submitHero}>
+        <div className={container}>
+          <div className={`${seclabel} mb-6`}>
+            <span className={seclabelNum}>[08]</span>
             <span>Admin_</span>
-            <span className="bar" />
+            <span className={seclabelBar} />
           </div>
-          <h1 className="submit-hero__title">
-            All <em className="gradient-text">submissions</em>
+          <h1 className={submitHeroTitle}>
+            All <em className="text-ink">submissions</em>
           </h1>
-          <p className="submit-hero__sub">Approve, feature, reject, or delete any project.</p>
+          <p className={submitHeroSub}>Approve, feature, reject, or delete any project.</p>
         </div>
       </header>
 
-      <main className="submit-main">
-        <div className="container">
+      <main className={submitMain}>
+        <div className={container}>
 
           {actionError && (
-            <div style={{ marginBottom: 16, padding: '10px 14px', background: 'color-mix(in oklab, var(--pop-red) 10%, var(--paper))', border: '1px solid var(--pop-red)', color: 'var(--pop-red)', fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.04em' }}>
+            <div className="mb-4 px-3.5 py-2.5 bg-[color-mix(in_oklab,var(--pop-red)_10%,var(--paper))] border border-pop-red text-pop-red text-xs font-mono tracking-[0.04em]">
               Error: {actionError}
             </div>
           )}
@@ -198,16 +214,15 @@ export default function AdminPage() {
             placeholder="Search by project or maker name…"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
-            style={{ width: '100%', marginBottom: 16, padding: '8px 12px', background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', fontSize: 13, color: 'var(--ink)' }}
+            className="w-full mb-4 px-3 py-2 bg-paper-2 border border-rule rounded-base text-[13px] text-ink"
           />
 
-          <div style={{ display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap' }}>
+          <div className="flex gap-2 mb-8 flex-wrap">
             {(['all', 'pending', 'live', 'featured', 'rejected'] as Filter[]).map(f => (
               <button
                 key={f}
                 onClick={() => { setFilter(f); setPage(1) }}
-                className={`btn ${filter === f ? 'btn--gradient' : 'btn--ghost'}`}
-                style={{ padding: '5px 14px', fontSize: 11 }}
+                className={`${FILTER_BTN}${filter === f ? '' : ' hover:opacity-85'}`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
               </button>
@@ -215,12 +230,12 @@ export default function AdminPage() {
           </div>
 
           {dataLoading ? (
-            <div className="empty-state"><span className="mono">Loading…</span></div>
+            <div className={emptyState}><span className={emptyStateMono}>Loading…</span></div>
           ) : visible.length === 0 ? (
-            <div className="empty-state"><span className="mono">_ nothing here</span></div>
+            <div className={emptyState}><span className={emptyStateMono}>_ nothing here</span></div>
           ) : (
             <>
-            <div className="dash-table">
+            <div className={dashTable}>
               {paginated.map(p => {
                 const live = isLive(p)
                 const featured = p.Featured === true
@@ -229,24 +244,23 @@ export default function AdminPage() {
                 const { text, cls } = statusLabel(p.status, p.Featured)
                 const busy = actingId === p.id
                 return (
-                  <div key={p.id} className="dash-row" style={{ flexWrap: 'wrap', gap: '6px 0', alignItems: 'center' }}>
-                    <div className="dash-row__main">
-                      <Link href={`/projects/${p.id}`} className="dash-row__title">{p.title}</Link>
-                      <span className="dash-row__meta">
+                  <div key={p.id} className={`${dashRow} flex-wrap gap-x-0 gap-y-1.5`}>
+                    <div className={dashRowMain}>
+                      <Link href={`/projects/${p.id}`} className={dashRowTitle}>{p.title}</Link>
+                      <span className={dashRowMeta}>
                         {p.category}
                         {p.date && <> · {new Date(p.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
                         {p.makers && p.makers.length > 0 && <> · {p.makers.join(', ')}</>}
                       </span>
                     </div>
 
-                    <span className={`dash-status ${cls}`}>{text}</span>
+                    <span className={`${dashStatus} ${cls}`}>{text}</span>
 
-                    <Link href={`/projects/${p.id}/edit?from=admin`} className="dash-row__edit">Edit</Link>
+                    <Link href={`/projects/${p.id}/edit?from=admin`} className={dashRowEdit}>Edit</Link>
 
                     {isDraftOrRejected && (
                       <button
-                        className="dash-row__edit"
-                        style={{ color: 'var(--pop-blue)' }}
+                        className={`${DASH_ACTION} text-pop-blue`}
                         onClick={() => setPending({ id: p.id, title: p.title, label: 'Approve', action: () => setStatus(p.id, 'APPROVED', 'approved') })}
                         disabled={busy}
                       >
@@ -256,8 +270,7 @@ export default function AdminPage() {
 
                     {live && !featured && (
                       <button
-                        className="dash-row__edit"
-                        style={{ color: 'var(--pop-violet)' }}
+                        className={`${DASH_ACTION} text-pop-violet`}
                         onClick={() => setPending({ id: p.id, title: p.title, label: 'Feature', action: () => toggleFeatured(p.id, true) })}
                         disabled={busy}
                       >
@@ -267,8 +280,7 @@ export default function AdminPage() {
 
                     {live && featured && (
                       <button
-                        className="dash-row__edit"
-                        style={{ color: 'var(--pop-blue)' }}
+                        className={`${DASH_ACTION} text-pop-blue`}
                         onClick={() => setPending({ id: p.id, title: p.title, label: 'Un-feature', action: () => toggleFeatured(p.id, false) })}
                         disabled={busy}
                       >
@@ -278,7 +290,7 @@ export default function AdminPage() {
 
                     {!isRejected && (
                       <button
-                        className="dash-row__delete"
+                        className={dashRowDelete}
                         onClick={() => setPending({ id: p.id, title: p.title, label: 'Reject', action: () => setStatus(p.id, 'REJECTED', 'rejected') })}
                         disabled={busy}
                       >
@@ -287,7 +299,7 @@ export default function AdminPage() {
                     )}
 
                     <button
-                      className="dash-row__delete"
+                      className={dashRowDelete}
                       onClick={() => setPending({ id: p.id, title: p.title, label: 'Delete', action: () => handleDelete(p.id, p.title) })}
                       disabled={busy}
                     >
@@ -307,19 +319,19 @@ export default function AdminPage() {
       <Footer />
 
       {pending && (
-        <div className="modal-backdrop" onClick={() => setPending(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <p className="modal__label">Confirm action</p>
-            <p className="modal__title">
-              {pending.label} <em>"{pending.title}"</em>?
+        <div className={modalBackdrop} onClick={() => setPending(null)}>
+          <div className={modal} onClick={e => e.stopPropagation()}>
+            <p className={modalLabel}>Confirm action</p>
+            <p className={modalTitle}>
+              {pending.label} <em className="not-italic text-ink-2">"{pending.title}"</em>?
             </p>
             {pending.label === 'Delete' && (
-              <p className="modal__warn">This cannot be undone.</p>
+              <p className={modalWarn}>This cannot be undone.</p>
             )}
-            <div className="modal__actions">
-              <button className="btn btn--ghost" onClick={() => setPending(null)}>Cancel</button>
+            <div className={modalActions}>
+              <button className={btnGhost} onClick={() => setPending(null)}>Cancel</button>
               <button
-                className={`btn ${pending.label === 'Delete' || pending.label === 'Reject' ? 'btn--danger' : 'btn--gradient'}`}
+                className={pending.label === 'Delete' || pending.label === 'Reject' ? btnDanger : btnGradient}
                 onClick={confirmPending}
               >
                 {pending.label}

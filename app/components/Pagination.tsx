@@ -1,5 +1,11 @@
 'use client'
 
+const BTN =
+  'min-w-[34px] h-[34px] px-2 border rounded-[4px] text-[11px] tracking-[0.05em] transition-colors duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-default'
+const BTN_IDLE =
+  'text-ink-2 border-rule enabled:hover:border-ink enabled:hover:text-ink enabled:hover:bg-paper-2'
+const BTN_ACTIVE = 'bg-ink text-paper border-ink'
+
 function pages(current: number, total: number): (number | '…')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   const set = new Set<number>()
@@ -22,18 +28,18 @@ export default function Pagination({ page, totalPages, onChange }: {
 }) {
   if (totalPages <= 1) return null
   return (
-    <div className="pagination">
-      <button className="pagination__btn" onClick={() => onChange(page - 1)} disabled={page === 1}>←</button>
+    <div className="flex flex-wrap items-center justify-center gap-1 mt-10 mb-2">
+      <button className={`${BTN} ${BTN_IDLE}`} onClick={() => onChange(page - 1)} disabled={page === 1}>←</button>
       {pages(page, totalPages).map((p, i) =>
         p === '…'
-          ? <span key={`e${i}`} className="pagination__ellipsis">…</span>
+          ? <span key={`e${i}`} className="px-1 text-muted text-xs leading-[34px]">…</span>
           : <button
               key={p}
-              className={`pagination__btn${p === page ? ' pagination__btn--active' : ''}`}
+              className={`${BTN} ${p === page ? BTN_ACTIVE : BTN_IDLE}`}
               onClick={() => onChange(p as number)}
             >{p}</button>
       )}
-      <button className="pagination__btn" onClick={() => onChange(page + 1)} disabled={page === totalPages}>→</button>
+      <button className={`${BTN} ${BTN_IDLE}`} onClick={() => onChange(page + 1)} disabled={page === totalPages}>→</button>
     </div>
   )
 }

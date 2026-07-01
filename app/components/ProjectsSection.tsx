@@ -6,6 +6,12 @@ import { type Project } from '@/lib/projects'
 import Pagination from '@/app/components/Pagination'
 import CustomSelect from '@/app/components/CustomSelect'
 import ProjectCard from '@/app/components/ProjectCard'
+import { container, emptyState } from '@/lib/ui'
+
+const PILL_BASE =
+  'inline-flex items-center gap-2 px-3 py-[7px] rounded-[4px] border text-[11.5px] font-medium tracking-[0.06em] uppercase transition-[transform,background-color,color,border-color,box-shadow] duration-200'
+const SELECT_WRAP =
+  'inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] border border-rule bg-paper text-[11.5px] text-ink-2 tracking-[0.06em] uppercase max-[640px]:w-full max-[640px]:justify-between'
 
 function applyFilters(
   projects: Project[],
@@ -125,48 +131,50 @@ export default function ProjectsSection({
   return (
     <>
       {/* Grid */}
-      <section className="grid-section grid-section--title" id="projects">
-        <div className="container">
-          <div className="grid-header">
-            <h3>{tool !== 'All tools' ? tool : cat === 'All' ? 'All Projects' : cat}</h3>
-            <div className="meta">
-              <b>{String(filtered.length).padStart(2, '0')}</b>&nbsp;·&nbsp;results
+      <section className="pt-[97px] pb-6 max-[640px]:pt-20" id="projects">
+        <div className={container}>
+          <div className="flex items-baseline justify-between mb-5 select-none cursor-default">
+            <h3 className="text-[28px] m-0 font-bold tracking-[-0.03em] max-[640px]:text-xl">{tool !== 'All tools' ? tool : cat === 'All' ? 'All Projects' : cat}</h3>
+            <div className="text-muted text-[11px] tracking-[0.1em] uppercase">
+              <b className="text-ink font-normal">{String(filtered.length).padStart(2, '0')}</b>&nbsp;·&nbsp;results
             </div>
           </div>
         </div>
       </section>
 
       {/* Filter bar */}
-      <div className="filterbar">
-        <div className="container">
-          <div className="filterbar__row">
-            <div className="pills">
+      <div className="relative z-10 bg-paper border-y border-rule py-3 max-[640px]:py-2">
+        <div className={container}>
+          <div className="flex items-center gap-3 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               {allCategories.map(c => (
                 <button
                   key={c}
-                  className={`pill${c === cat ? ' is-active is-gradient' : ''}${bouncingPill === c ? ' is-bouncing' : ''}`}
+                  className={`${PILL_BASE} ${c === cat ? 'bg-accent text-white border-transparent' : 'bg-paper text-ink-2 border-rule hover:text-ink hover:border-ink'}${bouncingPill === c ? ' animate-[pillBounce_0.45s_cubic-bezier(0.34,1.56,0.64,1)]' : ''}`}
                   onClick={() => handleCatClick(c)}
                 >
                   <span>{c}</span>
-                  <span className="count">{String(categoryCount(c)).padStart(2, '0')}</span>
+                  <span className="text-[10.5px] opacity-70 tracking-normal">{String(categoryCount(c)).padStart(2, '0')}</span>
                 </button>
               ))}
             </div>
 
-            <div className="filter-divider" />
+            <div className="w-px h-[22px] bg-rule max-[1024px]:hidden" />
 
-            <div className="select">
-              <label>Made with</label>
+            <div className={SELECT_WRAP}>
+              <label className="text-muted text-[10px]">Made with</label>
               <CustomSelect
+                variant="filter"
                 value={tool}
                 onChange={v => { setTool(v); setPage(1) }}
                 options={allTools.map(t => ({ value: t, label: t }))}
               />
             </div>
 
-            <div className="select">
-              <label>Sort</label>
+            <div className={SELECT_WRAP}>
+              <label className="text-muted text-[10px]">Sort</label>
               <CustomSelect
+                variant="filter"
                 value={sort}
                 onChange={v => { setSort(v); setPage(1) }}
                 options={[
@@ -178,10 +186,10 @@ export default function ProjectsSection({
             </div>
 
             <button
-              className={`toggle${featured ? ' is-on' : ''}`}
+              className={`inline-flex items-center gap-2.5 px-3 py-1.5 rounded-[4px] border text-[11.5px] tracking-[0.06em] uppercase bg-paper max-[640px]:w-full max-[640px]:justify-between ${featured ? 'text-ink border-ink' : 'text-ink-2 border-rule'}`}
               onClick={() => { setFeatured(f => !f); setPage(1) }}
             >
-              <span className="toggle__sw" />
+              <span className={`relative w-7 h-4 rounded-[2px] border transition-[background-color,border-color] duration-200 after:content-[''] after:absolute after:left-px after:top-px after:w-3 after:h-3 after:transition-[transform,background-color] after:duration-200 ${featured ? 'bg-ink border-transparent after:translate-x-3 after:bg-white' : 'bg-paper-2 border-rule after:bg-paper-3'}`} />
               Featured only
             </button>
           </div>
@@ -189,15 +197,15 @@ export default function ProjectsSection({
       </div>
 
       {/* Cards */}
-      <section className="grid-section">
-        <div className="container">
+      <section className="pt-10 pb-20 max-[640px]:pt-5 max-[640px]:pb-12">
+        <div className={container}>
 
           {filtered.length === 0 ? (
-            <div className="empty-state">
+            <div className={emptyState}>
               <div>Nothing here yet</div>
-              <p style={{ marginTop: 8 }}>
+              <p className="mt-2">
                 Try a different filter —{' '}
-                <a href="#" onClick={resetFilters} style={{ textDecoration: 'underline' }}>
+                <a href="#" onClick={resetFilters} className="underline">
                   show everything
                 </a>
                 .
@@ -205,9 +213,9 @@ export default function ProjectsSection({
             </div>
           ) : (
             <>
-              <div className="bento" ref={gridRef}>
+              <div className="grid gap-[18px] grid-cols-3 max-[1024px]:grid-cols-2 max-[640px]:grid-cols-1" ref={gridRef}>
                 {paginated.map((p, i) => (
-                  <ProjectCard key={p.id} project={p} onCatClick={handleCatClick} onToolClick={handleToolClick} makerDisplay={makerDisplays[p.id]} />
+                  <ProjectCard key={p.id} project={p} index={i} onCatClick={handleCatClick} onToolClick={handleToolClick} makerDisplay={makerDisplays[p.id]} />
                 ))}
               </div>
               <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
