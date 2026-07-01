@@ -20,7 +20,7 @@ export const seclabelDot =
 
 /* ── Buttons ────────────────────────────────────────── */
 export const btn =
-  'inline-flex items-center gap-2.5 px-[22px] py-[11px] rounded-full font-semibold text-sm border border-ink active:scale-[0.97] [transition:transform_0.12s_ease,background_0.2s,color_0.2s,border-color_0.2s,opacity_0.2s]'
+  'inline-flex items-center justify-center gap-2.5 px-[22px] py-[11px] rounded-full font-semibold text-sm border border-ink active:scale-[0.97] [transition:transform_0.12s_ease,background_0.2s,color_0.2s,border-color_0.2s,opacity_0.2s]'
 export const btnPrimary = `${btn} bg-ink text-paper hover:bg-paper hover:text-ink`
 export const btnGhost = `${btn} bg-accent text-white border-transparent hover:opacity-85`
 export const btnGradient = `${btn} bg-accent text-white border-transparent`
@@ -28,7 +28,7 @@ export const btnSecondary = `${btn} bg-accent text-white border-transparent hove
 export const btnDanger = `${btn} bg-pop-red text-white border-pop-red hover:opacity-85`
 export const btnArr = 'text-sm leading-none'
 export const btnDark =
-  'inline-flex items-center gap-1.5 px-[22px] py-2.5 bg-[#2e2e2e] text-white rounded-full text-sm font-medium no-underline border border-white/12 transition-[background] duration-[180ms] hover:opacity-85'
+  'inline-flex items-center justify-center gap-1.5 px-[22px] py-2.5 bg-[#2e2e2e] text-white rounded-full text-sm font-medium no-underline border border-white/12 transition-[background] duration-[180ms] hover:opacity-85'
 
 /* ── Form fields ────────────────────────────────────── */
 export const field = 'flex flex-col gap-1.5 mb-4'

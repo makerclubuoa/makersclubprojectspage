@@ -10,7 +10,7 @@ export default function Footer() {
     <footer className="border-t border-rule">
 
       {/* Main footer row */}
-      <div className="py-10 border-t border-rule">
+      <div className="py-10">
         <div className={container}>
           <div className="flex items-start justify-between gap-12 max-[900px]:flex-col max-[900px]:gap-8">
 
@@ -63,8 +63,8 @@ export default function Footer() {
       </div>
 
       {/* Legal */}
-      <div className="py-[18px] border-t border-rule flex justify-between items-center text-xs text-muted">
-        <div className={`${container} flex justify-between w-full max-[560px]:flex-col max-[560px]:gap-1`}>
+      <div className="border-t border-rule py-[18px] text-xs text-muted">
+        <div className={container}>
           <span>© 2026 University of Auckland Makers Club</span>
         </div>
       </div>
