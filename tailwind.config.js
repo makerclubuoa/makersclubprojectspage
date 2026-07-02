@@ -19,6 +19,17 @@ module.exports = {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        grad: `linear-gradient(
+    146deg,
+    #567dff 0%,
+    #9f42d1 20%,
+    #f04ab9 35%,
+    #ff25c7 50%,
+    #ff3c6d 75%,
+    #ff856a 100%
+  )`,
+      },
       colors: {
         paper: "#ffffff",
         "paper-2": "#f5f5f7",
