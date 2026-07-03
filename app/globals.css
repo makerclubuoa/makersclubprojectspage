@@ -13,7 +13,16 @@
 /* Expose the existing design tokens as Tailwind theme values. `inline` means
    utilities reference the live CSS vars, so bg-paper / text-ink / border-rule
    automatically follow the light/dark token swaps below. */
-@theme inline {
+@theme {
+  --animate-linearSpin: linearSpin 14s infinite linear;
+  @keyframes linearSpin {
+    from {
+      translate: 0;
+    }
+    to {
+      translate: -100%;
+    }
+  }
   --font-sans: var(--font-dm-sans);
   --font-holt: var(--font-holtwood);
   --color-paper: var(--paper);
