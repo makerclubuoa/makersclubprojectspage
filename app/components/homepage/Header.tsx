@@ -5,7 +5,7 @@ interface HeaderPropsType {
   colour?: string;
   typeOverride?: string;
 }
-export default async function Header({
+export default function Header({
   text,
   rotation,
   bgColour,
@@ -14,10 +14,15 @@ export default async function Header({
 }: HeaderPropsType) {
   return (
     <div
-      className={`bg-${bgColour} text-${colour} ${typeOverride} flex items-center font-bold text-2xl pl-3`}
+      className={`bg-${bgColour} text-${colour} ${typeOverride} flex items-center  w-[110%] overflow-hidden content-stretch outline-solid outline-3 outline-black`}
       style={{ transform: `rotate(${rotation}deg)` }}
     >
-      {text}
+      <p
+        className="font-bold text-3xl pl-12 font-holt
+          [-webkit-text-stroke:1.2px_black]"
+      >
+        {text}
+      </p>
     </div>
   );
 }
