@@ -10,7 +10,7 @@ const textElements = [
 
 export default async function MovingText() {
   return (
-    <div className="bg-pop-violet text-white font-holt flex overflow-hidden gap-0 scrollbar-none outline-black outline-3 z-10">
+    <div className="bg-pop-violet text-white font-holt flex overflow-hidden gap-0 scrollbar-none outline-black outline-3 z-10 rotate-[2.27deg] -translate-y-3 lg:-translate-y-7">
       <div className="flex justify-around w-max gap-1 shrink-0 animate-linearSpin">
         {textElements.map((element) => {
           return (
