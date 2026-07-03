@@ -15,10 +15,10 @@ export default function Polaroid({
 }: PolaroidPropsType) {
   return (
     <div
-      className="min-h-96 w-1/2 md:max-w-96 bg-outline-gray-100 shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7"
+      className="min-h-90 md:min-h-80 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7"
       onClick={onClick}
     >
-      <div className="outline-gray-200 outline-3 w-4/5 h-6/8 px-3 relative">
+      <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-red-100 min-h-64 px-3 relative">
         <Image src={src} layout="fill" objectFit="cover" alt="" />
       </div>
       {description !== undefined ? (
