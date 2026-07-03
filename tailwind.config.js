@@ -19,6 +19,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-dm-sans)"],
+        holtwood: ["var(--font-holtwood"],
+      },
       backgroundImage: {
         grad: `linear-gradient(
     146deg,
