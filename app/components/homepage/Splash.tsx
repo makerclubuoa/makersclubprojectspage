@@ -32,7 +32,9 @@ export default function Splash() {
             {`We're gathering makers to create ideas together. If you design, crochet, cook, code, or like creating new things, then we're here for you. With regular events and more, this is the University of Auckland's home for all who make.`}
           </p>
         </div>
-        <Button onClick={() => {}}>Join Now!</Button>
+        <Button onClick={() => {}} typeOverride="z-10 relative">
+          Join Now!
+        </Button>
       </div>
     </div>
   );
