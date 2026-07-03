@@ -16,7 +16,7 @@ export default function Header({
 }: HeaderPropsType) {
   return (
     <div
-      className={`bg-${bgColour} text-${colour} ${typeOverride} flex items-center w-[110%] overflow-hidden content-stretch outline-solid outline-3 outline-black`}
+      className={`bg-${bgColour} text-${colour} ${typeOverride} flex items-center w-[110%] content-stretch outline-solid outline-3 outline-black`}
       style={{ transform: `rotate(${rotation}deg)` }}
     >
       <p
