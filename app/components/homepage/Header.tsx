@@ -4,6 +4,7 @@ interface HeaderPropsType {
   bgColour?: string;
   colour?: string;
   typeOverride?: string;
+  textTypeOverride?: string;
 }
 export default function Header({
   text,
@@ -11,6 +12,7 @@ export default function Header({
   bgColour,
   colour,
   typeOverride,
+  textTypeOverride,
 }: HeaderPropsType) {
   return (
     <div
@@ -18,8 +20,8 @@ export default function Header({
       style={{ transform: `rotate(${rotation}deg)` }}
     >
       <p
-        className="font-bold text-4xl pl-12 font-holt
-          [-webkit-text-stroke:1.4px_black]"
+        className={`font-bold text-4xl font-holt
+          [-webkit-text-stroke:1.4px_black] ${textTypeOverride}`}
       >
         {text}
       </p>
