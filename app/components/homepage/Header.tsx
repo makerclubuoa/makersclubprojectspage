@@ -14,12 +14,12 @@ export default function Header({
 }: HeaderPropsType) {
   return (
     <div
-      className={`bg-${bgColour} text-${colour} ${typeOverride} flex items-center  w-[110%] overflow-hidden content-stretch outline-solid outline-3 outline-black`}
+      className={`bg-${bgColour} text-${colour} ${typeOverride} flex items-center w-[110%] overflow-hidden content-stretch outline-solid outline-3 outline-black`}
       style={{ transform: `rotate(${rotation}deg)` }}
     >
       <p
-        className="font-bold text-3xl pl-12 font-holt
-          [-webkit-text-stroke:1.2px_black]"
+        className="font-bold text-4xl pl-12 font-holt
+          [-webkit-text-stroke:1.4px_black]"
       >
         {text}
       </p>
