@@ -13,7 +13,7 @@ export default function Test() {
       <Header
         text="What's New?"
         rotation={-1.5}
-        typeOverride="h-15"
+        typeOverride="h-20 pl-10"
         bgColour="pop-pink"
         colour="white"
       />
