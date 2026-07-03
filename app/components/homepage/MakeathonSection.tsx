@@ -21,16 +21,16 @@ export default function MakeathonSection() {
         colour="white"
       />
       {screenSize <= 768 ? (
-        <div className="w-full flex flex-col items-center">
+        <div className="pt-10 w-full flex flex-col items-center">
           <Polaroid src={art} onClick={undefined} description="hi" />
-          <div className="w-2/3 pr-5 lg:pr-20 text-lg lg:text-2xl font-semibold flex justify-center flex-col">
+          <div className="pt-5 w-2/3 pr-5 lg:pr-20 text-lg lg:text-2xl font-semibold flex justify-center flex-col">
             <p>
               {`Looking to collaborate with like-minded individuals? Our new semester long Make-A-Thon is the perfect place to get those creative juices going!`}
               <br />
               <br />
               {`Join us for Launch Night on DATE HERE, where we decide our theme for this semester.`}
             </p>
-            <div className="pt-3 lg:pt-5">
+            <div className="flex justify-center py-3 lg:pt-5">
               <Button onClick={() => {}} bgColour="pop-pink" textColour="white">
                 Register for Semester 2!
               </Button>
