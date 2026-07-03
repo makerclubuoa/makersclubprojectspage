@@ -1,5 +1,6 @@
 /* ── Tailwind v4 (utilities only; the project keeps its own reset, so Preflight
    is intentionally omitted to avoid restyling not-yet-migrated components) ── */
+@import url("https://googleapis.com");
 @import "tailwindcss";
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
@@ -13,6 +14,8 @@
    utilities reference the live CSS vars, so bg-paper / text-ink / border-rule
    automatically follow the light/dark token swaps below. */
 @theme inline {
+  --font-sans: var(--font-dm-sans);
+  --font-holt: var(--font-holtwood);
   --color-paper: var(--paper);
   --background-image-grad: linear-gradient(
     146deg,
