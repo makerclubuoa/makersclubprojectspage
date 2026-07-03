@@ -20,8 +20,8 @@ export default function Header({
       style={{ transform: `rotate(${rotation}deg)` }}
     >
       <p
-        className={`font-bold text-4xl font-holt
-          [-webkit-text-stroke:1.4px_black] ${textTypeOverride}`}
+        className={`font-bold text-3xl md:text-4xl font-holt
+          text-shadow-lg [-webkit-text-stroke:1.4px_black] ${textTypeOverride}`}
       >
         {text}
       </p>
