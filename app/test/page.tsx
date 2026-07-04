@@ -1,12 +1,8 @@
-"use client";
-import Button from "../components/global/Button";
-import Polaroid from "../components/global/Polaroid";
 import Header from "../components/homepage/Header";
 import MakeathonSection from "../components/homepage/MakeathonSection";
 import MovingText from "../components/homepage/MovingText";
 import Splash from "../components/homepage/Splash";
-
-import art from "@/public/maker-club-art.png";
+import TimelineSection from "../components/homepage/TimelineSection";
 
 export default function Test() {
   return (
@@ -23,6 +19,7 @@ export default function Test() {
         colour="white"
       />
       <MakeathonSection />
+      <TimelineSection />
     </div>
   );
 }
