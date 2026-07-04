@@ -18,7 +18,7 @@ export default function Button({
 }: ButtonPropsType) {
   return (
     <button
-      className={`rounded-full px-5 py-0.5 lg:px-7 lg:py-1 font-semibold border-2 border-black ${type !== "solid" ? `shadow-[2px_2px_0px_0px_#000]` : ""} ${bgColour !== undefined ? `bg-${bgColour}` : `bg-white`} text-${textColour} text-lg md:text-xl lg:text-2xl ${typeOverride}`}
+      className={`rounded-full px-5 py-0.5 lg:px-7 lg:py-1 font-semibold border-2 border-black ${type !== "solid" ? `shadow-[2px_2px_0px_0px_#000]` : ""} ${bgColour !== undefined ? `bg-${bgColour}` : `bg-white`} ${textColour !== undefined ? `text-${textColour}` : `text-black`} text-lg md:text-xl lg:text-2xl ${typeOverride}`}
       onClick={onClick}
     >
       {children}
