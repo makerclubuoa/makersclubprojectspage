@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${holtwood.variable}`}>
       <head />
-      <body>
+      <body className="font-sans">
         {/* <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('theme');var s=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(t===null&&s)){document.body.dataset.mode='dark';document.documentElement.style.colorScheme='dark';}else{document.body.dataset.mode='light';}})()` }} /> */}
         <AuthProvider>{children}</AuthProvider>
       </body>
