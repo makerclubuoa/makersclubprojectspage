@@ -6,7 +6,7 @@ import TimelineSection from "../components/homepage/TimelineSection";
 
 export default function Test() {
   return (
-    <div className="overflow-x-hidden">
+    <div className="overflow-hidden">
       <Splash />
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
         <MovingText />
