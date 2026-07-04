@@ -9,7 +9,7 @@ import Image from "next/image";
 export default function VendingMachineSection() {
   const screenSize = useScreenSize();
   return (
-    <div className="outline-3 outline-black py-10 bg-pop-pink md:pb-20 ">
+    <div className="relative outline-3 outline-black py-10 bg-pop-pink md:pb-20 ">
       <p className="text-4xl font-holt text-white pl-10 pb-0 mb-10 [-webkit-text-stroke:6px_black] [letter-spacing:0.05em] [paint-order:stroke_fill]">
         Support Small Creators
       </p>
