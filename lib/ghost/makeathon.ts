@@ -1,11 +1,11 @@
 import { api } from "@/lib/ghost-api";
 import { DOMParser } from "@xmldom/xmldom";
 import { propagateServerField } from "next/dist/server/lib/render-server";
-interface MakeathonType {
+export interface MakeathonType {
   title: string;
   date: string;
   description: string[];
-  image: string | URL;
+  image: string;
 }
 
 export async function getMakeathon(): Promise<MakeathonType> {
