@@ -1,14 +1,15 @@
+import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
 import Header from "../components/homepage/Header";
 import MakeathonSection from "../components/homepage/MakeathonSection";
 import MovingText from "../components/homepage/MovingText";
 import Splash from "../components/homepage/Splash";
 import TimelineSection from "../components/homepage/TimelineSection";
 
-export default function Test() {
+export default async function Test() {
+  const timelines: TimelineType[] = await getYearTimeline();
   return (
     <div className="overflow-visible">
       <Splash />
-
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
         <MovingText />
       </div>
@@ -27,7 +28,7 @@ export default function Test() {
         bgColour="pop-violet"
         colour="white"
       />
-      <TimelineSection />
+      <TimelineSection timelines={timelines} />
     </div>
   );
 }
