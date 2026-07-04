@@ -6,8 +6,9 @@ import TimelineSection from "../components/homepage/TimelineSection";
 
 export default function Test() {
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-visible">
       <Splash />
+
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
         <MovingText />
       </div>
@@ -19,6 +20,13 @@ export default function Test() {
         colour="white"
       />
       <MakeathonSection />
+      <Header
+        text="Semester 2. Fully loaded."
+        rotation={1.5}
+        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10"
+        bgColour="pop-violet"
+        colour="white"
+      />
       <TimelineSection />
     </div>
   );
