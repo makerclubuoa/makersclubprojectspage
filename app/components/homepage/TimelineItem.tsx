@@ -12,11 +12,11 @@ export default function TimelineItem({
   description,
   index,
 }: TimelineItemProps) {
-  const screenWidth = useScreenSize();
+  const screenSize = useScreenSize();
   return (
     <div
       style={{ gridRowStart: index }}
-      className={`${index % 2 === 0 ? `col-start-2 pr-5 justify-self-start` : `col-start-1 pl-5 justify-self-end`} w-full max-w-md`}
+      className={`${screenSize <= 768 ? `justify-self-center` : `${index % 2 === 0 ? `col-start-2 pr-5 justify-self-start` : `col-start-1 pl-5 justify-self-end`} `} z-10 w-full max-w-md mt-20`}
     >
       <div className="outline-3 bg-white min-h-32 max-h-full py-5 flex items-center px-3 shadow-[5px_5px_0px_0px_#000]">
         <div className="font-sans">
