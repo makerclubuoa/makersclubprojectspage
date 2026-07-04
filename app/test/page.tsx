@@ -4,6 +4,7 @@ import MakeathonSection from "../components/homepage/MakeathonSection";
 import MovingText from "../components/homepage/MovingText";
 import Splash from "../components/homepage/Splash";
 import TimelineSection from "../components/homepage/TimelineSection";
+import VendingMachineSection from "../components/homepage/VendingMachineSection";
 
 export default async function Test() {
   const timelines: TimelineType[] = await getYearTimeline();
@@ -29,6 +30,7 @@ export default async function Test() {
         colour="white"
       />
       <TimelineSection timelines={timelines} />
+      <VendingMachineSection />
     </div>
   );
 }
