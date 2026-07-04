@@ -1,14 +1,14 @@
-import { api } from "../../../lib/ghost-api";
+import { api } from "@/lib/ghost-api";
 import { PostOrPage } from "@tryghost/content-api";
 import { Document, DOMParser } from "@xmldom/xmldom";
 
-interface TimelineType {
+export interface TimelineType {
   name: string;
   date: string;
   description: string;
 }
 
-export async function getYearTimeline() {
+export async function getYearTimeline(): Promise<TimelineType[]> {
   const yearRoadmap: PostOrPage = (
     await api().posts.browse({
       filter: "tag:roadmap",
@@ -30,6 +30,7 @@ export async function getYearTimeline() {
   const doc = new DOMParser().parseFromString(wrappedHtml, "text/html");
 
   const paragraphElements = doc.getElementsByTagName("p");
+  console.log(JSON.stringify(yearRoadmap.html));
 
   let counter = 0;
   const timelines: TimelineType[] = [];
@@ -38,11 +39,6 @@ export async function getYearTimeline() {
   for (const pElement of paragraphElements) {
     let text = pElement.textContent;
     if (text === null) continue;
-    if (counter === 0 || counter === 3) {
-      timelines.push({ ...timeline });
-      timeline = { name: "", date: "", description: "" };
-    }
-
     if (text.split(" ")[0].toUpperCase().includes("DATE")) {
       timeline.date = text.split(" ").slice(1).join(" ");
       counter++;
@@ -54,6 +50,11 @@ export async function getYearTimeline() {
       counter++;
     } else {
       counter = 0;
+    }
+    if (counter === 3) {
+      timelines.push({ ...timeline });
+      counter = 0;
+      timeline = { name: "", date: "", description: "" };
     }
   }
 
