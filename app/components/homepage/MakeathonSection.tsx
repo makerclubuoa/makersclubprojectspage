@@ -48,7 +48,7 @@ export default function MakeathonSection() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-row justify-center bg-green-50 lg:top-12 relative gap-1 px-5">
+        <div className="pt-10 flex flex-row justify-center lg:top-12 relative gap-1 px-5">
           <div className="w-2/3 pr-20 text-lg lg:text-2xl font-semibold flex justify-center flex-col">
             <p>
               {`Looking to collaborate with like-minded individuals? Our new semester long Make-A-Thon is the perfect place to get those creative juices going!`}
