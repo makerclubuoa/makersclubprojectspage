@@ -6,6 +6,7 @@ import Splash from "../components/homepage/Splash";
 import TimelineSection from "../components/homepage/TimelineSection";
 import VendingMachineSection from "../components/homepage/VendingMachineSection";
 import { getMakeathon } from "@/lib/ghost/makeathon";
+import JoinSection from "../components/homepage/JoinSection";
 
 export default async function Test() {
   const timelines: TimelineType[] = await getYearTimeline();
@@ -33,6 +34,8 @@ export default async function Test() {
       />
       <TimelineSection timelines={timelines} />
       <VendingMachineSection />
+
+      <JoinSection />
     </div>
   );
 }
