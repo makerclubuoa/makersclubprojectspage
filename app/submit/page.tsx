@@ -348,7 +348,7 @@ export default function SubmitPage() {
 
       <header className={submitHero}>
         <div className={container}>
-          <Link href="/" className={projectBack}>← Back to projects</Link>
+          <Link href="/projects" className={projectBack}>← Back to projects</Link>
           <div className={`${seclabel} mb-6`}>
             <span className={seclabelNum}>[04]</span>
             <span>Submit_</span>
@@ -421,7 +421,7 @@ export default function SubmitPage() {
                   <p className={submitSuccessP}>
                     Your project is in the queue. We review submissions every Tuesday — if anything&rsquo;s unclear we&rsquo;ll reach out on the contact you provided.
                   </p>
-                  <Link href="/" className={`${btnGradient} mt-6`}>
+                  <Link href="/projects" className={`${btnGradient} mt-6`}>
                     Back to projects <span className={btnArr}>→</span>
                   </Link>
                 </div>

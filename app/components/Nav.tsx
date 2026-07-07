@@ -92,7 +92,7 @@ export default function Nav() {
         <a href="https://makeuoa.nz/code-of-conduct/" className={NAVLINK} onClick={close}>Code of conduct</a>
         <a href="https://makeuoa.nz/tag/updates/" className={NAVLINK} onClick={close}>Updates</a>
         <a href="https://vend.makeuoa.nz/" className={NAVLINK} onClick={close}>Vending machine</a>
-        <Link href="/" className={NAVLINK} onClick={close}>Projects</Link>
+        <Link href="/projects" className={NAVLINK} onClick={close}>Projects</Link>
         <Link href="/submit" className="hidden max-md:block max-md:mx-5 max-md:mt-3 max-md:px-5 max-md:py-3.5 max-md:rounded-base max-md:bg-ink max-md:text-paper max-md:font-semibold max-md:text-center max-md:whitespace-nowrap" onClick={close}>Submit a project</Link>
 
         {/* Mobile-only footer inside the drawer */}

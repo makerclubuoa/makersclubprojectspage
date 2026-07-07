@@ -385,7 +385,7 @@ export default function DashboardPage() {
             <div className={emptyState}>
               <div className={emptyStateMono}>_ nothing liked yet</div>
               <p className="mt-2">
-                <Link href="/" className="underline">Browse projects →</Link>
+                <Link href="/projects" className="underline">Browse projects →</Link>
               </p>
             </div>
           ) : (() => {

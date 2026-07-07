@@ -7,7 +7,6 @@ import MakeAThonSection from "../homepage/MakeathonSection";
 import MovingText from "../homepage/MovingText";
 import Splash from "../homepage/Splash";
 import art from "@/public/maker-club-art.png";
-import Image from "next/image";
 import Screentone from "../global/Screentone";
 
 export default function MakeathonSection() {
@@ -25,13 +24,7 @@ export default function MakeathonSection() {
       {screenSize <= 768 ? (
         <div className="pt-10 w-full flex flex-col items-center">
           <Polaroid src={art} onClick={undefined} description="hi">
-            <Image
-              src={"screentone.svg"}
-              fill
-              alt=""
-              className="[filter:brightness(0)_saturate(100%)_invert(43%)_sepia(92%)_saturate(3035%)_hue-rotate(320deg)_brightness(102%)_contrast(103%)]
-                opacity-15 absolute scale-150 object-cover"
-            />
+            <Screentone />
           </Polaroid>
           <div className="pt-24 w-2/3 pr-5 lg:pr-20 text-lg lg:text-2xl font-bold flex justify-center flex-col">
             <p>
@@ -63,13 +56,7 @@ export default function MakeathonSection() {
             </div>
           </div>
           <Polaroid src={art} onClick={undefined} description="hi">
-            <Image
-              src={"screentone.svg"}
-              fill
-              alt=""
-              className="[filter:brightness(0)_saturate(100%)_invert(43%)_sepia(92%)_saturate(3035%)_hue-rotate(320deg)_brightness(102%)_contrast(103%)]
-                opacity-15 absolute scale-150 object-cover"
-            />
+            <Screentone />
           </Polaroid>
         </div>
       )}

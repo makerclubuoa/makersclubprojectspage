@@ -51,7 +51,7 @@ export default function Footer() {
               <div>
                 <h5 className={H5}>Projects</h5>
                 <ul className="list-none p-0 m-0 flex flex-col gap-2.5">
-                  <li><Link className={NAVLINK} href="/">Archive</Link></li>
+                  <li><Link className={NAVLINK} href="/projects">Archive</Link></li>
                   <li><Link className={NAVLINK} href="/submit">Submit a project</Link></li>
                   <li><Link className={NAVLINK} href="/login">Sign in</Link></li>
                 </ul>
