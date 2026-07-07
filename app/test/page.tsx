@@ -4,9 +4,13 @@ import MakeathonSection from "../components/homepage/MakeathonSection";
 import MovingText from "../components/homepage/MovingText";
 import Splash from "../components/homepage/Splash";
 import TimelineSection from "../components/homepage/TimelineSection";
+import VendingMachineSection from "../components/homepage/VendingMachineSection";
+import { getMakeathon } from "@/lib/ghost/makeathon";
+import JoinSection from "../components/homepage/JoinSection";
 
 export default async function Test() {
   const timelines: TimelineType[] = await getYearTimeline();
+  const makeathon = await getMakeathon();
   return (
     <div className="overflow-visible">
       <Splash />
@@ -20,7 +24,7 @@ export default async function Test() {
         bgColour="pop-pink"
         colour="white"
       />
-      <MakeathonSection />
+      <MakeathonSection makeathon={makeathon} />
       <Header
         text="Semester 2. Fully loaded."
         rotation={1.5}
@@ -29,6 +33,9 @@ export default async function Test() {
         colour="white"
       />
       <TimelineSection timelines={timelines} />
+      <VendingMachineSection />
+
+      <JoinSection />
     </div>
   );
 }
