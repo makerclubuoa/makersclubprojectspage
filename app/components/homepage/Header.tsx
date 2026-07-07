@@ -1,0 +1,30 @@
+interface HeaderPropsType {
+  text: string;
+  rotation: number;
+  bgColour?: string;
+  colour?: string;
+  typeOverride?: string;
+  textTypeOverride?: string;
+}
+export default function Header({
+  text,
+  rotation,
+  bgColour,
+  colour,
+  typeOverride,
+  textTypeOverride,
+}: HeaderPropsType) {
+  return (
+    <div
+      className={`bg-${bgColour} text-${colour} ${typeOverride} flex items-center w-[110%] content-stretch outline-solid outline-3 outline-black`}
+      style={{ transform: `rotate(${rotation}deg)` }}
+    >
+      <p
+        className={`font-bold text-3xl md:text-4xl font-holt
+          text-shadow-lg [-webkit-text-stroke:1.4px_black] ${textTypeOverride}`}
+      >
+        {text}
+      </p>
+    </div>
+  );
+}
