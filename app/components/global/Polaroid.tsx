@@ -6,6 +6,7 @@ interface PolaroidPropsType {
   src: string | StaticImport;
   description?: string;
   onClick?: () => void;
+  typeOverride?: string;
   children?: React.ReactNode;
 }
 
@@ -13,11 +14,12 @@ export default function Polaroid({
   src,
   description,
   onClick,
+  typeOverride,
   children,
 }: PolaroidPropsType) {
   return (
     <div
-      className="min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative"
+      className={`min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride}`}
       onClick={onClick}
     >
       <div className="bg-red-200 -z-10">{children}</div>
