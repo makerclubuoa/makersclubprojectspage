@@ -17,7 +17,9 @@ export async function getPhotos(): Promise<PhotosType[]> {
   const imagesArr = JSON.parse(photos.lexical).root.children;
   let res: PhotosType[] = [];
   for (const image of imagesArr) {
-    res.push({ src: image.src });
+    if (image.src) {
+      res.push({ src: image.src });
+    }
   }
   console.log(res);
   return res;

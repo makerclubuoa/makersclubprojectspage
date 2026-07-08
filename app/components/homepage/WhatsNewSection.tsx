@@ -3,35 +3,9 @@ import Header from "./Header";
 import art from "../../../public/maker-club-art-colour.png";
 import PinnedPostSnippet from "../global/PinnedPostSnippet";
 import PhotoCarousel from "../global/PhotoCarousel";
+import { getPhotos, PhotosType } from "@/lib/ghost/photos";
 
-const samplePhotoCarousel = [
-  {
-    src: art,
-    alt: "",
-  },
-  {
-    src: art,
-    alt: "",
-  },
-  {
-    src: art,
-    alt: "",
-  },
-  {
-    src: art,
-    alt: "",
-  },
-  {
-    src: art,
-    alt: "",
-  },
-  {
-    src: art,
-    alt: "",
-  },
-];
-
-export default function WhatsNewSection() {
+export default function WhatsNewSection({ photos }: { photos: PhotosType[] }) {
   return (
     <div className="pb-10">
       <Header
@@ -48,7 +22,7 @@ export default function WhatsNewSection() {
         </div>
       </div>
       <div className="pt-8 lg:pt-5">
-        <PhotoCarousel props={samplePhotoCarousel} />
+        <PhotoCarousel props={photos} />
       </div>
     </div>
   );

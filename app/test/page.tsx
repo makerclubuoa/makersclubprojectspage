@@ -8,17 +8,20 @@ import VendingMachineSection from "../components/homepage/VendingMachineSection"
 import { getMakeathon } from "@/lib/ghost/makeathon";
 import JoinSection from "../components/homepage/JoinSection";
 import WhatsNewSection from "../components/homepage/WhatsNewSection";
+import { getPhotos } from "@/lib/ghost/photos";
 
 export default async function Test() {
   const timelines: TimelineType[] = await getYearTimeline();
   const makeathon = await getMakeathon();
+  const photos = await getPhotos();
+
   return (
     <div className="overflow-visible">
       <Splash />
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
         <MovingText />
       </div>
-      <WhatsNewSection />
+      <WhatsNewSection photos={photos} />
       <MakeathonSection makeathon={makeathon} />
       <Header
         text="Semester 2. Fully loaded."
@@ -29,7 +32,6 @@ export default async function Test() {
       />
       <TimelineSection timelines={timelines} />
       <VendingMachineSection />
-
       <JoinSection />
     </div>
   );
