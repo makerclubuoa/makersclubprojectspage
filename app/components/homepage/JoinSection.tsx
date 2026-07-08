@@ -29,7 +29,11 @@ export default function JoinSection() {
               <br />
               {`Register for ${year} now for free!`}
             </p>
-            <Button onClick={() => {}} bgColour="pop-pink" textColour="white">
+            <Button
+              onClick={() => {}}
+              bgColour="pop-pink"
+              textColour="white z-20"
+            >
               Join Now!
             </Button>
           </div>

@@ -19,7 +19,7 @@ export default function MakeathonSection({
       <Header
         text={makeathon.title}
         rotation={1.54}
-        typeOverride="relative lg:top-12 h-20 pl-5 md:pl-10"
+        typeOverride="relative top-5 lg:top-12 h-20 pl-5 md:pl-10"
         bgColour="pop-red"
         colour="white"
       />
