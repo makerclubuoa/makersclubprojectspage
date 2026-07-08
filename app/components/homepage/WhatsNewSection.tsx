@@ -42,12 +42,12 @@ export default function WhatsNewSection() {
         colour="white"
       />
       <div className="flex justify-center">
-        <div className="w-full items-center md:items-stretch  md:w-3/4 px-20 md:px-5 pt-1 md:pt-3 lg:pt-10 flex  flex-col md:flex-row gap-10">
+        <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
           <Photo src={art} alt="" rotation={2.3} tape="popViolet" />
           <PinnedPostSnippet />
         </div>
       </div>
-      <div className="pt-10 md:pt-20">
+      <div className="pt-8 lg:pt-5">
         <PhotoCarousel props={samplePhotoCarousel} />
       </div>
     </div>
