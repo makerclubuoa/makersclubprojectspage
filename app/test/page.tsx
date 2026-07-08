@@ -9,11 +9,13 @@ import { getMakeathon } from "@/lib/ghost/makeathon";
 import JoinSection from "../components/homepage/JoinSection";
 import WhatsNewSection from "../components/homepage/WhatsNewSection";
 import { getPhotos } from "@/lib/ghost/photos";
+import getLatestUpcomingEvent from "@/lib/ghost/events";
 
 export default async function Test() {
   const timelines: TimelineType[] = await getYearTimeline();
   const makeathon = await getMakeathon();
   const photos = await getPhotos();
+  const upcomingEvent = await getLatestUpcomingEvent();
 
   return (
     <div className="overflow-visible">
@@ -21,7 +23,7 @@ export default async function Test() {
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
         <MovingText />
       </div>
-      <WhatsNewSection photos={photos} />
+      <WhatsNewSection upcomingEvent={upcomingEvent} photos={photos} />
       <MakeathonSection makeathon={makeathon} />
       <Header
         text="Semester 2. Fully loaded."
