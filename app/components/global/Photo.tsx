@@ -29,11 +29,12 @@ export const tapeMappings = {
   },
 } as const;
 
-interface PhotoProps {
+export interface PhotoProps {
   src: string | StaticImageData;
   alt: string;
   rotation?: number;
   tape?: keyof typeof tapeMappings;
+  randomTape?: boolean;
   typeOverride?: string;
 }
 
@@ -42,6 +43,7 @@ export default function Photo({
   alt,
   rotation,
   tape,
+  randomTape,
   typeOverride,
 }: PhotoProps) {
   return (

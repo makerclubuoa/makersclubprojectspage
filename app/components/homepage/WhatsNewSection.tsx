@@ -2,6 +2,34 @@ import Photo, { tapeMappings } from "../global/Photo";
 import Header from "./Header";
 import art from "../../../public/maker-club-art-colour.png";
 import PinnedPostSnippet from "../global/PinnedPostSnippet";
+import PhotoCarousel from "../global/PhotoCarousel";
+
+const samplePhotoCarousel = [
+  {
+    src: art,
+    alt: "",
+  },
+  {
+    src: art,
+    alt: "",
+  },
+  {
+    src: art,
+    alt: "",
+  },
+  {
+    src: art,
+    alt: "",
+  },
+  {
+    src: art,
+    alt: "",
+  },
+  {
+    src: art,
+    alt: "",
+  },
+];
 
 export default function WhatsNewSection() {
   return (
@@ -18,6 +46,9 @@ export default function WhatsNewSection() {
           <Photo src={art} alt="" rotation={2.3} tape="popViolet" />
           <PinnedPostSnippet />
         </div>
+      </div>
+      <div className="pt-10 md:pt-20">
+        <PhotoCarousel props={samplePhotoCarousel} />
       </div>
     </div>
   );
