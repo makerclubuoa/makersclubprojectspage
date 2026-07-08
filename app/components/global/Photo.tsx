@@ -8,33 +8,36 @@ export const tapeMappings = {
   },
   popPink: {
     colour: "pop-pink",
-    rotation: "1.5deg",
-    position: "top-0 left-1/2",
+    rotation: "-20deg",
+    position: "top-0",
   },
-  popRed: { colour: "pop-red", rotation: "1.5deg", position: "top-0 left-1/2" },
+  popRed: {
+    colour: "pop-red",
+    rotation: "20deg",
+    position: "bottom-0 right-0",
+  },
   popOrange: {
     colour: "pop-orange",
-    rotation: "1.5deg",
-    position: "top-0 left-1/2",
+    rotation: "30deg",
+    position: "right-0",
   },
   popMagenta: {
     colour: "pop-magenta",
-    rotation: "1.5deg",
-    position: "top-0 left-1/2",
+    rotation: "30deg",
+    position: "bottom-0 right-0",
   },
   popBlue: {
     colour: "pop-blue",
-    rotation: "1.5deg",
-    position: "top-0 left-1/2",
+    rotation: "20deg",
+    position: "top-0",
   },
 } as const;
 
 export interface PhotoProps {
   src: string | StaticImageData;
-  alt: string;
+  alt?: string;
   rotation?: number;
   tape?: keyof typeof tapeMappings;
-  randomTape?: boolean;
   typeOverride?: string;
 }
 
@@ -43,7 +46,6 @@ export default function Photo({
   alt,
   rotation,
   tape,
-  randomTape,
   typeOverride,
 }: PhotoProps) {
   return (
@@ -58,7 +60,13 @@ export default function Photo({
         }}
       ></div>
       <div className="absolute inset-0 p-5 outline-3">
-        <Image src={src} fill className="object-cover" alt={alt} />
+        {/* TODO: make this more accessible */}
+        <Image
+          src={src}
+          fill
+          className="object-cover"
+          alt={alt ?? "Image of a recent event."}
+        />
       </div>
     </div>
   );

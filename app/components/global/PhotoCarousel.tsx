@@ -31,7 +31,12 @@ export default function PhotoCarousel({ props }: PhotoCarouselProps) {
           return (
             <SwiperSlide key={index}>
               <div className="flex justify-center items-center h-96">
-                <Photo src={photo.src} alt={photo.alt} />
+                {/* TODO: make accessible */}
+                <Photo
+                  src={photo.src}
+                  alt={photo.alt ? photo.alt : "Photo of a recent event."}
+                  tape={photo.tape}
+                />
               </div>
             </SwiperSlide>
           );
