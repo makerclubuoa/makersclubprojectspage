@@ -6,10 +6,6 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
-/* Dark mode is driven by body[data-mode='dark'], not prefers-color-scheme,
-   so `dark:` variants track the data attribute. */
-@custom-variant dark (&:where([data-mode='dark'], [data-mode='dark'] *));
-
 /* Expose the existing design tokens as Tailwind theme values. `inline` means
    utilities reference the live CSS vars, so bg-paper / text-ink / border-rule
    automatically follow the light/dark token swaps below. */
@@ -106,36 +102,6 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  body:not([data-mode="light"]) {
-    --paper: #1d1d1f;
-    --paper-2: #2c2c2e;
-    --paper-3: #3a3a3c;
-    --ink: #f5f5f7;
-    --ink-2: #aeaeb2;
-    --muted: #8e8e93;
-    --rule: rgba(255, 255, 255, 0.12);
-    --rule-2: rgba(255, 255, 255, 0.06);
-    --card-hover-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-    --rcard-shadow: 4px 4px 0 var(--paper-3);
-    color-scheme: dark;
-  }
-}
-
-[data-mode="dark"] {
-  --paper: #1d1d1f;
-  --paper-2: #2c2c2e;
-  --paper-3: #3a3a3c;
-  --ink: #f5f5f7;
-  --ink-2: #aeaeb2;
-  --muted: #8e8e93;
-  --rule: rgba(255, 255, 255, 0.12);
-  --rule-2: rgba(255, 255, 255, 0.06);
-  --card-hover-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-  --rcard-shadow: 4px 4px 0 var(--paper-3);
-  color-scheme: dark;
-}
-
 /* Base element reset — in @layer base so Tailwind utilities (e.g. text-paper on
    an <a>) win over `a { color: inherit }` instead of losing to unlayered rules. */
 @layer base {
@@ -202,12 +168,8 @@
   transform: none;
 }
 
-/* ── Date input dark-mode fix ───────────────────────── */
 input[type="date"] {
   color-scheme: light;
-}
-[data-mode="dark"] input[type="date"] {
-  color-scheme: dark;
 }
 
 /* ── Keyframes (referenced from JSX via animate-[…]) ── */

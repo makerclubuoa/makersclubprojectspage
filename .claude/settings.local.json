@@ -21,7 +21,15 @@
       "Bash(grep -qiE 'error|EADDRINUSE' __TRACKED_VAR__/dev.log)",
       "Bash(npx @tailwindcss/cli -i app/globals.css -o __TRACKED_VAR__/tw-out.css)",
       "Bash(grep -nE 'color: inherit;|\\\\.text-paper \\\\{' __TRACKED_VAR__/tw-out.css)",
-      "Bash(grep -nE '@layer \\(theme|base|components|utilities\\)\\(, | \\\\{|;\\)' __TRACKED_VAR__/tw-out.css)"
+      "Bash(grep -nE '@layer \\(theme|base|components|utilities\\)\\(, | \\\\{|;\\)' __TRACKED_VAR__/tw-out.css)",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)",
+      "Bash(nohup npx next dev -p 3055)",
+      "Bash(disown)",
+      "Bash(curl -sv http://localhost:3055/)",
+      "Bash(curl -s -o /c/Users/ibrah/OneDrive/Documents/GitHub/makersclubprojectspage/_home3000.html -w \"HTTP:%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(npm ls *)",
+      "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('has playwright'\\)}catch\\(e\\){console.log\\('no playwright'\\)}\")"
     ]
   }
 }
