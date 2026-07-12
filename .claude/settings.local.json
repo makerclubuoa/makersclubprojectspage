@@ -29,7 +29,9 @@
       "Bash(curl -sv http://localhost:3055/)",
       "Bash(curl -s -o /c/Users/ibrah/OneDrive/Documents/GitHub/makersclubprojectspage/_home3000.html -w \"HTTP:%{http_code}\\\\n\" http://localhost:3000/)",
       "Bash(npm ls *)",
-      "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('has playwright'\\)}catch\\(e\\){console.log\\('no playwright'\\)}\")"
+      "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('has playwright'\\)}catch\\(e\\){console.log\\('no playwright'\\)}\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }
