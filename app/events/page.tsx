@@ -3,6 +3,7 @@ import art from "@/public/maker-club-art-colour.png";
 import PinnedPostSnippet from "../components/global/PinnedPostSnippet";
 import Photo from "../components/global/Photo";
 import EventSlide from "../components/events/EventSlide";
+import PastEventsSection from "../components/events/PastEventsSection";
 
 export default async function Events() {
   const upcomingEvent = await getLatestUpcomingEvent();
@@ -36,20 +37,15 @@ export default async function Events() {
           </div>
         </div>
       </div>
-      <div className="flex justify-center items-center pt-5 w-full">
-        <div className="w-full xl:w-3/4 xl:max-w-[100rem]  grid md:grid-cols-2 2xl:grid-cols-3 gap-5">
-          {pastEvents.map((event, index) => {
-            return (
-              <EventSlide
-                src={event.src ?? ""}
-                title={event.title}
-                key={index}
-                excerpt=""
-              />
-            );
-          })}
-        </div>
+      <div className="mt-10 flex-col border-y-4 bg-white min-h-36 flex justify-center px-5">
+        <p
+          className="font-bold text-4xl md:text-5xl font-holt
+          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-purple-300"
+        >
+          Past Events
+        </p>
       </div>
+      <PastEventsSection />
     </div>
   );
 }

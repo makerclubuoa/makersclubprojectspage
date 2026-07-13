@@ -87,7 +87,7 @@ export async function getPastEvents(
   page: number = 1,
   limit: number = 12,
   skip: number = 0,
-): Promise<Event[]> {
+): Promise<{ pastEvents: Event[]; skip: number }> {
   const pastEvents: PostsOrPages = await api().posts.browse({
     filter: "tag:Events",
     formats: "html",
@@ -200,7 +200,7 @@ export async function getPastEvents(
     }
   }
 
-  return res;
+  return { pastEvents: res, skip: countNotPast };
 }
 
 function parsePastEvents(pastEvents: PostsOrPages) {}
