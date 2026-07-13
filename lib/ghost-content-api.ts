@@ -5,8 +5,8 @@ let contentApi: undefined | GhostAPI;
 export function api() {
   if (!contentApi) {
     contentApi = new GhostContentAPI({
-      url: process.env.GHOST_URL!,
-      key: process.env.GHOST_CONTENT_API_KEY!,
+      url: process.env.NEXT_PUBLIC_GHOST_URL!,
+      key: process.env.NEXT_PUBLIC_GHOST_CONTENT_API_KEY!,
       version: "v6.0",
     });
   }
