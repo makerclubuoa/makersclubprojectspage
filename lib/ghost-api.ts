@@ -10,6 +10,5 @@ export function api() {
       version: "v6.0",
     });
   }
-
   return adminApi;
 }
