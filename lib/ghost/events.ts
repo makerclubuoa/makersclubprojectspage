@@ -129,7 +129,7 @@ export async function getPastEvents(
         ?.find((t) => t.name?.includes("DATE"))
         ?.name?.replace("#DATE:", "")
         .trim();
-
+      console.log(pastEvent.slug);
       res.push({
         title: pastEvent.title ?? "No title provided.",
         slug: pastEvent.slug,

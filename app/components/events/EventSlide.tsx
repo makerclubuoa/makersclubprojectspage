@@ -5,11 +5,22 @@ interface EventSlideProps {
   title: string;
   src: string;
   excerpt?: string;
+  slug?: string;
 }
-export default function EventSlide({ title, src, excerpt }: EventSlideProps) {
+export default function EventSlide({
+  title,
+  src,
+  excerpt,
+  slug,
+}: EventSlideProps) {
   return (
     <div className="flex flex-col items-center w-full">
-      <Polaroid src={src} description={title} typeOverride="md:w-full" />
+      <Polaroid
+        link={`/events/${slug}`}
+        src={src}
+        description={title}
+        typeOverride="md:w-full"
+      />
     </div>
   );
 }

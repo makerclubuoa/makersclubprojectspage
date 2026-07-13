@@ -33,10 +33,12 @@ export default function PastEventsSection() {
       <div className="flex justify-center items-center pt-5 w-full">
         <div className="w-full xl:w-3/4 xl:max-w-[100rem] grid md:grid-cols-2 2xl:grid-cols-3 gap-5">
           {pastEvents.map((event, index) => {
+            console.log(event.slug);
             return (
               <EventSlide
                 src={event.src ?? ""}
                 title={event.title}
+                slug={event.slug}
                 key={index}
                 excerpt=""
               />
