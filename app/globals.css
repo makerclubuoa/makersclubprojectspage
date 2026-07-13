@@ -25,7 +25,13 @@
   }
   --font-sans: var(--font-dm-sans);
   --font-holt: var(--font-holtwood);
-  --color-paper: var(--paper);
+  --color-paper: var (--paper);
+  --background-image-purple-grad: linear-gradient(
+    180deg,
+    #9f42d1 0%,
+    #c76cf8 50%,
+    #b375d5 100%
+  );
   --background-image-grad: linear-gradient(
     146deg,
     #567dff 0%,
