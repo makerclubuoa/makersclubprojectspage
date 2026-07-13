@@ -6,24 +6,25 @@ import Button from "../global/Button";
 
 export default function PastEventsSection() {
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
+  const [skip, setSkip] = useState<number>(12);
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(12);
-  const [skip, setSkip] = useState<number>(0);
 
   useEffect(() => {
-    loadMoreEvents();
+    loadMoreEvents(true);
   }, []);
 
-  function loadMoreEvents() {
+  function loadMoreEvents(firstPage: boolean = false) {
     (async () => {
+      console.log(skip);
+      console.log(page);
       const { pastEvents: newPastEvents, skip: newSkip } = await getPastEvents(
-        page,
-        limit,
         skip,
+        page,
+        firstPage,
       );
       setPastEvents([...pastEvents, ...newPastEvents]);
       setSkip(newSkip);
-      setPage(page + 1);
+      setPage(2);
     })();
   }
 

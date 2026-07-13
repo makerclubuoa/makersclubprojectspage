@@ -1,13 +1,15 @@
 import getLatestUpcomingEvent, { getPastEvents } from "@/lib/ghost/events";
+import Header from "../components/homepage/Header";
 import art from "@/public/maker-club-art-colour.png";
 import PinnedPostSnippet from "../components/global/PinnedPostSnippet";
 import Photo from "../components/global/Photo";
-import EventSlide from "../components/events/EventSlide";
 import PastEventsSection from "../components/events/PastEventsSection";
+import TimelineSection from "../components/homepage/TimelineSection";
+import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
 
 export default async function Events() {
   const upcomingEvent = await getLatestUpcomingEvent();
-  const pastEvents = await getPastEvents();
+  const timelines: TimelineType[] = await getYearTimeline();
   return (
     <div className="bg-purple-grad min-h-dvh">
       <div className="pt-20">
@@ -37,7 +39,7 @@ export default async function Events() {
           </div>
         </div>
       </div>
-      <div className="mt-10 flex-col border-y-4 bg-white min-h-36 flex justify-center px-5">
+      <div className="mt-10 flex-col border-y-4 bg-white min-h-36 flex justify-center px-5 md:px-10">
         <p
           className="font-bold text-4xl md:text-5xl font-holt
           text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-purple-300"
@@ -46,6 +48,14 @@ export default async function Events() {
         </p>
       </div>
       <PastEventsSection />
+      <Header
+        text="Semester 2. Fully loaded."
+        rotation={1.5}
+        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10"
+        bgColour="pop-violet"
+        colour="white"
+      />
+      <TimelineSection timelines={timelines} />
     </div>
   );
 }
