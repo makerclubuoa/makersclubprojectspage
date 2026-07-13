@@ -19,6 +19,7 @@
     "@tryghost/admin-api": "^1.14.10",
     "@tryghost/content-api": "^1.12.9",
     "@xmldom/xmldom": "^0.9.10",
+    "chrono-node": "^2.10.0",
     "lucide-react": "^1.23.0",
     "next": "^16.2.6",
     "react": "^19.0.0",
