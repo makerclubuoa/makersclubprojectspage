@@ -19,7 +19,7 @@ export default function Polaroid({
 }: PolaroidPropsType) {
   return (
     <div
-      className={`min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride}`}
+      className={`min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride ? typeOverride : ""}`}
       onClick={onClick}
     >
       <div className="bg-red-200 -z-10">{children}</div>
@@ -27,8 +27,8 @@ export default function Polaroid({
         <Image src={src} layout="fill" objectFit="cover" alt="" />
       </div>
       {description !== undefined ? (
-        <div className="w-full flex  justify-center items-center pt-2 grow ">
-          <p className="text-3xl font-semibold">{description}</p>
+        <div className="w-full flex justify-center items-center pt-2 grow ">
+          <p className="text-2xl font-semibold text-center">{description}</p>
         </div>
       ) : null}
     </div>
