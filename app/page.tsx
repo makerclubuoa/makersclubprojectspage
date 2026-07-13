@@ -7,23 +7,23 @@ import TimelineSection from "./components/homepage/TimelineSection";
 import VendingMachineSection from "./components/homepage/VendingMachineSection";
 import { getMakeathon } from "@/lib/ghost/makeathon";
 import JoinSection from "./components/homepage/JoinSection";
+import WhatsNewSection from "./components/homepage/WhatsNewSection";
+import { getPhotos } from "@/lib/ghost/photos";
+import getLatestUpcomingEvent from "@/lib/ghost/events";
 
 export default async function Home() {
   const timelines: TimelineType[] = await getYearTimeline();
   const makeathon = await getMakeathon();
+  const photos = await getPhotos();
+  const upcomingEvent = await getLatestUpcomingEvent();
+
   return (
     <div className="overflow-visible">
       <Splash />
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
         <MovingText />
       </div>
-      <Header
-        text="What's New?"
-        rotation={-1.5}
-        typeOverride="relative -top-10 lg:-top-3 h-20 pl-5 md:pl-10"
-        bgColour="pop-pink"
-        colour="white"
-      />
+      <WhatsNewSection upcomingEvent={upcomingEvent} photos={photos} />
       <MakeathonSection makeathon={makeathon} />
       <Header
         text="Semester 2. Fully loaded."
@@ -34,7 +34,6 @@ export default async function Home() {
       />
       <TimelineSection timelines={timelines} />
       <VendingMachineSection />
-
       <JoinSection />
     </div>
   );

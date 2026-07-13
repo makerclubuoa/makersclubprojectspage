@@ -35,7 +35,9 @@ export default function WhatsNewSection({
         </div>
       </div>
       <div className="pt-8 lg:pt-5">
-        <PhotoCarousel props={photos} />
+        <div className="flex justify-center">
+          <PhotoCarousel props={photos} />
+        </div>
       </div>
     </div>
   );
