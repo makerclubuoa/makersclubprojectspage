@@ -21,7 +21,7 @@ export default async function getLatestUpcomingEvent(): Promise<Event> {
       include: "tags",
     })
   )[0];
-
+  console.log("UPCOMING EVENT");
   console.log(upcomingEvent);
   let date = null;
   if (upcomingEvent.tags) {
@@ -82,125 +82,110 @@ export async function getUpcomingEvents(): Promise<Event[]> {
 
   return res;
 }
+function isPastEvent(event: PostsOrPages[number]) {
+  let dateTag: string | null = null;
 
+  for (const tag of event.tags ?? []) {
+    if (tag.name?.includes("DATE")) {
+      dateTag = tag.name.replace("#DATE:", "").trim();
+
+      const parsedDate = chrono.parseDate(dateTag);
+
+      if (!parsedDate) return true;
+
+      const eventDate = new Date(parsedDate);
+      eventDate.setHours(0, 0, 0, 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      return eventDate < today;
+    }
+  }
+
+  return true;
+}
+//TODO: the last event is skipped occasionally due to the number in getPastEvents
 export async function getPastEvents(
+  offset: number = 12,
   page: number = 1,
-  limit: number = 12,
-  skip: number = 0,
+  firstPage: boolean = false,
 ): Promise<{ pastEvents: Event[]; skip: number }> {
   const pastEvents: PostsOrPages = await api().posts.browse({
     filter: "tag:Events",
     formats: "html",
-    page: page ?? 1,
-    limit: limit ?? 12,
+    page: page,
+    limit: offset,
     include: "tags",
   });
 
-  //check the date of the events - if they are before today, then put them here
   let res: Event[] = [];
-  let countNotPast = skip;
+  let total = 0;
 
   for (const pastEvent of pastEvents) {
-    let date = null;
-    let foundDate = false;
-    if (pastEvent.tags) {
-      for (const tag of pastEvent.tags) {
-        if (tag.name) {
-          if (tag.name.includes("DATE")) {
-            date = tag.name.replace("#DATE:", "").trim();
-            const parsedDate = chrono.parseDate(date);
-            console.log(parsedDate);
-            if (parsedDate) {
-              foundDate = true;
-              if (
-                parsedDate?.setHours(0, 0, 0, 0) <
-                new Date().setHours(0, 0, 0, 0)
-              ) {
-                res.push({
-                  title: pastEvent.title ?? "No title provided.",
-                  slug: pastEvent.slug,
-                  src: pastEvent.feature_image ?? undefined,
-                  date: date ?? "TBA | No date provided.",
-                  html: pastEvent.html ?? "No body provided.",
-                  excerpt: pastEvent.excerpt ?? "No except provided.",
-                });
-              } else {
-                countNotPast++;
-              }
-            }
-          }
-        }
-      }
-      if (!foundDate) {
-        res.push({
-          title: pastEvent.title ?? "No title provided.",
-          slug: pastEvent.slug,
-          src: pastEvent.feature_image ?? undefined,
-          date: date ?? "TBA | No date provided.",
-          html: pastEvent.html ?? "No body provided.",
-          excerpt: pastEvent.excerpt ?? "No except provided.",
-        });
-      }
+    if (total === 12) break;
+    if (pastEvent.tags && isPastEvent(pastEvent)) {
+      const date = pastEvent.tags
+        ?.find((t) => t.name?.includes("DATE"))
+        ?.name?.replace("#DATE:", "")
+        .trim();
+
+      res.push({
+        title: pastEvent.title ?? "No title provided.",
+        slug: pastEvent.slug,
+        src: pastEvent.feature_image ?? undefined,
+        date: date ?? "TBA | No date provided.",
+        html: pastEvent.html ?? "No body provided.",
+        excerpt: pastEvent.excerpt ?? "No except provided.",
+      });
+      total++;
     }
   }
 
-  //depending on the number that is NOT past, we want to determine how many more we need to offset by
+  //NOTE: total is the number of valid past events.
 
-  const additionalPastEvents: PostsOrPages = await api().posts.browse({
-    filter: "tag:Events",
-    formats: "html",
-    page: page ? page + 1 : 2,
-    limit: limit ?? 12,
-    include: "tags",
-  });
+  if (page === 1) {
+    const additionalPastEvents: PostsOrPages = await api().posts.browse({
+      filter: "tag:Events",
+      formats: "html",
+      page: 1,
+      limit: 12 - total + 12,
+      include: "tags",
+    });
 
-  let counter = 0;
-  for (const pastEvent of additionalPastEvents) {
-    if (counter === countNotPast) break;
-    let date = null;
-    let foundDate = false;
-    if (pastEvent.tags) {
-      for (const tag of pastEvent.tags) {
-        if (tag.name) {
-          if (tag.name.includes("DATE")) {
-            date = tag.name.replace("#DATE:", "").trim();
-            const parsedDate = chrono.parseDate(date);
-            console.log(parsedDate);
-            if (parsedDate) {
-              foundDate = true;
-              if (
-                parsedDate?.setHours(0, 0, 0, 0) <
-                new Date().setHours(0, 0, 0, 0)
-              ) {
-                res.push({
-                  title: pastEvent.title ?? "No title provided.",
-                  slug: pastEvent.slug,
-                  src: pastEvent.feature_image ?? undefined,
-                  date: date ?? "TBA | No date provided.",
-                  html: pastEvent.html ?? "No body provided.",
-                  excerpt: pastEvent.excerpt ?? "No except provided.",
-                });
-                counter++;
-              }
-            }
-          }
-        }
-      }
-      if (!foundDate) {
-        res.push({
-          title: pastEvent.title ?? "No title provided.",
-          slug: pastEvent.slug,
-          src: pastEvent.feature_image ?? undefined,
+    const countNotPast = 12 - total;
+
+    let moreEvents: Event[] = [];
+
+    for (
+      let i = additionalPastEvents.length - 1;
+      i >= 0 && moreEvents.length < countNotPast;
+      i--
+    ) {
+      const event = additionalPastEvents[i];
+
+      if (event.tags && isPastEvent(event)) {
+        const date = event.tags
+          ?.find((t) => t.name?.includes("DATE"))
+          ?.name?.replace("#DATE:", "")
+          .trim();
+
+        moreEvents.unshift({
+          title: event.title ?? "No title provided.",
+          slug: event.slug,
+          src: event.feature_image ?? undefined,
           date: date ?? "TBA | No date provided.",
-          html: pastEvent.html ?? "No body provided.",
-          excerpt: pastEvent.excerpt ?? "No except provided.",
+          html: event.html ?? "No body provided.",
+          excerpt: event.excerpt ?? "No excerpt provided.",
         });
-        counter++;
       }
     }
-  }
 
-  return { pastEvents: res, skip: countNotPast };
+    res = [...res, ...moreEvents];
+
+    return { pastEvents: res, skip: offset + (12 - total) };
+  }
+  return { pastEvents: res, skip: 12 + offset + (12 - total) };
 }
 
 function parsePastEvents(pastEvents: PostsOrPages) {}
