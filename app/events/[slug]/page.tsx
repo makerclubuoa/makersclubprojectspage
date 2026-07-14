@@ -3,6 +3,7 @@ import placeholder from "@/public/placeholder.png";
 import { getEvent } from "@/lib/ghost/event";
 import { getYearTimeline } from "@/lib/ghost/timeline";
 import Image from "next/image";
+import JoinSection from "@/app/components/homepage/JoinSection";
 export default async function Event({
   params,
 }: {
@@ -32,7 +33,7 @@ export default async function Event({
               className="brightness-75 object-cover -z-20"
             />
           </div>
-          <div className="p-16">
+          <div className=" p-16">
             <p className="font-semibold text-white text-shadow-lg">
               {event.date}
             </p>
@@ -50,9 +51,8 @@ export default async function Event({
             </p>
           </div>
         </div>
-
         <div className="w-full flex justify-center">
-          <div className="p-10 md:w-3/4">
+          <div className="py-10 px-20 md:w-3/4">
             <div
               className="ghost-content"
               dangerouslySetInnerHTML={{ __html: event.html }}
@@ -70,6 +70,7 @@ export default async function Event({
           </div>
           <TimelineSection timelines={timelines} />
         </div>
+        <JoinSection />
       </div>
     </div>
   );
