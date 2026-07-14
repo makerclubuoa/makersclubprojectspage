@@ -50,6 +50,13 @@ export default async function Events() {
           </div>
         </div>
       </div>
+      {/* <div className="mt-10 flex-col border-y-4 bg-white min-h-36 flex justify-center px-5 md:px-10"> */}
+      {/*   <p className="text-center font-semibold text-2xl"> */}
+      {/*     Want a sneak peak at what’s coming? Check out our Semester-long events */}
+      {/*     timeline! */}
+      {/*   </p> */}
+      {/*   <div>Button Placeholder</div> */}
+      {/* </div> */}
       <p
         className="font-bold text-4xl md:text-5xl font-holt
           text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-white p-10"
