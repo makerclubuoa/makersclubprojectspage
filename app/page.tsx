@@ -32,7 +32,9 @@ export default async function Home() {
         bgColour="pop-violet"
         colour="white"
       />
-      <TimelineSection timelines={timelines} />
+      <div className="mt-20 md:mt-40 lg:mt-26">
+        <TimelineSection timelines={timelines} />
+      </div>
       <VendingMachineSection />
       <JoinSection />
     </div>

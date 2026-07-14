@@ -13,7 +13,7 @@ export default function TimelineSection({ timelines }: TimelineSectionProps) {
 
   return (
     <div
-      className={`outline-3 flex flex-col relative pt-5 mt-20 md:mt-40 lg:mt-26 md:pt-10 bg-grad h-full ${screenSize <= 768 ? `h-[120%]` : ""}`}
+      className={`outline-3 flex flex-col relative pt-5  md:pt-10 bg-grad h-full ${screenSize <= 768 ? `h-[120%]` : ""}`}
     >
       {/* <Image */}
       {/*   src={"screentone.svg"} */}
