@@ -1,4 +1,6 @@
 import Image, { StaticImageData } from "next/image";
+import placeholder from "@/public/placeholder.png";
+import Link from "next/link";
 
 export const tapeMappings = {
   popViolet: {
@@ -38,6 +40,7 @@ export interface PhotoProps {
   alt?: string;
   rotation?: number;
   tape?: keyof typeof tapeMappings;
+  link?: string;
   typeOverride?: string;
 }
 
@@ -46,8 +49,36 @@ export default function Photo({
   alt,
   rotation,
   tape,
+  link,
   typeOverride,
 }: PhotoProps) {
+  if (link) {
+    return (
+      <Link href={link}>
+        <div
+          className={`w-fit h-72 aspect-square relative`}
+          style={{ transform: `rotate(${rotation}deg)` }}
+        >
+          <div
+            className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
+            style={{
+              transform: `${tape !== undefined ? `rotate(${tapeMappings[tape].rotation})` : ``}`,
+            }}
+          ></div>
+          <div className="absolute inset-0 p-5 outline-3">
+            {/* TODO: make this more accessible */}
+            <Image
+              src={src !== "" ? src : placeholder}
+              fill
+              className="object-cover"
+              alt={alt ?? "Image of a recent event."}
+            />
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
   return (
     <div
       className={`w-fit h-72 aspect-square relative`}
