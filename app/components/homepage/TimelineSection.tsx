@@ -13,31 +13,8 @@ export default function TimelineSection({ timelines }: TimelineSectionProps) {
 
   return (
     <div
-      className={`outline-3 flex flex-col relative pt-5  md:pt-10 bg-grad h-full ${screenSize <= 768 ? `h-[120%]` : ""}`}
+      className={`outline-3 flex flex-col relative pt-5 md:pt-10 bg-grad h-full ${screenSize <= 768 ? `h-[120%]` : ""}`}
     >
-      {/* <Image */}
-      {/*   src={"screentone.svg"} */}
-      {/*   height={3000} */}
-      {/*   width={3000} */}
-      {/*   alt="" */}
-      {/*   className=" */}
-      {/*           opacity-50 absolute -bottom-0 left-1/2 overflow-hidden */}
-      {/*     [filter:brightness(0)_saturate(100%)_invert(43%)_sepia(92%)_saturate(3035%)_hue-rotate(320deg)_brightness(102%)_contrast(103%)] */}
-      {/**/}
-      {/*   " */}
-      {/* /> */}
-      {/* <Image */}
-      {/*   src={"screentone.svg"} */}
-      {/*   height={3000} */}
-      {/*   width={3000} */}
-      {/*   alt="" */}
-      {/*   className=" */}
-      {/**/}
-      {/*           opacity-50 absolute top-0 right-1/2  */}
-      {/*     [filter:brightness(0)_saturate(100%)_invert(43%)_sepia(92%)_saturate(3035%)_hue-rotate(320deg)_brightness(102%)_contrast(103%)] */}
-      {/**/}
-      {/*   " */}
-      {/* /> */}
       <div
         style={{
           gridTemplateRows: `repeat(${timelines.length}, minmax(0, 1fr))`,
