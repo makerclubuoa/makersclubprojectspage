@@ -1,4 +1,5 @@
 import { api } from "@/lib/ghost-content-api";
+import DOMPurify from "isomorphic-dompurify";
 import { PostOrPage, PostsOrPages } from "@tryghost/content-api";
 import * as chrono from "chrono-node";
 export interface Event {
@@ -39,7 +40,9 @@ export default async function getLatestUpcomingEvent(): Promise<Event> {
     slug: upcomingEvent.slug,
     src: upcomingEvent.feature_image ?? undefined,
     date: date ?? "TBA | No date provided.",
-    html: upcomingEvent.html ?? "No body provided.",
+    html: upcomingEvent.html
+      ? DOMPurify.sanitize(upcomingEvent.html)
+      : "No body provided.",
     excerpt: upcomingEvent.excerpt ?? "No except provided.",
   };
 }
@@ -109,8 +112,7 @@ function isPastEvent(event: PostsOrPages[number]) {
 export async function getPastEvents(
   offset: number = 12,
   page: number = 1,
-  firstPage: boolean = false,
-): Promise<{ pastEvents: Event[]; skip: number }> {
+): Promise<{ pastEvents: Event[]; skip: number; hasMore: boolean }> {
   const pastEvents: PostsOrPages = await api().posts.browse({
     filter: "tag:Events",
     formats: "html",
@@ -129,7 +131,6 @@ export async function getPastEvents(
         ?.find((t) => t.name?.includes("DATE"))
         ?.name?.replace("#DATE:", "")
         .trim();
-      console.log(pastEvent.slug);
       res.push({
         title: pastEvent.title ?? "No title provided.",
         slug: pastEvent.slug,
@@ -183,9 +184,17 @@ export async function getPastEvents(
 
     res = [...res, ...moreEvents];
 
-    return { pastEvents: res, skip: offset + (12 - total) };
+    return {
+      pastEvents: res,
+      skip: offset + (12 - total),
+      hasMore: additionalPastEvents.meta.pagination !== null,
+    };
   }
-  return { pastEvents: res, skip: 12 + offset + (12 - total) };
+  return {
+    pastEvents: res,
+    skip: 12 + offset + (12 - total),
+    hasMore: pastEvents.meta.pagination !== null,
+  };
 }
 
 function parsePastEvents(pastEvents: PostsOrPages) {}
