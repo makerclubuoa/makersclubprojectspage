@@ -1,6 +1,7 @@
 "use client";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image, { StaticImageData } from "next/image";
+import placeholder from "@/public/placeholder.png";
 import Link from "next/link";
 
 interface PolaroidPropsType {
@@ -28,7 +29,12 @@ export default function Polaroid({
         >
           <div className="bg-red-200 -z-10">{children}</div>
           <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-red-100 min-h-64 px-3 relative">
-            <Image src={src} layout="fill" objectFit="cover" alt="" />
+            <Image
+              src={src !== "" ? src : placeholder}
+              layout="fill"
+              objectFit="cover"
+              alt=""
+            />
           </div>
           {description !== undefined ? (
             <div className="w-full flex justify-center items-center pt-2 grow ">
@@ -48,7 +54,12 @@ export default function Polaroid({
     >
       <div className="bg-red-200 -z-10">{children}</div>
       <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-red-100 min-h-64 px-3 relative">
-        <Image src={src} layout="fill" objectFit="cover" alt="" />
+        <Image
+          src={src !== "" ? src : placeholder}
+          layout="fill"
+          objectFit="cover"
+          alt=""
+        />
       </div>
       {description !== undefined ? (
         <div className="w-full flex justify-center items-center pt-2 grow ">
