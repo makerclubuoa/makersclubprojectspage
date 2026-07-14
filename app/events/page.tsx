@@ -6,6 +6,7 @@ import Photo from "../components/global/Photo";
 import PastEventsSection from "../components/events/PastEventsSection";
 import TimelineSection from "../components/homepage/TimelineSection";
 import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
+import LinkButton from "../components/global/LinkButton";
 
 export default async function Events() {
   const upcomingEvent = await getLatestUpcomingEvent();
@@ -29,33 +30,44 @@ export default async function Events() {
         <div>
           <div className="pt-5 flex justify-center">
             <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
-              <Photo src={upcomingEvent.src ?? art} alt="" rotation={2.3} />
+              <Photo
+                src={upcomingEvent.src ?? art}
+                alt=""
+                rotation={2.3}
+                link={`events/${upcomingEvent.slug}`}
+              />
               <PinnedPostSnippet upcomingEvent={upcomingEvent} pinned={true}>
-                <div className="flex w-full justify-end-safe">
-                  button location
+                <div className="flex w-full justify-end-safe mt-4">
+                  <LinkButton
+                    link={`events/${upcomingEvent.slug}`}
+                    typeOverride="text-md md:text-md lg:text-md"
+                  >
+                    Sign Me Up!
+                  </LinkButton>
                 </div>
               </PinnedPostSnippet>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-10 flex-col border-y-4 bg-white min-h-36 flex justify-center px-5 md:px-10">
-        <p
-          className="font-bold text-4xl md:text-5xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-purple-300"
-        >
-          Past Events
-        </p>
-      </div>
+      <p
+        className="font-bold text-4xl md:text-5xl font-holt
+          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-white p-10"
+      >
+        Past Events
+      </p>
       <PastEventsSection />
-      <Header
-        text="Semester 2. Fully loaded."
-        rotation={1.5}
-        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10"
-        bgColour="pop-violet"
-        colour="white"
-      />
-      <TimelineSection timelines={timelines} />
+      <div className="mt-10">
+        <div className="flex-col border-y-4 bg-white min-h-36 flex jusitfy-center py-10 px-5 md:px-10">
+          <p
+            className="font-bold text-4xl md:text-5xl font-holt
+          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-purple-300"
+          >
+            Future Events Timeline
+          </p>
+        </div>
+        <TimelineSection timelines={timelines} />
+      </div>
     </div>
   );
 }
