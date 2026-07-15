@@ -31,6 +31,5 @@ export async function getPhotos(): Promise<PhotosType[]> {
       res.push({ src: image.src, tape: getRandomTape() });
     }
   }
-  console.log(res);
   return res;
 }

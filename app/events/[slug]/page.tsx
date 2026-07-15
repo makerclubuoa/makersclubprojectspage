@@ -20,7 +20,7 @@ export async function generateMetadata({
     };
   }
   return {
-    title: event.title,
+    title: `${event.title} | Maker Club`,
     description: event.excerpt,
   };
 }
