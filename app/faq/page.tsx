@@ -9,9 +9,9 @@ export default async function FAQ() {
   const photos = await getPhotos();
   return (
     <div className="">
-      <div className="h-dvh w-full">
-        <div className="h-1/3  w-full flex flex-col justify-center">
-          <div className="w-full h-1/3 absolute border-b-4">
+      <div className="min-h-dvh w-full">
+        <div className="h-[33dvh] relative w-full flex flex-col justify-center">
+          <div className="w-full h-[33dvh] absolute border-b-4">
             <Image
               src={photos[4].src ?? placeholder}
               alt="Background."
@@ -29,7 +29,7 @@ export default async function FAQ() {
             </div>
           </div>
         </div>
-        <div className="flex justify-center">
+        <div className="flex justify-center relative h-full">
           <div className="w-3/4 flex flex-col pt-5">
             <p className="font-bold text-3xl">Maker Club Questions</p>
             <details className="faq">
@@ -299,16 +299,13 @@ export default async function FAQ() {
             <div className="font-bold text-2xl text-center pb-10">
               <Link
                 href="www.auckland.ac.nz/en/cie/locations/unleash-space.html"
-                className="underline"
+                className="underline "
               >
                 Still have more questions? Click here to checkout out the CIE
                 website for more information.
               </Link>
             </div>
           </div>
-        </div>
-        <div className="h-[50dvh]">
-          <JoinSection />
         </div>
       </div>
     </div>
