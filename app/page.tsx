@@ -11,6 +11,9 @@ import { fetchProjects } from "@/lib/projects";
 import JoinSection from "./components/homepage/JoinSection";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
+import WhatsNewSection from "./components/homepage/WhatsNewSection";
+import { getPhotos } from "@/lib/ghost/photos";
+import getLatestUpcomingEvent from "@/lib/ghost/events";
 
 export default async function Home() {
   const timelines: TimelineType[] = await getYearTimeline();
@@ -19,6 +22,9 @@ export default async function Home() {
   const previewProjects = [...projects].sort(
     (a, b) => Number(b.Featured) - Number(a.Featured)
   );
+  const photos = await getPhotos();
+  const upcomingEvent = await getLatestUpcomingEvent();
+
   return (
     <div className="overflow-visible">
       <Nav />
@@ -26,13 +32,7 @@ export default async function Home() {
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
         <MovingText />
       </div>
-      <Header
-        text="What's New?"
-        rotation={-1.5}
-        typeOverride="relative -top-10 lg:-top-3 h-20 pl-5 md:pl-10"
-        bgColour="pop-pink"
-        colour="white"
-      />
+      <WhatsNewSection upcomingEvent={upcomingEvent} photos={photos} />
       <MakeathonSection makeathon={makeathon} />
       <Header
         text="Semester 2. Fully loaded."
@@ -43,8 +43,10 @@ export default async function Home() {
       />
       <TimelineSection timelines={timelines} />
       <ProjectsPreviewSection projects={previewProjects} />
+      <div className="mt-20 md:mt-40 lg:mt-26">
+        <TimelineSection timelines={timelines} />
+      </div>
       <VendingMachineSection />
-
       <JoinSection />
       <Footer />
     </div>

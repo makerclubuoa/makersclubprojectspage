@@ -24,6 +24,8 @@ module.exports = {
         holtwood: ["var(--font-holtwood"],
       },
       backgroundImage: {
+        "purple-gradient":
+          "linear-gradient(180deg, #9F42D1 0%, #C76CF8 50%, #B375D5 100%)",
         grad: `linear-gradient(
     146deg,
     #567dff 0%,

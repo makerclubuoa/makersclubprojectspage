@@ -15,13 +15,13 @@ export default function PhotoCarousel({ props }: PhotoCarouselProps) {
   const [swiper, setSwiper] = useState<SwiperType | null>(null);
   const screenSize = useScreenSize();
   return (
-    <div className="py-3 flex relative">
+    <div className="py-3 w-full max-w-[100rem] flex relative">
       <Swiper
         loop={true}
         slidesPerView={(() => {
-          if (screenSize < 600) return 1;
-          if (screenSize <= 1000) return 2;
-          if (screenSize > 1000 && screenSize < 1500) return 3;
+          if (screenSize < 800) return 1;
+          if (screenSize <= 1100) return 2;
+          if (screenSize > 1100 && screenSize < 1500) return 3;
           return 4;
         })()}
         spaceBetween={10}

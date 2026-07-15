@@ -21,7 +21,13 @@
   }
   --font-sans: var(--font-dm-sans);
   --font-holt: var(--font-holtwood);
-  --color-paper: var(--paper);
+  --color-paper: var (--paper);
+  --background-image-purple-grad: linear-gradient(
+    180deg,
+    #9f42d1 0%,
+    #c76cf8 50%,
+    #b375d5 100%
+  );
   --background-image-grad: linear-gradient(
     146deg,
     #567dff 0%,
@@ -206,4 +212,29 @@ input[type="date"] {
   to {
     transform: translateY(0);
   }
+}
+
+.ghost-content {
+  line-height: 2;
+  font-weight: 600;
+}
+
+.ghost-content a {
+  display: block;
+  width: max-content; /* Or a specific width like 200px */
+  margin: 0 auto;
+  box-shadow: 2px 2px 0px 0px #000;
+  border-radius: 9999px;
+  margin-top: 2rem;
+  padding: 0.125rem 1.25rem;
+  font-weight: 600;
+  border: 3px solid black;
+  background-color: #9f42d1;
+  color: white;
+  font-size: 1.125rem;
+}
+
+.ghost-content img {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
