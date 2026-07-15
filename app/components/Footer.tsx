@@ -1,16 +1,17 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { container } from '@/lib/ui'
-import Button from './global/Button'
-import art from '@/public/maker-club-art.png'
+import Link from "next/link";
+import Image from "next/image";
+import { container } from "@/lib/ui";
+import Button from "./global/Button";
+import art from "@/public/maker-club-art.png";
+import LinkButton from "./global/LinkButton";
 
 const FOOTERLINK =
-  'text-white font-bold text-[15px] md:text-base transition-opacity duration-150 hover:opacity-75'
+  "text-white font-bold text-[15px] md:text-base transition-opacity duration-150 hover:opacity-75";
 
 export default function Footer() {
-  const year = new Date().getFullYear()
+  const year = new Date().getFullYear();
 
   return (
     <footer
@@ -18,7 +19,7 @@ export default function Footer() {
       className="relative overflow-hidden"
       style={{
         backgroundImage:
-          'linear-gradient(146deg, #567dff 3%, #9f42d1 26%, #f04ab9 45%, #ff25c7 66%, #ff3c6d 82%, #ff856a 100%)',
+          "linear-gradient(146deg, #567dff 3%, #9f42d1 26%, #f04ab9 45%, #ff25c7 66%, #ff3c6d 82%, #ff856a 100%)",
       }}
     >
       <div className={`relative z-[2] ${container} py-12 md:py-16`}>
@@ -31,20 +32,42 @@ export default function Footer() {
         />
 
         <ul className="list-none p-0 m-0 flex flex-col gap-3 mb-8 max-w-[70%] md:max-w-none">
-          <li><a className={FOOTERLINK} href="https://makeuoa.nz/about/">About</a></li>
-          <li><a className={FOOTERLINK} href="https://makeuoa.nz/faq/">Frequently Asked Questions</a></li>
-          <li><a className={FOOTERLINK} href="https://makeuoa.nz/events/">Events</a></li>
-          <li><Link className={FOOTERLINK} href="/projects">Projects</Link></li>
-          <li><a className={FOOTERLINK} href="https://vend.makeuoa.nz/">Vending Machine</a></li>
+          <li>
+            <a className={FOOTERLINK} href="/about">
+              About
+            </a>
+          </li>
+          <li>
+            <a className={FOOTERLINK} href="/faq">
+              Frequently Asked Questions
+            </a>
+          </li>
+          <li>
+            <a className={FOOTERLINK} href="/events">
+              Events
+            </a>
+          </li>
+          <li>
+            <Link className={FOOTERLINK} href="/projects">
+              Projects
+            </Link>
+          </li>
+          <li>
+            <a className={FOOTERLINK} href="https://vend.makeuoa.nz/">
+              Vending Machine
+            </a>
+          </li>
         </ul>
 
-        <Button onClick={() => {}} bgColour="pop-pink" typeOverride="mb-8">
-          Join Now!
-        </Button>
+        <div>
+          <LinkButton link="" bgColour="pop-pink" textColour="white">
+            Join Now!
+          </LinkButton>
 
-        <p className="text-white text-[13px] font-semibold m-0">
-          © The University of Auckland Maker Club {year}
-        </p>
+          <p className="text-white text-[13px] font-semibold mt-10 m-0">
+            © The University of Auckland Maker Club {year}
+          </p>
+        </div>
       </div>
 
       {/* Corner illustration (flipped so the mascot lands bottom-right) */}
@@ -56,5 +79,5 @@ export default function Footer() {
         />
       </div>
     </footer>
-  )
+  );
 }
