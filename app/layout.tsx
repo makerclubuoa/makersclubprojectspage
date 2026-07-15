@@ -3,6 +3,9 @@ import "./globals.css";
 import AuthProvider from "@/app/components/AuthProvider";
 import { DM_Sans } from "next/font/google";
 import { Holtwood_One_SC } from "next/font/google";
+import Nav from "./components/Nav";
+import Footer from "./components/Footer";
+import JoinSection from "./components/homepage/JoinSection";
 
 export const metadata: Metadata = {
   title: "PROJECTS · MAKER CLUB",
@@ -30,7 +33,12 @@ export default function RootLayout({
     <html lang="en" className={`${dmSans.variable} ${holtwood.variable}`}>
       <head />
       <body className="font-sans">
+        <Nav></Nav>
         <AuthProvider>{children}</AuthProvider>
+        <div className="h-[50dvh]">
+          <JoinSection />
+        </div>
+        <Footer />
       </body>
     </html>
   );

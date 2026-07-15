@@ -9,16 +9,12 @@ import ProjectsPreviewSection from "./components/homepage/ProjectsPreviewSection
 import { getMakeathon } from "@/lib/ghost/makeathon";
 import { fetchProjects } from "@/lib/projects";
 import JoinSection from "./components/homepage/JoinSection";
-import Nav from "./components/Nav";
-import Footer from "./components/Footer";
-import WhatsNewSection from "./components/homepage/WhatsNewSection";
 import { getPhotos } from "@/lib/ghost/photos";
 import getLatestUpcomingEvent from "@/lib/ghost/events";
 import WhatsNewSection from "./components/homepage/WhatsNewSection";
-import { getPhotos } from "@/lib/ghost/photos";
-import getLatestUpcomingEvent from "@/lib/ghost/events";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
+import LinkButton from "./components/global/LinkButton";
 
 export default async function Home() {
   const timelines: TimelineType[] = await getYearTimeline();
@@ -28,10 +24,8 @@ export default async function Home() {
 
   const projects = await fetchProjects();
   const previewProjects = [...projects].sort(
-    (a, b) => Number(b.Featured) - Number(a.Featured)
+    (a, b) => Number(b.Featured) - Number(a.Featured),
   );
-  const photos = await getPhotos();
-  const upcomingEvent = await getLatestUpcomingEvent();
 
   return (
     <div className="overflow-visible">
@@ -41,7 +35,11 @@ export default async function Home() {
         <MovingText />
       </div>
       <WhatsNewSection upcomingEvent={upcomingEvent} photos={photos} />
-      <MakeathonSection makeathon={makeathon} />
+      <div className="w-full flex items-center justify-center">
+        <LinkButton link={`events/`} bgColour="pop-pink" textColour="white">
+          See More Events
+        </LinkButton>
+      </div>
       <Header
         text="Semester 2. Fully loaded."
         rotation={0}
@@ -49,21 +47,23 @@ export default async function Home() {
         bgColour="pop-violet"
         colour="white"
       />
-      <TimelineSection timelines={timelines} />
-      <ProjectsPreviewSection projects={previewProjects} />
       <div className="mt-20 md:mt-40 lg:mt-26">
         <TimelineSection timelines={timelines} />
       </div>
-      <div className="mt-20 md:mt-40 lg:mt-26">
-        <TimelineSection timelines={timelines} />
+      <div className="z-50">
+        <Header
+          text="Things We've Made"
+          rotation={1}
+          typeOverride="-top-3 z-20 xl:p-15 relative h-20 pl-5"
+          bgColour="pop-blue"
+          colour="white"
+        />
+        <ProjectsPreviewSection projects={previewProjects} />
       </div>
-      <ProjectsPreviewSection projects={previewProjects} />
       <VendingMachineSection />
       <div className="h-dvh">
         <JoinSection />
       </div>
-       <Footer />
-
     </div>
   );
 }
