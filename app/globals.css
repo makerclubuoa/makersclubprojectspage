@@ -276,3 +276,18 @@ input[type="date"] {
   margin-top: 2rem;
   margin-bottom: 2rem;
 }
+
+.faq-q {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.faq-ans {
+  padding-left: 1rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.faq {
+  padding-bottom: 1.5rem;
+}

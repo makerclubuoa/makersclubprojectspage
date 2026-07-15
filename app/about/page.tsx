@@ -3,14 +3,15 @@ import Image from "next/image";
 import placeholder from "@/public/placeholder.png";
 import JoinSection from "../components/homepage/JoinSection";
 import LinkButton from "../components/global/LinkButton";
+import PhotoCarousel from "../components/global/PhotoCarousel";
 
 export default async function About() {
   const photos = await getPhotos();
   return (
     <div className="">
-      <div className="border border-red-100 h-dvh w-full">
-        <div className="h-1/3 xl:h-1/2 w-full flex flex-col justify-center">
-          <div className="w-full h-1/3 xl:h-1/2 absolute border-b-4">
+      <div className="border h-dvh w-full">
+        <div className="h-1/3  w-full flex flex-col justify-center">
+          <div className="w-full h-1/3 absolute border-b-4">
             <Image
               src={photos[1].src ?? placeholder}
               alt="Background."
@@ -28,9 +29,9 @@ export default async function About() {
             </div>
           </div>
         </div>
-        <div className="h-2/3 xl:h-1/2 w-full flex flex-col justify-center items-center">
-          <div className="p-10 md:w-3/4">
-            <div className="pb-10 font-semibold text-xl">
+        <div className="h-2/3 w-full flex justify-between flex-col items-center gap-5">
+          <div className="flex items-center flex-col p-10 md:w-3/4">
+            <div className="pb-10 font-semibold text-2xl">
               <p className="">
                 We make stuff!
                 <br />
@@ -45,16 +46,15 @@ export default async function About() {
                 Auckland's home for all who make.
               </p>
             </div>
-          </div>
-          <div className="grow items-end pb-20 flex w-full justify-center">
             <div>
               <LinkButton link="">Register now!</LinkButton>
             </div>
           </div>
         </div>
+        <div className="h-[50dvh]">
+          <JoinSection />
+        </div>
       </div>
-
-      <JoinSection />
     </div>
   );
 }

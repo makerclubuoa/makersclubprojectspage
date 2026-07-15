@@ -27,8 +27,8 @@ export default async function Home() {
       <MakeathonSection makeathon={makeathon} />
       <Header
         text="Semester 2. Fully loaded."
-        rotation={1.5}
-        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10"
+        rotation={0}
+        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10 xl:top-30 xl:p-15"
         bgColour="pop-violet"
         colour="white"
       />
@@ -36,7 +36,9 @@ export default async function Home() {
         <TimelineSection timelines={timelines} />
       </div>
       <VendingMachineSection />
-      <JoinSection />
+      <div className="h-dvh">
+        <JoinSection />
+      </div>
     </div>
   );
 }
