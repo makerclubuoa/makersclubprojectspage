@@ -9,7 +9,7 @@ export default function Splash() {
     <div className="h-dvh w-full bg-grad flex flex-col justify-center items-center gap-0 p-0">
       <div className="flex flex-col items-center">
         <picture>
-          <source media="(max-width: 916px)" srcSet={artVert.src} />
+          <source media="(max-width: 2000px)" srcSet={artVert.src} />
           <Image
             src={art}
             alt="Background image."
