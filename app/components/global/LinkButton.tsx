@@ -8,7 +8,7 @@ interface LinkButtonPropsType {
   typeOverride?: string;
   children: React.ReactNode;
 }
-export default async function LinkButton({
+export default function LinkButton({
   textColour,
   bgColour,
   type,
