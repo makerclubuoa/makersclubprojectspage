@@ -33,12 +33,7 @@ export default function RootLayout({
     <html lang="en" className={`${dmSans.variable} ${holtwood.variable}`}>
       <head />
       <body className="font-sans">
-        <Nav></Nav>
         <AuthProvider>{children}</AuthProvider>
-        <div className="h-[50dvh]">
-          <JoinSection />
-        </div>
-        <Footer />
       </body>
     </html>
   );

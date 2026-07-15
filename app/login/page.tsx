@@ -1,44 +1,57 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Nav from '@/app/components/Nav'
-import Footer from '@/app/components/Footer'
-import CursorTrail from '@/app/components/CursorTrail'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/app/components/AuthProvider'
-import { form, formInner, formFig, seclabel, seclabelNum, seclabelBar, field, fieldLabel, fieldReq, fieldInput, btnGradient, btnArr } from '@/lib/ui'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Nav from "@/app/components/Nav";
+import Footer from "@/app/components/Footer";
+import CursorTrail from "@/app/components/CursorTrail";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/components/AuthProvider";
+import {
+  form,
+  formInner,
+  formFig,
+  seclabel,
+  seclabelNum,
+  seclabelBar,
+  field,
+  fieldLabel,
+  fieldReq,
+  fieldInput,
+  btnGradient,
+  btnArr,
+} from "@/lib/ui";
 
 export default function LoginPage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [sending, setSending] = useState(false)
-  const [sent, setSent] = useState(false)
-  const [error, setError] = useState('')
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!loading && user) router.replace('/')
-  }, [user, loading, router])
+    if (!loading && user) router.replace("/");
+  }, [user, loading, router]);
 
   async function handleMagicLink(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email.trim()) return
-    setSending(true)
-    setError('')
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSending(true);
+    setError("");
 
     // Open signup: Supabase creates the user on first sign-in (shouldCreateUser
     // defaults true); the post-login ensure-ghost sync mirrors them into Ghost.
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: `${window.location.origin}/` },
-    })
-    setSending(false)
-    if (error) setError(error.message)
-    else setSent(true)
+    });
+    setSending(false);
+    if (error) setError(error.message);
+    else setSent(true);
   }
 
-  if (loading) return null
+  if (loading) return null;
 
   return (
     <>
@@ -57,15 +70,19 @@ export default function LoginPage() {
             {sent ? (
               <div className="border border-pop-magenta py-12 px-9 text-center bg-[color-mix(in_oklab,var(--pop-magenta)_7%,var(--paper))]">
                 <div className="text-[36px] text-pop-magenta mb-4">✉</div>
-                <h2 className="text-[32px] font-normal mt-0 mb-3">// Check your inbox.</h2>
+                <h2 className="text-[32px] font-normal mt-0 mb-3">
+                  // Check your inbox.
+                </h2>
                 <p className="text-ink-2 text-sm max-w-[44ch] mx-auto leading-[1.6]">
-                  We sent a magic link to <strong>{email}</strong>. Click it to finish signing in.
+                  We sent a magic link to <strong>{email}</strong>. Click it to
+                  finish signing in.
                 </p>
               </div>
             ) : (
               <>
                 <p className="text-ink-2 mb-7 text-[13px] leading-[1.65]">
-                  Sign in to like projects and submit your own to the archive. Maker Club members only.
+                  Sign in to like projects and submit your own to the archive.
+                  Maker Club members only.
                 </p>
 
                 <form onSubmit={handleMagicLink}>
@@ -78,7 +95,7 @@ export default function LoginPage() {
                       type="email"
                       placeholder="you@example.com"
                       value={email}
-                      onChange={e => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
@@ -92,20 +109,24 @@ export default function LoginPage() {
                     type="submit"
                     disabled={sending}
                   >
-                    {sending ? 'Checking…' : 'Send magic link'} <span className={btnArr}>→</span>
+                    {sending ? "Checking…" : "Send magic link"}{" "}
+                    <span className={btnArr}>→</span>
                   </button>
                 </form>
 
                 <p className="text-[11px] text-muted mt-5 leading-[1.5] tracking-[0.04em]">
-                  No password needed. We&rsquo;ll send a one-click sign-in link to your inbox.{' '}
-                  <a href="https://makeuoa.nz" className="text-ink-2 underline">Not a member yet?</a>
+                  No password needed. We&rsquo;ll send a one-click sign-in link
+                  to your inbox.{" "}
+                  <a href="https://makeuoa.nz" className="text-ink-2 underline">
+                    Not a member yet?
+                  </a>
                 </p>
               </>
             )}
           </div>
         </div>
       </main>
-      <Footer />
     </>
-  )
+  );
 }
+
