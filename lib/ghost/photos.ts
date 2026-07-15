@@ -23,6 +23,7 @@ export async function getPhotos(): Promise<PhotosType[]> {
       limit: 1,
     })
   )[0];
+  //@ts-ignore
   const imagesArr = JSON.parse(photos.lexical).root.children;
   let res: PhotosType[] = [];
   for (const image of imagesArr) {

@@ -15,8 +15,8 @@ import WhatsNewSection from "./components/homepage/WhatsNewSection";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import LinkButton from "./components/global/LinkButton";
-import { getRandomProduct } from "@/lib/api/getRandomProduct";
 import Image from "next/image";
+import { getRandomProduct } from "@/lib/stripe";
 
 export default async function Home() {
   const timelines: TimelineType[] = await getYearTimeline();
