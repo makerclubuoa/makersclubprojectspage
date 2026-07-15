@@ -34,22 +34,22 @@ export default function MakeathonSection({
           </Polaroid>
           <div className="pt-24 w-2/3 pr-5 lg:pr-20 text-lg lg:text-2xl font-bold flex justify-center flex-col">
             {formatParagraph(makeathon.description)}
-            <div className="flex justify-center py-3 lg:pt-5">
-              <Button onClick={() => {}} bgColour="pop-pink" textColour="white">
-                Learn More
-              </Button>
-            </div>
+            {/* <div className="flex justify-center py-3 lg:pt-5"> */}
+            {/*   <Button onClick={() => {}} bgColour="pop-pink" textColour="white"> */}
+            {/*     Learn More */}
+            {/*   </Button> */}
+            {/* </div> */}
           </div>
         </div>
       ) : (
         <div className="pt-10 flex flex-row justify-center lg:top-12 relative gap-1 px-5">
           <div className="w-2/3 pr-20 text-lg lg:text-2xl font-semibold flex justify-center flex-col">
             {formatParagraph(makeathon.description)}
-            <div className="pt-3 lg:pt-5">
-              <Button onClick={() => {}} bgColour="pop-pink" textColour="white">
-                Register for Semester 2!
-              </Button>
-            </div>
+            {/* <div className="pt-3 lg:pt-5"> */}
+            {/*   <Button onClick={() => {}} bgColour="pop-pink" textColour="white"> */}
+            {/*     Register for Semester 2! */}
+            {/*   </Button> */}
+            {/* </div> */}
           </div>
           <Polaroid
             src={makeathon.image}
