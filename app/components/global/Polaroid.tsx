@@ -21,6 +21,7 @@ export default function Polaroid({
   typeOverride,
   children,
 }: PolaroidPropsType) {
+  // TODO: fix weird issue iwht placeholder
   if (link) {
     return (
       <Link href={link} className="w-full flex justify-center">
@@ -30,7 +31,7 @@ export default function Polaroid({
           <div className="bg-gray-100 -z-10">{children}</div>
           <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-gray-100  min-h-64 px-3 relative">
             <Image
-              src={src !== "" ? src : placeholder}
+              src={src === null ? placeholder : src}
               layout="fill"
               objectFit="cover"
               alt=""
@@ -55,7 +56,7 @@ export default function Polaroid({
       <div className="bg-gray-200 -z-10">{children}</div>
       <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-gray-100 min-h-64 px-3 relative">
         <Image
-          src={src !== "" ? src : placeholder}
+          src={src === null ? placeholder : src}
           layout="fill"
           objectFit="cover"
           alt=""

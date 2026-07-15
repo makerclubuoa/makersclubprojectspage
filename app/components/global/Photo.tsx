@@ -36,7 +36,7 @@ export const tapeMappings = {
   },
 } as const;
 export interface PhotoProps {
-  src: string;
+  src: string | StaticImageData;
   alt?: string;
   rotation?: number;
   tape?: keyof typeof tapeMappings;
