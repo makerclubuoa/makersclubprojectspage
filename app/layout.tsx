@@ -8,7 +8,7 @@ import Footer from "./components/Footer";
 import JoinSection from "./components/homepage/JoinSection";
 
 export const metadata: Metadata = {
-  title: "PROJECTS · MAKER CLUB",
+  title: "Maker Club",
   icons: { icon: "/logo.png" },
 };
 

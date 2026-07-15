@@ -4,6 +4,26 @@ import { getEvent } from "@/lib/ghost/event";
 import { getYearTimeline } from "@/lib/ghost/timeline";
 import Image from "next/image";
 import JoinSection from "@/app/components/homepage/JoinSection";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const event = await getEvent(slug);
+
+  if (event.title == "No title provided.") {
+    return {
+      title: "Post Not Found",
+    };
+  }
+  return {
+    title: event.title,
+    description: event.excerpt,
+  };
+}
+
 export default async function Event({
   params,
 }: {

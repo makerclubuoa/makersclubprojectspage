@@ -1,6 +1,12 @@
+import { Metadata } from "next";
 import Footer from "../components/Footer";
 import JoinSection from "../components/homepage/JoinSection";
 import Nav from "../components/Nav";
+
+export const metadata: Metadata = {
+  title: "Sell Your Wares |Maker Club",
+  icons: { icon: "/logo.png" },
+};
 
 export default function RootLayout({
   children,

@@ -11,7 +11,7 @@ export default function JoinSection() {
   return (
     <div className="relative h-full w-full border-t-4 border-b-4">
       <picture className="absolute inset-0 z-0 block">
-        <source media="(max-width: 916px)" srcSet={artVert.src} />
+        <source media="(max-width: 2000px)" srcSet={artVert.src} />
         <Image
           src={art}
           alt="Background image."
