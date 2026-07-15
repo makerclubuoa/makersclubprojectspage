@@ -6,6 +6,8 @@ import Photo, { PhotoProps } from "./Photo";
 import type { Swiper as SwiperType } from "swiper";
 import { useState } from "react";
 import useScreenSize from "@/app/hooks/useScreenSize";
+import "swiper/css/autoplay";
+import { Autoplay } from "swiper/modules";
 
 interface PhotoCarouselProps {
   props: PhotoProps[];
@@ -15,8 +17,14 @@ export default function PhotoCarousel({ props }: PhotoCarouselProps) {
   const [swiper, setSwiper] = useState<SwiperType | null>(null);
   const screenSize = useScreenSize();
   return (
-    <div className="py-3 w-full max-w-[100rem] flex relative">
+    <div className="py-3 w-full max-w-[100rem] flex relative ">
       <Swiper
+        modules={[Autoplay]}
+        autoplay={{
+          delay: 2500, // Delay between transitions (in ms)
+          disableOnInteraction: false, // Keeps autoplay running after user swipes
+          pauseOnMouseEnter: true, // Pauses autoplay when hovering over the slider
+        }}
         loop={true}
         slidesPerView={(() => {
           if (screenSize < 800) return 1;
