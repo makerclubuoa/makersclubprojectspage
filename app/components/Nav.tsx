@@ -6,7 +6,7 @@ import { useAuth } from "@/app/components/AuthProvider";
 import LinkButton from "./global/LinkButton";
 
 const NAVLINK =
-  "text-white px-[11px] py-1.5 rounded-full transition-colors duration-150 whitespace-nowrap hover:bg-white/15 max-md:px-6 max-md:py-4 max-md:rounded-none max-md:text-base max-md:font-medium max-md:text-left max-md:w-full max-md:border-b max-md:border-white/15 max-md:last:border-b-0";
+  "text-semibold text-white px-[11px] py-1.5 rounded-full transition-colors duration-150 whitespace-nowrap hover:bg-white/15 max-md:px-6 max-md:py-4 max-md:rounded-none max-md:text-base max-md:font-medium max-md:text-left max-md:w-full max-md:border-b max-md:border-white/15 max-md:last:border-b-0";
 const NAVAUTH =
   "text-white px-3 py-[7px] rounded-full font-[550] text-sm transition-opacity duration-200 whitespace-nowrap hover:opacity-70";
 const HBAR =
@@ -37,11 +37,11 @@ export default function Nav() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-8 py-3.5 bg-gradient-to-b from-black/70 via-black/40 to-transparent text-[15px] max-md:grid-cols-[1fr_auto] max-md:px-5 max-md:overflow-visible"
+      className={`fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-8 py-3.5 to-transparent text-[15px] max-md:grid-cols-[1fr_auto] max-md:px-5 max-md:overflow-visible  ${menuOpen ? "max-md:bg-pop-pink/20 max-md:backdrop-blur-lg" : "bg-gradient-to-b from-black/70 via-black/40 "}`}
       id="nav"
     >
       {/* Left: hamburger + logo */}
-      <div className="flex items-center gap-3.5 min-w-0">
+      <div className={`flex items-center gap-3.5 min-w-0`}>
         <button
           className="hidden max-md:flex flex-col justify-center gap-[5px] cursor-pointer p-1.5 shrink-0"
           onClick={() => setMenuOpen((o) => !o)}
@@ -67,7 +67,7 @@ export default function Nav() {
 
       {/* Center: nav links (mobile drawer) */}
       <div
-        className={`flex gap-0.5 items-center justify-center text-[15px] font-medium max-md:absolute max-md:top-full max-md:left-0 max-md:right-0 max-md:h-[calc(100svh-58px)] max-md:bg-black/70 max-md:backdrop-blur-xl max-md:flex-col max-md:items-stretch max-md:gap-0 max-md:pb-6 max-md:overflow-y-auto max-md:border-t max-md:border-white/15 ${menuOpen ? "max-md:flex" : "max-md:hidden"}`}
+        className={`flex gap-0.5 items-center justify-center text-[15px] font-medium max-md:absolute max-md:top-full max-md:left-0 max-md:right-0 max-md:h-[calc(100svh-58px)] max-md:bg-pop-pink/20 max-md:backdrop-blur-lg max-md:flex-col max-md:items-stretch max-md:gap-0 max-md:pb-6 max-md:overflow-y-auto max-md:border-t max-md:border-white/15 ${menuOpen ? "max-md:flex" : "max-md:hidden"}`}
       >
         <a href="/about" className={NAVLINK} onClick={close}>
           About
@@ -84,15 +84,11 @@ export default function Nav() {
         <Link href="/projects" className={NAVLINK} onClick={close}>
           Projects
         </Link>
-        <Link
-          href="/submit"
-          className="
-          hidden max-md:block max-md:mx-5 max-md:mt-3 max-md:px-5 max-md:py-3.5 max-md:rounded-base max-md:bg-white max-md:text-ink max-md:font-semibold max-md:text-center max-md:whitespace-nowrap"
-          onClick={close}
+        <div
+          className={`w-full flex items-center justify-center pt-3 ${menuOpen ? "md:hidden" : "hidden"}`}
         >
-          Submit a Project
-        </Link>
-
+          <LinkButton link="/submit">Submit a Project</LinkButton>
+        </div>
         {/* Mobile-only footer inside the drawer */}
         <div className="hidden max-md:flex max-md:items-center max-md:gap-3 max-md:px-6 max-md:py-4 max-md:mt-auto max-md:border-t max-md:border-white/15">
           {!loading &&
@@ -151,7 +147,7 @@ export default function Nav() {
               </button>
               <Link
                 href="/submit"
-                className="shadow-[2px_2px_0px_0px_#000] border-2 border-black bg-white text-ink px-4 py-[7px] rounded-full font-semibold text-sm "
+                className="hidden lg:inline-flex  shadow-[2px_2px_0px_0px_#000] border-2 border-black bg-white text-ink px-4 py-[7px] rounded-full font-semibold text-[0.7rem] lg:text-sm"
                 onClick={close}
               >
                 Submit a Project
@@ -164,7 +160,7 @@ export default function Nav() {
               </Link>
 
               <Link
-                className="shadow-[2px_2px_0px_0px_#000] border-2 border-black bg-white text-ink px-4 py-[7px] rounded-full font-semibold text-sm "
+                className="hidden lg:inline-flex  shadow-[2px_2px_0px_0px_#000] border-2 border-black bg-white text-ink px-4 py-[7px] rounded-full font-semibold text-[0.7rem] lg:text-sm"
                 href="/submit"
                 onClick={close}
               >
