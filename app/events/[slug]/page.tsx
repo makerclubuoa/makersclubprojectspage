@@ -4,6 +4,7 @@ import { getEvent } from "@/lib/ghost/event";
 import { getYearTimeline } from "@/lib/ghost/timeline";
 import Image from "next/image";
 import JoinSection from "@/app/components/homepage/JoinSection";
+import Footer from "@/app/components/Footer";
 
 export async function generateMetadata({
   params,
@@ -89,8 +90,11 @@ export default async function Event({
             </p>
           </div>
           <TimelineSection timelines={timelines} />
+          <div className="h-[50dvh]">
+            <JoinSection />
+          </div>
+          <Footer />
         </div>
-        <JoinSection />
       </div>
     </div>
   );
