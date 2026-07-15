@@ -18,7 +18,7 @@ export default function WhatsNewSection({
       <Header
         text="What's New?"
         rotation={-1.5}
-        typeOverride="relative -top-10 lg:-top-3 h-20 pl-5 md:pl-10"
+        typeOverride="relative -top-10 lg:-top-3 h-20 pl-5 md:pl-10 xl:mb-10"
         bgColour="pop-pink"
         colour="white"
       />
@@ -26,6 +26,7 @@ export default function WhatsNewSection({
         <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
           {/* TODO: change this to a placeholder photo */}
           <Photo
+            link={`events/${upcomingEvent.slug}`}
             src={upcomingEvent.src ?? art}
             alt=""
             rotation={2.3}
@@ -35,7 +36,9 @@ export default function WhatsNewSection({
         </div>
       </div>
       <div className="pt-8 lg:pt-5">
-        <PhotoCarousel props={photos} />
+        <div className="flex justify-center">
+          <PhotoCarousel props={photos} />
+        </div>
       </div>
     </div>
   );
