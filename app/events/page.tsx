@@ -7,6 +7,8 @@ import PastEventsSection from "../components/events/PastEventsSection";
 import TimelineSection from "../components/homepage/TimelineSection";
 import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
 import LinkButton from "../components/global/LinkButton";
+import JoinSection from "../components/homepage/JoinSection";
+import Footer from "../components/Footer";
 
 export default async function Events() {
   const upcomingEvent = await getLatestUpcomingEvent();
@@ -75,6 +77,10 @@ export default async function Events() {
         </div>
         <TimelineSection timelines={timelines} />
       </div>
+      <div className="bg-white h-[50dvh]">
+        <JoinSection />
+      </div>
+      <Footer />
     </div>
   );
 }

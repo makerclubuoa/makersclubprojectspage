@@ -42,6 +42,8 @@ export default async function Home() {
           See More Events
         </LinkButton>
       </div>
+
+      <MakeathonSection makeathon={makeathon} />
       <Header
         text="Semester 2. Fully loaded."
         rotation={0}
