@@ -50,9 +50,6 @@ export default async function About() {
               <LinkButton link="">Register now!</LinkButton>
             </div>
           </div>
-          <div className="pb-10">
-            <PhotoCarousel props={photos} />
-          </div>
         </div>
       </div>
     </div>
