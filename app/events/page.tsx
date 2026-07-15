@@ -1,6 +1,6 @@
 import getLatestUpcomingEvent, { getPastEvents } from "@/lib/ghost/events";
 import Header from "../components/homepage/Header";
-import art from "@/public/maker-club-art-colour.png";
+import placeholder from "@/public/placeholder.png";
 import PinnedPostSnippet from "../components/global/PinnedPostSnippet";
 import Photo from "../components/global/Photo";
 import PastEventsSection from "../components/events/PastEventsSection";
@@ -33,7 +33,7 @@ export default async function Events() {
           <div className="pt-5 flex justify-center">
             <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
               <Photo
-                src={upcomingEvent.src ?? art}
+                src={upcomingEvent.src ?? placeholder}
                 alt=""
                 rotation={2.3}
                 link={`events/${upcomingEvent.slug}`}
