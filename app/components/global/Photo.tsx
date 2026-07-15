@@ -1,6 +1,7 @@
 import Image, { StaticImageData } from "next/image";
 import placeholder from "@/public/placeholder.png";
 import Link from "next/link";
+import { twMerge } from "tailwind-merge";
 
 export const tapeMappings = {
   popViolet: {
@@ -34,16 +35,14 @@ export const tapeMappings = {
     position: "top-0",
   },
 } as const;
-
 export interface PhotoProps {
-  src: string | StaticImageData;
+  src: string;
   alt?: string;
   rotation?: number;
   tape?: keyof typeof tapeMappings;
   link?: string;
   typeOverride?: string;
 }
-
 export default function Photo({
   src,
   alt,
@@ -56,11 +55,11 @@ export default function Photo({
     return (
       <Link href={link}>
         <div
-          className={`w-fit h-72 aspect-square relative`}
+          className={twMerge("w-fit h-72 aspect-square relative", typeOverride)}
           style={{ transform: `rotate(${rotation}deg)` }}
         >
           <div
-            className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
+            className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `border-2 bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
             style={{
               transform: `${tape !== undefined ? `rotate(${tapeMappings[tape].rotation})` : ``}`,
             }}
@@ -71,7 +70,7 @@ export default function Photo({
               src={src !== "" ? src : placeholder}
               fill
               className="object-cover"
-              alt={alt ?? "Image of a recent event."}
+              alt={alt ?? "Image of an event."}
             />
           </div>
         </div>
@@ -81,11 +80,11 @@ export default function Photo({
 
   return (
     <div
-      className={`w-fit h-72 aspect-square relative`}
+      className={twMerge("w-fit h-72 aspect-square relative", typeOverride)}
       style={{ transform: `rotate(${rotation}deg)` }}
     >
       <div
-        className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
+        className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `border-2 bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
         style={{
           transform: `${tape !== undefined ? `rotate(${tapeMappings[tape].rotation})` : ``}`,
         }}
