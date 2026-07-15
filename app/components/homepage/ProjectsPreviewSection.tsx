@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { type Project } from "@/lib/projects";
+import Photo from "@/app/components/global/Photo";
 
 const TAPES = [
   "-top-2 -left-3 -rotate-12 bg-pop-red",
@@ -15,15 +16,9 @@ export default function ProjectsPreviewSection({
   const featured = projects.slice(0, 3);
 
   return (
-    <div className="relative outline-3 outline-black overflow-hidden bg-white">
-      <div className="w-[104%] -ml-[2%] -mt-1 -rotate-1 bg-pop-blue border-b-3 border-black px-8 md:px-12 py-6">
-        <p className="rotate-1 text-3xl md:text-4xl font-holt text-white [-webkit-text-stroke:6px_black] [letter-spacing:0.05em] [paint-order:stroke_fill]">
-          Things We&rsquo;ve Made.
-        </p>
-      </div>
-
+    <div className="relative overflow-hidden bg-white">
       {featured.length > 0 && (
-        <div className="flex flex-col md:flex-row justify-center items-start gap-10 md:gap-8 px-6 md:px-12 pt-12">
+        <div className="flex flex-col md:flex-row justify-center items-start gap-10 md:gap-8 px-6  pt-12">
           {featured.map((project, i) => (
             <Link
               key={project.id}
@@ -37,10 +32,9 @@ export default function ProjectsPreviewSection({
                 <div className="absolute inset-0 outline-3 outline-black overflow-hidden">
                   {project.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Photo
                       src={project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      alt={`Photo of ${project.title}.`}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100 px-2 text-sm font-semibold text-center text-gray-500">
@@ -83,7 +77,6 @@ export default function ProjectsPreviewSection({
           aria-hidden
           className="pointer-events-none select-none absolute -bottom-3 -right-1 hidden h-28 w-auto md:block lg:h-36"
         />
-        {/* eslint-enable @next/next/no-img-element */}
 
         <p className="relative z-10 text-lg md:text-xl font-bold text-center text-black">
           Got something you&rsquo;d like to share? We&rsquo;d love to see it!
