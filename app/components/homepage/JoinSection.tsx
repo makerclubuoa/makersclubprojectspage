@@ -1,9 +1,7 @@
-"use client";
-
 import Image from "next/image";
-import Button from "../global/Button";
 import art from "@/public/maker-club-art-colour.png";
 import artVert from "@/public/maker-club-art-colour-vert.png";
+import LinkButton from "../global/LinkButton";
 
 export default function JoinSection() {
   const year = new Date().getFullYear();
@@ -37,10 +35,13 @@ export default function JoinSection() {
             <br />
             Register for {year} now for free!
           </p>
-
-          <Button onClick={() => {}} bgColour="pop-pink" textColour="white">
+          <LinkButton
+            link={process.env.NEXT_PUBLIC_SIGN_UP!}
+            bgColour="pop-pink"
+            textColour="white"
+          >
             Join Now!
-          </Button>
+          </LinkButton>
         </div>
       </div>
     </div>

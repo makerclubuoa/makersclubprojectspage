@@ -60,10 +60,13 @@ export default function Footer() {
         </ul>
 
         <div>
-          <LinkButton link="" bgColour="pop-pink" textColour="white">
+          <LinkButton
+            link={process.env.NEXT_PUBLIC_SIGN_UP!}
+            bgColour="pop-pink"
+            textColour="white"
+          >
             Join Now!
           </LinkButton>
-
           <p className="text-white text-[13px] font-semibold mt-10 m-0">
             © The University of Auckland Maker Club {year}
           </p>
