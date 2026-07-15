@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: process.env.SUPABASE_URL!,
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
   turbopack: {
