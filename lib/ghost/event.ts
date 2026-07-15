@@ -32,8 +32,6 @@ export async function getEvent(slug: string): Promise<EventDetail> {
     }
   }
 
-  console.log(event.html);
-
   return {
     title: event.title ?? "No title provided.",
     slug: event.slug,

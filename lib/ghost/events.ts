@@ -22,8 +22,6 @@ export default async function getLatestUpcomingEvent(): Promise<Event> {
       include: "tags",
     })
   )[0];
-  console.log("UPCOMING EVENT");
-  console.log(upcomingEvent);
   let date = null;
   if (upcomingEvent.tags) {
     for (const tag of upcomingEvent.tags) {

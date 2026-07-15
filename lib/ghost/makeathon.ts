@@ -16,7 +16,6 @@ export async function getMakeathon(): Promise<MakeathonType> {
       limit: 1,
     })
   )[0];
-  console.log(makeathonDetail);
   if (!makeathonDetail.html) throw new Error("Roadmap not found.");
   //NOTE: this is needed because xmldom requires one parent root
   const wrappedHtml = `

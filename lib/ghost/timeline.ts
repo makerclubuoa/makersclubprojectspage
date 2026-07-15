@@ -30,7 +30,6 @@ export async function getYearTimeline(): Promise<TimelineType[]> {
   const doc = new DOMParser().parseFromString(wrappedHtml, "text/html");
 
   const paragraphElements = doc.getElementsByTagName("p");
-  console.log(JSON.stringify(yearRoadmap.html));
 
   let counter = 0;
   const timelines: TimelineType[] = [];
