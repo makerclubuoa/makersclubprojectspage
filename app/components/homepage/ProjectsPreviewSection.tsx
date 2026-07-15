@@ -17,14 +17,14 @@ export default function ProjectsPreviewSection({
   const featured = projects.slice(0, 3);
 
   return (
-    <div className="relative overflow-hidden bg-white">
+    <div className="relative overflow-hidden bg-white flex items-center flex-col">
       {featured.length > 0 && (
-        <div className="flex flex-col md:flex-row justify-center items-start gap-10 md:gap-8 px-6 pt-12">
+        <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-10 px-6 pt-12 w-full max-w-[100rem] ">
           {featured.map((project, i) => (
             <Link
               key={project.id}
               href={`/projects/${project.id}`}
-              className="w-full md:w-64 flex flex-col items-start group"
+              className="w-96 md:w-72 md:h-fit flex flex-col justify-start items-start"
             >
               <div className="relative w-full aspect-square">
                 <div
@@ -58,7 +58,7 @@ export default function ProjectsPreviewSection({
       )}
 
       <div className="relative flex flex-col items-center gap-5 px-6 pt-16 pb-24">
-        <p className="relative z-10 text-2xl md:text-3xl font-bold text-center text-black">
+        <p className="relative z-10 text-2xl md:text-3xl font-semibold text-center text-black">
           Got something you&rsquo;d like to share? We&rsquo;d love to see it!
         </p>
         <LinkButton link="/submit" bgColour="pop-pink" textColour="white">
