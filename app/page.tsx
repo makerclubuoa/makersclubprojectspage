@@ -61,9 +61,11 @@ export default async function Home() {
         <ProjectsPreviewSection projects={previewProjects} />
       </div>
       <VendingMachineSection />
-      <div className="h-dvh">
+      <div className="h-[50dvh]">
         <JoinSection />
       </div>
+
+      <Footer />
     </div>
   );
 }
