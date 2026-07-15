@@ -9,7 +9,7 @@ export default async function About() {
   const photos = await getPhotos();
   return (
     <div className="">
-      <div className="border h-dvh w-full">
+      <div className="h-dvh w-full">
         <div className="h-1/3  w-full flex flex-col justify-center">
           <div className="w-full h-1/3 absolute border-b-4">
             <Image
@@ -50,9 +50,9 @@ export default async function About() {
               <LinkButton link="">Register now!</LinkButton>
             </div>
           </div>
-        </div>
-        <div className="h-[50dvh]">
-          <JoinSection />
+          <div className="pb-10">
+            <PhotoCarousel props={photos} />
+          </div>
         </div>
       </div>
     </div>
