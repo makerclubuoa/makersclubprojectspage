@@ -15,13 +15,15 @@ import WhatsNewSection from "./components/homepage/WhatsNewSection";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import LinkButton from "./components/global/LinkButton";
+import { getRandomProduct } from "@/lib/api/getRandomProduct";
+import Image from "next/image";
 
 export default async function Home() {
   const timelines: TimelineType[] = await getYearTimeline();
   const makeathon = await getMakeathon();
   const photos = await getPhotos();
   const upcomingEvent = await getLatestUpcomingEvent();
-
+  const randomProduct = await getRandomProduct();
   const projects = await fetchProjects();
   const previewProjects = [...projects].sort(
     (a, b) => Number(b.Featured) - Number(a.Featured),
@@ -60,11 +62,10 @@ export default async function Home() {
         />
         <ProjectsPreviewSection projects={previewProjects} />
       </div>
-      <VendingMachineSection />
+      <VendingMachineSection product={randomProduct} />
       <div className="h-[50dvh]">
         <JoinSection />
       </div>
-
       <Footer />
     </div>
   );

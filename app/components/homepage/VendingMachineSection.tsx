@@ -1,12 +1,15 @@
 "use client";
-import Button from "../global/Button";
 import Polaroid from "../global/Polaroid";
-import art from "@/public/maker-club-art.png";
-import Header from "./Header";
 import useScreenSize from "@/app/hooks/useScreenSize";
-import Image from "next/image";
+import placeholder from "@/public/placeholder.png";
+import { IGetRandomProductResponse } from "@/lib/api/getRandomProduct";
+import LinkButton from "../global/LinkButton";
 
-export default function VendingMachineSection() {
+export default function VendingMachineSection({
+  product,
+}: {
+  product: IGetRandomProductResponse;
+}) {
   const screenSize = useScreenSize();
   return (
     <div className="relative outline-3 outline-black py-10 bg-pop-pink md:pb-20 ">
@@ -16,10 +19,9 @@ export default function VendingMachineSection() {
       {screenSize <= 768 ? (
         <div className="w-full flex flex-col items-center">
           <Polaroid
-            src={art}
+            src={product.src ?? placeholder}
             typeOverride="rotate-5 absolute"
             onClick={undefined}
-            description="hi"
           ></Polaroid>
           <div className="pt-14 w-2/3 pr-5 lg:pr-20 text-lg lg:text-2xl font-bold flex justify-center flex-col text-white">
             <p>
@@ -32,12 +34,10 @@ export default function VendingMachineSection() {
               {`Check out what we have in store below!`}
             </p>
             <div className="items-center sm:items-start pt-3 lg:pt-5 flex flex-col sm:flex-row gap-2">
-              <Button onClick={() => {}} typeOverride="z-10 relative">
+              <LinkButton link="https://vend.makeuoa.nz/">
                 See What's in Stock!
-              </Button>
-              <Button onClick={() => {}} typeOverride="z-10 relative">
-                Apply to Sell
-              </Button>
+              </LinkButton>
+              <LinkButton link="/wares">Apply to Sell</LinkButton>
             </div>
           </div>
         </div>
@@ -54,18 +54,15 @@ export default function VendingMachineSection() {
               {`Check out what we have in store below!`}
             </p>
             <div className="mr-5 pt-3 lg:pt-5 flex flex-col md:flex-row gap-2">
-              <Button onClick={() => {}} typeOverride="z-10 relative">
+              <LinkButton link="https://vend.makeuoa.nz/">
                 See What's in Stock!
-              </Button>
-              <Button onClick={() => {}} typeOverride="z-10 relative">
-                Apply to Sell
-              </Button>
+              </LinkButton>
+              <LinkButton link="/wares">Apply to Sell</LinkButton>
             </div>
           </div>
           <Polaroid
-            src={art}
+            src={product.src ?? placeholder}
             onClick={undefined}
-            description="hi"
             typeOverride="mr-5 rotate-5 absolute"
           />
         </div>
