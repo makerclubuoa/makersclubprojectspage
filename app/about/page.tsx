@@ -4,14 +4,15 @@ import placeholder from "@/public/placeholder.png";
 import JoinSection from "../components/homepage/JoinSection";
 import LinkButton from "../components/global/LinkButton";
 import PhotoCarousel from "../components/global/PhotoCarousel";
+import Footer from "../components/Footer";
 
 export default async function About() {
   const photos = await getPhotos();
   return (
     <div className="">
       <div className="h-dvh w-full">
-        <div className="h-1/3  w-full flex flex-col justify-center">
-          <div className="w-full h-1/3 absolute border-b-4">
+        <div className="relative min-h-1/3 border-b-4 w-full flex flex-col justify-center">
+          <div className="w-full h-1/3 ">
             <Image
               src={photos[1].src ?? placeholder}
               alt="Background."
@@ -29,9 +30,9 @@ export default async function About() {
             </div>
           </div>
         </div>
-        <div className="h-2/3 w-full flex justify-between flex-col items-center gap-5">
+        <div className="bg-green-50 min-h-2/3 w-full flex justify-between flex-col items-center gap-5">
           <div className="flex items-center flex-col p-10 md:w-3/4">
-            <div className="pb-10 font-semibold text-2xl">
+            <div className="pb-10 font-semibold text-xl md:text-2xl">
               <p className="">
                 We make stuff!
                 <br />
@@ -51,6 +52,10 @@ export default async function About() {
             </div>
           </div>
         </div>
+        <div className="h-[50dvh]">
+          <JoinSection />
+        </div>
+        <Footer />
       </div>
     </div>
   );
