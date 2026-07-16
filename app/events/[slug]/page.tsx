@@ -21,6 +21,7 @@ export async function generateMetadata({
   }
   return {
     title: `${event.title} | Maker Club`,
+    icons: { icon: "/logoNew.png" },
     description: event.excerpt,
   };
 }

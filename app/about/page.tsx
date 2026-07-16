@@ -48,7 +48,13 @@ export default async function About() {
               </p>
             </div>
             <div>
-              <LinkButton link="">Register now!</LinkButton>
+              <LinkButton
+                link={process.env.NEXT_PUBLIC_SIGN_UP!}
+                bgColour="pop-red"
+                textColour="white"
+              >
+                Join Now!
+              </LinkButton>
             </div>
           </div>
         </div>
