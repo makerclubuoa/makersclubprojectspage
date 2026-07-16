@@ -3,7 +3,7 @@ import Link from "next/link";
 import instagram from "@/public/instagram.svg";
 import discord from "@/public/discord.svg";
 
-export default async function Socials() {
+export default function Socials() {
   return (
     <div className="mb-3 flex gap-3 items-center min-h-5 max-h-5 md:min-h-10 md:max-h-10">
       <Link href="https://www.instagram.com/make.uoa/">

@@ -35,9 +35,11 @@ export default function Splash() {
             {`We're gathering makers to create ideas together. If you design, crochet, cook, code, or like creating new things, then we're here for you. With regular events and more, this is the University of Auckland's home for all who make.`}
           </p>
         </div>
-        <LinkButton link={process.env.NEXT_PUBLIC_SIGN_UP!}>
-          Join Now!
-        </LinkButton>
+        <div className="w-full h-full z-50 flex items-center justify-center">
+          <LinkButton link={process.env.NEXT_PUBLIC_SIGN_UP!}>
+            Join Now!
+          </LinkButton>
+        </div>
       </div>
     </div>
   );
