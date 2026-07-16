@@ -2,13 +2,13 @@
 import Polaroid from "../global/Polaroid";
 import useScreenSize from "@/app/hooks/useScreenSize";
 import placeholder from "@/public/placeholder.png";
-import { IGetRandomProductResponse } from "@/lib/api/getRandomProduct";
+import type { IGetRandomProductRes } from "@/lib/stripe";
 import LinkButton from "../global/LinkButton";
 
 export default function VendingMachineSection({
   product,
 }: {
-  product: IGetRandomProductResponse;
+  product: IGetRandomProductRes;
 }) {
   const screenSize = useScreenSize();
   return (
