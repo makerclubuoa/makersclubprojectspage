@@ -30,7 +30,9 @@ export default function MakeathonSection({
             onClick={undefined}
             description={makeathon.date}
           >
-            <Screentone />
+            <div className="hidden md:visible">
+              <Screentone />
+            </div>
           </Polaroid>
           <div className="pt-24 w-2/3 pr-5 lg:pr-20 text-lg lg:text-2xl font-bold flex justify-center flex-col">
             {formatParagraph(makeathon.description)}
