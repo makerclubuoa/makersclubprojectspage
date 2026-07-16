@@ -4,8 +4,8 @@ import JoinSection from "../components/homepage/JoinSection";
 import Nav from "../components/Nav";
 
 export const metadata: Metadata = {
-  title: "Sell Your Wares |Maker Club",
-  icons: { icon: "/logo.png" },
+  title: "Sell Your Wares | Maker Club",
+  icons: { icon: "/logoNew.png" },
 };
 
 export default function RootLayout({

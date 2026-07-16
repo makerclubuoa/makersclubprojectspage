@@ -42,7 +42,7 @@ export default function Nav() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-8 py-3.5 to-transparent text-[15px] max-md:grid-cols-[1fr_auto] max-md:px-5 max-md:overflow-visible  ${menuOpen ? "max-md:bg-pop-pink max-md:border-b-2 max-md:border-black/20" : "bg-gradient-to-b from-black/70 via-black/40 "}`}
+      className={`fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-8 py-3.5 to-transparent text-[15px] max-md:grid-cols-[1fr_auto] max-md:px-5 max-md:overflow-visible  ${menuOpen ? "max-md:bg-pop-pink/80 max-md:border-b-2 max-md:border-black/20" : "bg-gradient-to-b from-black/70 via-black/40 "}`}
       id="nav"
     >
       {/* Left: hamburger + logo */}
@@ -72,7 +72,7 @@ export default function Nav() {
 
       {/* Center: nav links (mobile drawer) */}
       <div
-        className={`flex gap-0.5 items-center justify-center text-[15px] font-medium max-md:absolute max-md:top-full max-md:left-0 max-md:right-0 max-md:h-[calc(100svh-58px)] max-md:bg-pop-pink max-md:flex-col max-md:items-stretch max-md:gap-0 max-md:pb-6 max-md:overflow-y-auto max-md:border-t max-md:border-white/15 ${menuOpen ? "max-md:flex" : "max-md:hidden"}`}
+        className={`flex gap-0.5 items-center justify-center text-[15px] font-medium max-md:absolute max-md:top-full max-md:left-0 max-md:right-0 max-md:h-[calc(100svh-58px)] max-md:bg-pop-pink/80 max-md:flex-col max-md:items-stretch max-md:gap-0 max-md:pb-6 max-md:overflow-y-auto max-md:border-t max-md:border-white/15 ${menuOpen ? "max-md:flex" : "max-md:hidden"}`}
       >
         <a href="/about" className={NAVLINK} onClick={close}>
           About
@@ -133,8 +133,9 @@ export default function Nav() {
 
       {/* Right: auth */}
       <div className="flex items-center gap-1 lg:gap-2 justify-end max-md:hidden">
-        {!loading && showAuth && (
-          user ? (
+        {!loading &&
+          showAuth &&
+          (user ? (
             <>
               {isAdmin && (
                 <Link href="/admin" className={NAVAUTH} onClick={close}>
@@ -162,8 +163,7 @@ export default function Nav() {
             <Link href="/login" className={NAVAUTH} onClick={close}>
               Sign in
             </Link>
-          )
-        )}
+          ))}
         <Link
           href="/submit"
           className="hidden lg:inline-flex shadow-[2px_2px_0px_0px_#000] border-2 border-black bg-white text-ink px-4 py-[7px] rounded-full font-semibold text-[0.7rem] lg:text-sm"

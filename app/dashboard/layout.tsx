@@ -5,7 +5,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Dashboard | Maker Club",
-  icons: { icon: "/logo.png" },
+  icons: { icon: "/logoNew.png" },
 };
 
 export default function RootLayout({

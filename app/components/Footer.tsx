@@ -6,6 +6,7 @@ import { container } from "@/lib/ui";
 import Button from "./global/Button";
 import art from "@/public/maker-club-art.png";
 import LinkButton from "./global/LinkButton";
+import Socials from "./global/Socials";
 
 const FOOTERLINK =
   "text-white font-bold text-[15px] md:text-base transition-opacity duration-150 hover:opacity-75";
@@ -60,6 +61,7 @@ export default function Footer() {
         </ul>
 
         <div>
+          <Socials />
           <LinkButton
             link={process.env.NEXT_PUBLIC_SIGN_UP!}
             bgColour="pop-pink"
