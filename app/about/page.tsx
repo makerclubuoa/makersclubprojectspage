@@ -30,7 +30,7 @@ export default async function About() {
             </div>
           </div>
         </div>
-        <div className="bg-green-50 min-h-2/3 w-full flex justify-between flex-col items-center gap-5">
+        <div className="min-h-2/3 w-full flex justify-between flex-col items-center gap-5">
           <div className="flex items-center flex-col p-10 md:w-3/4">
             <div className="pb-10 font-semibold text-xl md:text-2xl">
               <p className="">
@@ -52,7 +52,7 @@ export default async function About() {
             </div>
           </div>
         </div>
-        <div className="h-[50dvh]">
+        <div className="h-dvh">
           <JoinSection />
         </div>
         <Footer />

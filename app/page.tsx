@@ -65,7 +65,7 @@ export default async function Home() {
         <ProjectsPreviewSection projects={previewProjects} />
       </div>
       <VendingMachineSection product={randomProduct} />
-      <div className="h-[50dvh]">
+      <div className="h-dvh">
         <JoinSection />
       </div>
       <Footer />
