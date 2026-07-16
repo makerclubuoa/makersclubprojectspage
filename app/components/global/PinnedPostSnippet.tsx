@@ -24,8 +24,8 @@ export default async function PinnedPostSnippet({
       <div className="flex flex-col justify-center h-full px-5">
         <p className="text-md font-medium">{upcomingEvent.date}</p>
         <p
-          className="[letter-spacing:0.01em] text-white font-bold text-3xl md:text-4xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] "
+          className="[letter-spacing:0.01em] text-white font-bold text-xl sm:text-2xl md:text-4xl font-holt
+          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill]"
         >
           {upcomingEvent.title}
         </p>
