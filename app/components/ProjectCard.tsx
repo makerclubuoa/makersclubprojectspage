@@ -8,8 +8,18 @@ export function formatDate(iso: string) {
   return d.toLocaleDateString('en-NZ', { month: 'short', year: 'numeric' }).toUpperCase()
 }
 
-const BADGE = 'px-2 py-1 text-white text-[10px] tracking-[0.08em] uppercase backdrop-blur-[4px]'
-const TAG = 'px-1.5 py-0.5 bg-paper-2 text-[10px] tracking-[0.04em]'
+const BADGE = 'px-2.5 py-0.5 rounded-full border-2 border-black text-white text-[10px] font-bold tracking-[0.08em] uppercase backdrop-blur-[4px]'
+const TAG = 'px-2 py-0.5 rounded-full border border-black/25 bg-paper-2 text-[10px] font-semibold tracking-[0.04em]'
+
+// Washi-tape strips pinned to the card tops, mirroring the homepage's
+// featured-project previews.
+const TAPES = [
+  '-top-2 left-5 -rotate-6 bg-pop-red',
+  '-top-2 left-1/2 -translate-x-1/2 rotate-3 bg-pop-violet',
+  '-top-2 right-5 rotate-6 bg-pop-blue',
+  '-top-2 left-8 rotate-2 bg-pop-orange',
+  '-top-2 right-8 -rotate-3 bg-pop-magenta',
+]
 
 export default function ProjectCard({
   project,
@@ -44,17 +54,18 @@ export default function ProjectCard({
 
   return (
     <a
-      className={`reveal relative flex flex-col bg-paper border border-rule rounded-xl overflow-hidden cursor-pointer will-change-transform [transition:transform_0.35s_cubic-bezier(0.2,0.9,0.3,1.2),box-shadow_0.35s_ease] [transform:rotate(var(--card-rotate))] hover:[transform:translateY(-4px)_rotate(var(--card-rotate))] hover:[box-shadow:var(--card-hover-shadow)] max-[640px]:[transform:none] ${wide ? 'col-span-2' : ''} ${tall ? 'row-span-2' : ''} max-[640px]:col-span-1 max-[640px]:row-span-1`}
+      className={`reveal relative flex flex-col bg-white outline-solid outline-3 outline-black cursor-pointer will-change-transform [transition:transform_0.35s_cubic-bezier(0.2,0.9,0.3,1.2),box-shadow_0.35s_ease] [transform:rotate(var(--card-rotate))] hover:[transform:translateY(-4px)_rotate(var(--card-rotate))] hover:shadow-[6px_6px_0px_0px_#000] max-[640px]:[transform:none] ${wide ? 'col-span-2' : ''} ${tall ? 'row-span-2' : ''} max-[640px]:col-span-1 max-[640px]:row-span-1`}
       style={{ '--card-rotate': `${rotate}deg` } as React.CSSProperties}
       href={`/projects/${project.id}`}
       onClick={handleClick}
     >
-      <div className={`${media} relative overflow-hidden bg-paper-2 border-b border-rule`}>
+      <div className={`absolute z-10 w-16 h-5 outline-2 outline-black ${TAPES[index % TAPES.length]}`} />
+      <div className={`${media} relative overflow-hidden bg-paper-2 border-b-[3px] border-black`}>
         <div
           className="absolute inset-0 flex items-end justify-start p-2.5 text-[10px] tracking-[0.04em] text-white/[0.92] bg-cover bg-center before:content-[''] before:absolute before:inset-0 before:pointer-events-none before:[background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.06)_0_6px,transparent_6px_14px)]"
           style={{ backgroundImage: project.image ? `url(${project.image})` : color }}
         >
-          {!project.image && <span className="relative z-[1] opacity-95 uppercase">[ {project.title} ]</span>}
+          {!project.image && <span className="relative z-[1] opacity-95 uppercase">{project.title}</span>}
         </div>
         <div className="absolute left-2.5 top-2.5 flex gap-1.5 z-[2]">
           <button
@@ -85,7 +96,7 @@ export default function ProjectCard({
             <span className={`${TAG} text-muted pointer-events-none`}>+{(project.tools ?? []).length - 3}</span>
           )}
         </div>
-        <div className="flex items-center justify-between mt-auto pt-2.5 border-t border-dashed border-rule text-[10.5px] text-muted tracking-[0.06em] uppercase">
+        <div className="flex items-center justify-between mt-auto pt-2.5 border-t-2 border-black/10 text-[10.5px] font-semibold text-ink-2 tracking-[0.06em] uppercase">
           <span className="flex items-center gap-2">
             {(() => {
               const names = makerDisplay ? makerDisplay.names : (project.makers ?? [])
@@ -96,7 +107,7 @@ export default function ProjectCard({
                 <>
                   <span className="flex">
                     {Array.from({ length: total }).map((_, i) => (
-                      <span key={i} className={`w-[18px] h-[18px] rounded-full border-2 border-paper inline-block${i > 0 ? ' -ml-1.5' : ''}`} style={{ background: color }} />
+                      <span key={i} className={`w-[18px] h-[18px] rounded-full border-2 border-black inline-block${i > 0 ? ' -ml-1.5' : ''}`} style={{ background: color }} />
                     ))}
                   </span>
                   <span>{label}</span>

@@ -1,0 +1,72 @@
+"use client";
+import { StaticImport } from "next/dist/shared/lib/get-img-props";
+import Image, { StaticImageData } from "next/image";
+import placeholder from "@/public/placeholder.png";
+import Link from "next/link";
+
+interface PolaroidPropsType {
+  src: string | StaticImport;
+  description?: string;
+  link?: string;
+  onClick?: () => void;
+  typeOverride?: string;
+  children?: React.ReactNode;
+}
+
+export default function Polaroid({
+  src,
+  description,
+  link,
+  onClick,
+  typeOverride,
+  children,
+}: PolaroidPropsType) {
+  // TODO: fix weird issue iwht placeholder
+  if (link) {
+    return (
+      <Link href={link} className="w-full flex justify-center">
+        <div
+          className={`min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride ? typeOverride : ""}`}
+        >
+          <div className="bg-gray-100 -z-10">{children}</div>
+          <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-gray-100  min-h-64 px-3 relative">
+            <Image
+              src={src === null ? placeholder : src}
+              layout="fill"
+              objectFit="cover"
+              alt=""
+            />
+          </div>
+          {description !== undefined ? (
+            <div className="w-full flex justify-center items-center pt-2 grow ">
+              <p className="text-2xl font-semibold text-center">
+                {description}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </Link>
+    );
+  }
+  return (
+    <div
+      className={`min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride ? typeOverride : ""}`}
+      onClick={onClick ? onClick : () => {}}
+    >
+      <div className="bg-gray-200 -z-10">{children}</div>
+      <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-gray-100 min-h-64 px-3 relative">
+        <Image
+          src={src === null ? placeholder : src}
+          layout="fill"
+          objectFit="cover"
+          alt=""
+        />
+      </div>
+      {description !== undefined ? (
+        <div className="w-full flex justify-center items-center pt-2 grow ">
+          <p className="text-2xl font-semibold text-center">{description}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}

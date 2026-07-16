@@ -1,55 +1,45 @@
-import PinnedEvent from "../events/PinnedEvent";
-import { PhotoProps } from "../global/Photo";
-import PhotoCarousel from "../global/PhotoCarousel";
+import Photo, { tapeMappings } from "../global/Photo";
 import Header from "./Header";
+import art from "../../../public/maker-club-art-colour.png";
+import PinnedPostSnippet from "../global/PinnedPostSnippet";
+import PhotoCarousel from "../global/PhotoCarousel";
+import { getPhotos, PhotosType } from "@/lib/ghost/photos";
+import { Event } from "@/lib/ghost/events";
 
-const photos: PhotoProps[] = [
-  {
-    src: "" as any,
-    alt: "Photo 1",
-  },
-  {
-    src: "" as any,
-    alt: "Photo 2",
-    rotation: -4,
-  },
-  {
-    src: "" as any,
-    alt: "Photo 3",
-    rotation: 6,
-  },
-  {
-    src: "" as any,
-    alt: "Photo 4",
-    rotation: -2,
-  },
-  {
-    src: "" as any,
-    alt: "Photo 5",
-  },
-  {
-    src: "" as any,
-    alt: "Photo 6",
-    rotation: 3,
-  },
-];
-
-export default function WhatsNewSection() {
+export default function WhatsNewSection({
+  photos,
+  upcomingEvent,
+}: {
+  photos: PhotosType[];
+  upcomingEvent: Event;
+}) {
   return (
-    <>
+    <div className="pb-10">
       <Header
         text="What's New?"
         rotation={-1.5}
-        typeOverride="relative -top-10 lg:-top-3 h-20 pl-5 md:pl-10"
+        typeOverride="relative -top-10 lg:-top-3 h-20 pl-5 md:pl-10 xl:mb-10"
         bgColour="pop-pink"
         colour="white"
       />
-      <PinnedEvent
-        name={"name"}
-        date={"date"}
-        excerpt="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-      />
-      <PhotoCarousel props={photos} />
-    </>
+      <div className="flex justify-center">
+        <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
+          {/* TODO: change this to a placeholder photo */}
+          <Photo
+            link={`events/${upcomingEvent.slug}`}
+            src={upcomingEvent.src ?? art}
+            alt=""
+            rotation={2.3}
+            tape="popViolet"
+          />
+          <PinnedPostSnippet upcomingEvent={upcomingEvent} />
+        </div>
+      </div>
+      <div className="pt-8 lg:pt-5">
+        <div className="flex justify-center">
+          <PhotoCarousel props={photos} />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,55 +1,74 @@
-import { Suspense } from 'react'
-import Nav from './components/Nav'
-import ProjectsSection from './components/ProjectsSection'
-import Footer from './components/Footer'
-import CTACarousel from './components/CTACarousel'
-import Link from 'next/link'
-import { fetchProjects, fetchMakerDisplay } from '@/lib/projects'
-import { container, btnDark } from '@/lib/ui'
+import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
+import Header from "./components/homepage/Header";
+import MakeathonSection from "./components/homepage/MakeathonSection";
+import MovingText from "./components/homepage/MovingText";
+import Splash from "./components/homepage/Splash";
+import TimelineSection from "./components/homepage/TimelineSection";
+import VendingMachineSection from "./components/homepage/VendingMachineSection";
+import ProjectsPreviewSection from "./components/homepage/ProjectsPreviewSection";
+import { getMakeathon } from "@/lib/ghost/makeathon";
+import { fetchProjects } from "@/lib/projects";
+import JoinSection from "./components/homepage/JoinSection";
+import { getPhotos } from "@/lib/ghost/photos";
+import getLatestUpcomingEvent from "@/lib/ghost/events";
+import WhatsNewSection from "./components/homepage/WhatsNewSection";
+import Nav from "./components/Nav";
+import Footer from "./components/Footer";
+import LinkButton from "./components/global/LinkButton";
+import Image from "next/image";
+import { getRandomProduct } from "@/lib/stripe";
 
-export const dynamic = 'force-dynamic'
-
-export default async function ProjectsPage() {
-  const projects = await fetchProjects()
-
-  const makerDisplays = Object.fromEntries(
-    await Promise.all(projects.map(async p => [p.id, await fetchMakerDisplay(p)]))
-  )
-
-  const allTools = (() => {
-    const s = new Set<string>()
-    projects.forEach(p => (p.tools ?? []).forEach(t => s.add(t)))
-    return ['All tools', ...[...s].sort()]
-  })()
-
-  const allCategories = [
-    'All',
-    ...[...new Set(projects.map(p => p.category).filter(Boolean) as string[])].sort(),
-  ]
+export default async function Home() {
+  const timelines: TimelineType[] = await getYearTimeline();
+  const makeathon = await getMakeathon();
+  const photos = await getPhotos();
+  const upcomingEvent = await getLatestUpcomingEvent();
+  const randomProduct = await getRandomProduct();
+  const projects = await fetchProjects();
+  const previewProjects = [...projects].sort(
+    (a, b) => Number(b.Featured) - Number(a.Featured),
+  );
 
   return (
-    <>
+    <div className="">
       <Nav />
-      <Suspense fallback={null}>
-        <ProjectsSection projects={projects} allTools={allTools} allCategories={allCategories} makerDisplays={makerDisplays} />
-      </Suspense>
-      <div className="py-20 bg-paper-2 text-ink">
-        <div className={`${container} flex items-center gap-16 max-[900px]:flex-col max-[900px]:gap-10`}>
-          <div className="flex-[0_0_380px] max-[900px]:flex-none">
-            <h4 className="text-[clamp(24px,3vw,36px)] mt-0 mb-3.5 font-bold leading-[1.15] text-ink">Got a thing you <em className="not-italic">made</em>?</h4>
-            <p className="opacity-65 max-w-[44ch] text-[15px] leading-[1.6] text-ink mt-0 mb-7">Submissions are open all the time. Half-finished, broken, or weird is welcome — that&rsquo;s usually where the good stuff is.</p>
-            <Link href="/submit" className={btnDark}>Submit a project</Link>
-          </div>
-          <CTACarousel
-            images={projects.filter(p => p.image).slice(0, 8).map(p => ({
-              id: p.id,
-              src: p.image!,
-              alt: p.title,
-            }))}
-          />
-        </div>
+      <Splash />
+      <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
+        <MovingText />
+      </div>
+      <WhatsNewSection upcomingEvent={upcomingEvent} photos={photos} />
+      <div className="w-full flex items-center justify-center pb-5">
+        <LinkButton link={`events/`} bgColour="pop-pink" textColour="white">
+          See More Events
+        </LinkButton>
+      </div>
+
+      <MakeathonSection makeathon={makeathon} />
+      <Header
+        text="Semester 2. Fully loaded."
+        rotation={0}
+        typeOverride="z-20 relative top-22 md:top-30 lg:top-31 h-20 pl-5 md:pl-10 xl:top-30 xl:p-15 overflow-x-hidden"
+        bgColour="pop-violet"
+        colour="white"
+      />
+      <div className="mt-20 md:mt-30 lg:mt-26 ">
+        <TimelineSection timelines={timelines} />
+      </div>
+      <div className="z-50">
+        <Header
+          text="Things We've Made"
+          rotation={1}
+          typeOverride="-top-3 z-20 xl:p-15 relative h-20 pl-5 overflow-x-hidden"
+          bgColour="pop-blue"
+          colour="white"
+        />
+        <ProjectsPreviewSection projects={previewProjects} />
+      </div>
+      <VendingMachineSection product={randomProduct} />
+      <div className="h-dvh">
+        <JoinSection />
       </div>
       <Footer />
-    </>
-  )
+    </div>
+  );
 }

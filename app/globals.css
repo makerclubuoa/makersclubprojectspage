@@ -1,20 +1,49 @@
 /* ── Tailwind v4 (utilities only; the project keeps its own reset, so Preflight
    is intentionally omitted to avoid restyling not-yet-migrated components) ── */
+@import url("https://googleapis.com");
+@import "tailwindcss";
 @layer theme, base, components, utilities;
-@import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/utilities.css' layer(utilities);
-
-/* Dark mode is driven by body[data-mode='dark'], not prefers-color-scheme,
-   so `dark:` variants track the data attribute. */
-@custom-variant dark (&:where([data-mode='dark'], [data-mode='dark'] *));
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 
 /* Expose the existing design tokens as Tailwind theme values. `inline` means
    utilities reference the live CSS vars, so bg-paper / text-ink / border-rule
    automatically follow the light/dark token swaps below. */
-@theme inline {
-  --color-paper: var(--paper);
-
-  
+@theme {
+  --animate-linearSpin: linearSpin 14s infinite linear;
+  @keyframes linearSpin {
+    from {
+      translate: 0;
+    }
+    to {
+      translate: -100%;
+    }
+  }
+  --font-sans: var(--font-dm-sans);
+  --font-holt: var(--font-holtwood);
+  --color-paper: var (--paper);
+  --background-image-purple-grad: linear-gradient(
+    180deg,
+    #9f42d1 0%,
+    #c76cf8 50%,
+    #b375d5 100%
+  );
+  /* Projects-area base — pop-blue family, same structure as purple-grad */
+  --background-image-blue-grad: linear-gradient(
+    180deg,
+    #567dff 0%,
+    #82a1ff 50%,
+    #6f8fe8 100%
+  );
+  --background-image-grad: linear-gradient(
+    146deg,
+    #567dff 0%,
+    #9f42d1 20%,
+    #f04ab9 35%,
+    #ff25c7 50%,
+    #ff3c6d 75%,
+    #ff856a 100%
+  );
   --color-paper-2: var(--paper-2);
   --color-paper-3: var(--paper-3);
   --color-ink: var(--ink);
@@ -30,7 +59,7 @@
   --color-pop-orange: var(--pop-orange);
   --color-accent: var(--accent);
   --radius-base: var(--radius);
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-mono: "JetBrains Mono", monospace;
   /* The design inherits body line-height 1.6; keep Tailwind's named text sizes
      on that rhythm so utilities match the original (named sizes otherwise bake
      in tighter line-heights). Override per-element with leading-* where needed. */
@@ -41,7 +70,24 @@
 }
 
 :root {
-  --grad: linear-gradient(146deg, #567dff 0%, #9f42d1 20%, #f04ab9 35%, #ff25c7 50%, #ff3c6d 75%, #ff856a 100%);
+  --grad: linear-gradient(
+    146deg,
+    #567dff 0%,
+    #9f42d1 20%,
+    #f04ab9 35%,
+    #ff25c7 50%,
+    #ff3c6d 75%,
+    #ff856a 100%
+  );
+  --background-image-grad: linear-gradient(
+    146deg,
+    #567dff 0%,
+    #9f42d1 20%,
+    #f04ab9 35%,
+    #ff25c7 50%,
+    #ff3c6d 75%,
+    #ff856a 100%
+  );
   --paper: #ffffff;
   --paper-2: #f5f5f7;
   --paper-3: #e8e8ed;
@@ -63,39 +109,10 @@
   --gap: 18px;
   --radius: 6px;
   /* Hover shadows that need mode-specific values (utilities read the token). */
-  --card-hover-shadow: 0 16px 48px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --card-hover-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
   --rcard-shadow: 4px 4px 0 var(--ink);
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  body:not([data-mode='light']) {
-    --paper: #1d1d1f;
-    --paper-2: #2c2c2e;
-    --paper-3: #3a3a3c;
-    --ink: #f5f5f7;
-    --ink-2: #aeaeb2;
-    --muted: #8e8e93;
-    --rule: rgba(255, 255, 255, 0.12);
-    --rule-2: rgba(255, 255, 255, 0.06);
-    --card-hover-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-    --rcard-shadow: 4px 4px 0 var(--paper-3);
-    color-scheme: dark;
-  }
-}
-
-[data-mode='dark'] {
-  --paper: #1d1d1f;
-  --paper-2: #2c2c2e;
-  --paper-3: #3a3a3c;
-  --ink: #f5f5f7;
-  --ink-2: #aeaeb2;
-  --muted: #8e8e93;
-  --rule: rgba(255, 255, 255, 0.12);
-  --rule-2: rgba(255, 255, 255, 0.06);
-  --card-hover-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-  --rcard-shadow: 4px 4px 0 var(--paper-3);
-  color-scheme: dark;
 }
 
 /* Base element reset — in @layer base so Tailwind utilities (e.g. text-paper on
@@ -115,7 +132,20 @@
   body {
     background: var(--paper);
     color: var(--ink);
-    font: 15px/1.6 -apple-system, BlinkMacSystemFont, 'avenir next', avenir, 'segoe ui', 'helvetica neue', helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
+    font:
+      15px/1.6 -apple-system,
+      BlinkMacSystemFont,
+      "avenir next",
+      avenir,
+      "segoe ui",
+      "helvetica neue",
+      helvetica,
+      Cantarell,
+      Ubuntu,
+      roboto,
+      noto,
+      arial,
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
@@ -142,19 +172,17 @@
 .reveal {
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.2, 0.7, 0.3, 1);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 .reveal.is-in {
   opacity: 1;
   transform: none;
 }
 
-/* ── Date input dark-mode fix ───────────────────────── */
-input[type='date'] {
+input[type="date"] {
   color-scheme: light;
-}
-[data-mode='dark'] input[type='date'] {
-  color-scheme: dark;
 }
 
 /* ── Keyframes (referenced from JSX via animate-[…]) ── */
@@ -177,10 +205,59 @@ input[type='date'] {
 
 /* CTA carousel scroll animations (animate-[scroll-up/down_12s_linear_infinite]) */
 @keyframes scroll-up {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-50%); }
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
 }
 @keyframes scroll-down {
-  from { transform: translateY(-50%); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.ghost-content {
+  line-height: 2;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.ghost-content a {
+  display: block;
+  width: max-content; /* Or a specific width like 200px */
+  margin: 0 auto;
+  box-shadow: 2px 2px 0px 0px #000;
+  border-radius: 9999px;
+  margin-top: 2rem;
+  padding: 0.125rem 1.25rem;
+  font-weight: 600;
+  border: 3px solid black;
+  background-color: #9f42d1;
+  color: white;
+  font-size: 1.125rem;
+}
+
+.ghost-content img {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.faq-q {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.faq-ans {
+  padding-left: 1rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.faq {
+  padding-bottom: 1.5rem;
 }

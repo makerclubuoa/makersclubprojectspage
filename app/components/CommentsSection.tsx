@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/components/AuthProvider'
-import { seclabel, seclabelNum, seclabelBar, modalBackdrop, modal, modalLabel, modalTitle, modalActions, btnGhost, btnGradient } from '@/lib/ui'
+import { secHead, secHeadRow, secHint, modalBackdrop, modal, modalLabel, modalTitle, modalActions, btnGhost, btnGradient } from '@/lib/ui'
 
 interface Comment {
   id: string
@@ -18,19 +18,18 @@ interface Props {
   projectId: string
   projectTitle: string
   projectOwnerId: string | null
-  sectionNum: string
 }
 
 const ADMIN_EMAIL = 'makerclubuoa@gmail.com'
-const META_BTN = 'text-[11px] text-muted p-0 cursor-pointer tracking-[.04em] hover:text-pop-red'
-const CONFIRM = 'text-[11px] text-ink-2 tracking-[.02em]'
-const CONFIRM_BTN = 'p-0 text-[11px] text-pop-red underline cursor-pointer'
+const META_BTN = 'text-[11px] font-semibold text-ink-2 p-0 cursor-pointer tracking-[.04em] hover:text-pop-red'
+const CONFIRM = 'text-[11px] font-semibold text-ink-2 tracking-[.02em]'
+const CONFIRM_BTN = 'p-0 text-[11px] font-bold text-pop-red underline cursor-pointer'
 
 function fmtCommentDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function CommentsSection({ projectId, projectTitle, projectOwnerId, sectionNum }: Props) {
+export default function CommentsSection({ projectId, projectTitle, projectOwnerId }: Props) {
   const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
@@ -110,12 +109,10 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
   }
 
   return (
-    <section className="mb-[60px]" id="comments">
-      <div className={seclabel}>
-        <span className={seclabelNum}>{sectionNum}</span>
-        <span>Comments</span>
-        <span className={seclabelBar} />
-        <span>{comments.length} {comments.length === 1 ? 'comment' : 'comments'}</span>
+    <section className="relative bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8 mb-10" id="comments">
+      <div className={`${secHeadRow} mb-5`}>
+        <h3 className={`${secHead} text-pop-blue`}>Comments</h3>
+        <span className={secHint}>{comments.length} {comments.length === 1 ? 'comment' : 'comments'}</span>
       </div>
 
       <div className="flex flex-col gap-0">
@@ -132,10 +129,10 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
             user.email === ADMIN_EMAIL
           )
           return (
-          <div key={c.id} className="border-t border-rule py-4 last-of-type:border-b last-of-type:border-rule last-of-type:mb-7">
+          <div key={c.id} className="border-t-2 border-black/10 py-4 last-of-type:border-b-2 last-of-type:border-black/10 last-of-type:mb-7">
             <div className="flex items-baseline gap-2.5 mb-1.5">
-              <span className="text-xs font-semibold tracking-[.04em] text-ink">{c.author_name}</span>
-              <span className="text-[11px] text-muted">{fmtCommentDate(c.created_at)}</span>
+              <span className="text-xs font-bold tracking-[.04em] text-ink">{c.author_name}</span>
+              <span className="text-[11px] font-medium text-ink-2">{fmtCommentDate(c.created_at)}</span>
               <span className="flex-1" />
               {canDelete && (
                 confirmDelete === c.id ? (
@@ -166,7 +163,7 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
                 </button>
               )}
             </div>
-            <p className="text-sm leading-[1.6] text-ink-2 m-0 whitespace-pre-wrap break-words">{c.body}</p>
+            <p className="text-sm font-medium leading-[1.6] text-ink-2 m-0 whitespace-pre-wrap break-words">{c.body}</p>
           </div>
           )
         })}
@@ -174,7 +171,7 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
         <form className="mt-2" onSubmit={handleSubmit}>
           <textarea
             ref={textareaRef}
-            className="w-full bg-paper-2 border border-rule rounded-base text-ink text-[14px] leading-[1.5] px-3.5 py-3 resize-y min-h-[80px] outline-none transition-[border-color] duration-150 focus:border-accent read-only:cursor-pointer read-only:opacity-70"
+            className="w-full bg-white border-2 border-black rounded-[6px] text-ink text-[14px] leading-[1.5] px-3.5 py-3 resize-y min-h-[80px] outline-none transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000] read-only:cursor-pointer read-only:opacity-70 placeholder:text-muted"
             placeholder={user ? 'Leave a comment…' : 'Sign in to leave a comment'}
             value={body}
             onChange={e => setBody(e.target.value)}
@@ -186,7 +183,7 @@ export default function CommentsSection({ projectId, projectTitle, projectOwnerI
           <div className="flex items-center gap-3 mt-2">
             {submitError && <span className="text-xs text-pop-red">{submitError}</span>}
             <span style={{ flex: 1 }} />
-            <span className="text-[11px] text-muted">{body.length}/1000</span>
+            <span className="text-[11px] font-semibold text-ink-2">{body.length}/1000</span>
             {user ? (
               <button
                 type="submit"

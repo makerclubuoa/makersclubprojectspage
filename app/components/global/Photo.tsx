@@ -1,52 +1,103 @@
-import { StaticImport } from "next/dist/shared/lib/get-img-props";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
+import placeholder from "@/public/placeholder.png";
 import Link from "next/link";
+import { twMerge } from "tailwind-merge";
 
-const tapeClasses = {
-  violet: "relative bg-pop-violet top-0 right-0 rotation-[25deg]",
-  pink: "relative bg-pop-pink top-0 right-0 rotation-[25deg]",
-  magenta: "relative bg-pop-magenta top-0 right-0 rotation-[25deg]",
-  orange: "relative bg-pop-orange top-0 right-0 rotation-[25deg]",
-  blue: "relative bg-pop-blue top-0 right-0 rotation-[25deg]",
-  red: "relative bg-pop-red top-0 right-0 rotation-[25deg]",
+export const tapeMappings = {
+  popViolet: {
+    colour: "pop-violet",
+    rotation: "-20deg",
+    position: "top-0",
+  },
+  popPink: {
+    colour: "pop-pink",
+    rotation: "-20deg",
+    position: "top-0",
+  },
+  popRed: {
+    colour: "pop-red",
+    rotation: "20deg",
+    position: "bottom-0 right-0",
+  },
+  popOrange: {
+    colour: "pop-orange",
+    rotation: "30deg",
+    position: "right-0",
+  },
+  popMagenta: {
+    colour: "pop-magenta",
+    rotation: "30deg",
+    position: "bottom-0 right-0",
+  },
+  popBlue: {
+    colour: "pop-blue",
+    rotation: "20deg",
+    position: "top-0",
+  },
 } as const;
-
-type Tape = keyof typeof tapeClasses;
-
 export interface PhotoProps {
-  src: string | StaticImport;
-  alt: string;
+  src: string | StaticImageData;
+  alt?: string;
   rotation?: number;
+  tape?: keyof typeof tapeMappings;
   link?: string;
   typeOverride?: string;
-  tape?: Tape;
 }
-
 export default function Photo({
   src,
   alt,
-  link,
   rotation,
-  typeOverride,
   tape,
+  link,
+  typeOverride,
 }: PhotoProps) {
-  if (link !== undefined)
+  if (link) {
     return (
-      <Link href={link} className="block">
+      <Link href={link}>
         <div
-          style={{ transform: `rotate(${rotation ? rotation : 0}deg)` }}
-          className={`outline-black outline-3 w-4/5 h-6/8 min-h-64 px-3 relative ${typeOverride ?? typeOverride}`}
+          className={twMerge("w-fit h-72 aspect-square relative", typeOverride)}
+          style={{ transform: `rotate(${rotation}deg)` }}
         >
-          <Image src={src} layout="fill" objectFit="cover" alt={alt} />
+          <div
+            className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `border-2 bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
+            style={{
+              transform: `${tape !== undefined ? `rotate(${tapeMappings[tape].rotation})` : ``}`,
+            }}
+          ></div>
+          <div className="absolute inset-0 p-5 outline-3">
+            {/* TODO: make this more accessible */}
+            <Image
+              src={src !== "" ? src : placeholder}
+              fill
+              className="object-cover"
+              alt={alt ?? "Image of an event."}
+            />
+          </div>
         </div>
       </Link>
     );
+  }
+
   return (
     <div
-      style={{ transform: `rotate(${rotation ? rotation : 0}deg)` }}
-      className={`outline-black outline-3 aspect-square min-h-64 min-w-64 w-1/3 max-w-80 px-3 relative ${typeOverride ?? typeOverride}`}
+      className={twMerge("w-fit h-72 aspect-square relative", typeOverride)}
+      style={{ transform: `rotate(${rotation}deg)` }}
     >
-      <Image src={src} layout="fill" objectFit="cover" alt={alt} />
+      <div
+        className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `border-2 bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
+        style={{
+          transform: `${tape !== undefined ? `rotate(${tapeMappings[tape].rotation})` : ``}`,
+        }}
+      ></div>
+      <div className="absolute inset-0 p-5 outline-3">
+        {/* TODO: make this more accessible */}
+        <Image
+          src={src}
+          fill
+          className="object-cover"
+          alt={alt ?? "Image of a recent event."}
+        />
+      </div>
     </div>
   );
 }
