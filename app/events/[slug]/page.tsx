@@ -37,8 +37,8 @@ export default async function Event({
   return (
     <div>
       <div className="h-dvh w-full">
-        <div className="h-1/3 xl:h-1/2 w-full flex flex-col justify-center">
-          <div className="w-full h-1/3 xl:h-1/2 absolute border-b-4">
+        <div className=" min-h-[30rem] h-1/3 xl:h-1/2 w-full flex flex-col justify-center">
+          <div className="w-full min-h-[30rem] h-1/3 xl:h-1/2 absolute border-b-4">
             <Image
               src={event.src ?? placeholder}
               alt="Background."

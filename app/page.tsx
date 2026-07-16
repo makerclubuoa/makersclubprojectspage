@@ -30,7 +30,7 @@ export default async function Home() {
   );
 
   return (
-    <div className="overflow-visible">
+    <div className="">
       <Nav />
       <Splash />
       <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
@@ -47,18 +47,18 @@ export default async function Home() {
       <Header
         text="Semester 2. Fully loaded."
         rotation={0}
-        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10 xl:top-30 xl:p-15"
+        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10 xl:top-30 xl:p-15 overflow-x-hidden"
         bgColour="pop-violet"
         colour="white"
       />
-      <div className="mt-20 md:mt-40 lg:mt-26">
+      <div className="mt-20 md:mt-40 lg:mt-26 overflow-x-hidden">
         <TimelineSection timelines={timelines} />
       </div>
       <div className="z-50">
         <Header
           text="Things We've Made"
           rotation={1}
-          typeOverride="-top-3 z-20 xl:p-15 relative h-20 pl-5"
+          typeOverride="-top-3 z-20 xl:p-15 relative h-20 pl-5 overflow-x-hidden"
           bgColour="pop-blue"
           colour="white"
         />

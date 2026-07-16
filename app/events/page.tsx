@@ -39,7 +39,7 @@ export default async function Events() {
                 link={`events/${upcomingEvent.slug}`}
               />
               <PinnedPostSnippet upcomingEvent={upcomingEvent} pinned={true}>
-                <div className="flex w-full justify-end-safe mt-4">
+                <div className="flex w-full justify-center md:justify-end-safe mt-4">
                   <LinkButton
                     link={`events/${upcomingEvent.slug}`}
                     typeOverride="text-md md:text-md lg:text-md"

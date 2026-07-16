@@ -39,7 +39,7 @@ export default function TimelineSection({ timelines }: TimelineSectionProps) {
           <div className="self-start top-1/3 overflow-visible sticky rounded-full h-2 w-2 outline-3 bg-pop-pink"></div>
         </div>
       </div>
-      <div className="z-10 pt-20 pb-10 flex w-full items-center justify-center text-2xl text-white font-holt">
+      <div className="z-10 pt-20 pb-10 flex w-full items-center justify-center text-2xl text-white font-holt text-center">
         <p>And many more to come!</p>
       </div>
     </div>
