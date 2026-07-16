@@ -2,21 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Footer from "@/app/components/Footer";
-import CursorTrail from "@/app/components/CursorTrail";
+import Screentone from "@/app/components/global/Screentone";
+import pliers from "@/public/doodle-pliers.png";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import type { Project } from "@/lib/projects";
 import Pagination from "@/app/components/Pagination";
 import {
   container,
-  seclabel,
-  seclabelNum,
-  seclabelBar,
-  submitHero,
-  submitHeroTitle,
-  submitHeroSub,
+  pageWrap,
+  pageBand,
+  pageBandTitle,
+  pageBandSub,
+  pageBandDoodle,
+  fieldInput,
   submitMain,
   emptyState,
   emptyStateMono,
@@ -44,12 +45,14 @@ import {
 
 const ADMIN_EMAIL = "makerclubuoa@gmail.com";
 
-// Small accent pill used for the status filters.
+// Small comic pill used for the status filters.
 const FILTER_BTN =
-  "inline-flex items-center gap-2.5 rounded-full font-semibold border border-transparent bg-accent text-white active:scale-[0.97] px-3.5 py-[5px] text-[11px] [transition:transform_0.12s_ease,background_0.2s,color_0.2s,border-color_0.2s,opacity_0.2s]";
+  "inline-flex items-center gap-2 rounded-full font-semibold border-2 border-black px-3.5 py-1 text-[11px] uppercase tracking-[0.04em] transition-[background-color,color,box-shadow,transform] duration-150 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none";
+const FILTER_BTN_ON = "bg-accent text-white shadow-[2px_2px_0px_0px_#000]";
+const FILTER_BTN_OFF = "bg-white text-ink hover:bg-paper-2";
 // Row action link (like a dash-row edit link but with a pinned colour, no hover shift).
 const DASH_ACTION =
-  "text-[10.5px] tracking-[0.08em] uppercase shrink-0 px-2 py-1 transition-colors duration-150";
+  "text-[10.5px] font-bold tracking-[0.08em] uppercase shrink-0 px-2 py-1 transition-colors duration-150";
 
 type Filter = "all" | "pending" | "live" | "featured" | "rejected";
 
@@ -231,29 +234,22 @@ export default function AdminPage() {
   const paginated = visible.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <>
-      <CursorTrail />
+    <div className={pageWrap}>
+      <div className="pt-20">
 
-      <header className={submitHero}>
-        <div className={container}>
-          <div className={`${seclabel} mb-6`}>
-            <span className={seclabelNum}>[08]</span>
-            <span>Admin_</span>
-            <span className={seclabelBar} />
-          </div>
-          <h1 className={submitHeroTitle}>
-            All <em className="text-ink">submissions</em>
-          </h1>
-          <p className={submitHeroSub}>
-            Approve, feature, reject, or delete any project.
-          </p>
-        </div>
+      <header className={pageBand}>
+        <Screentone />
+        <Image src={pliers} alt="" className={pageBandDoodle} />
+        <p className={`${pageBandTitle} text-pop-red`}>Admin</p>
+        <p className={pageBandSub}>
+          Approve, feature, reject, or delete any project.
+        </p>
       </header>
 
       <main className={submitMain}>
         <div className={container}>
           {actionError && (
-            <div className="mb-4 px-3.5 py-2.5 bg-[color-mix(in_oklab,var(--pop-red)_10%,var(--paper))] border border-pop-red text-pop-red text-xs font-mono tracking-[0.04em]">
+            <div className="mb-4 px-3.5 py-2.5 bg-white border-2 border-black rounded-[6px] shadow-[2px_2px_0px_0px_#000] text-pop-red text-xs font-bold tracking-[0.04em]">
               Error: {actionError}
             </div>
           )}
@@ -266,7 +262,7 @@ export default function AdminPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full mb-4 px-3 py-2 bg-paper-2 border border-rule rounded-base text-[13px] text-ink"
+            className={`${fieldInput} mb-4 shadow-[2px_2px_0px_0px_#000]`}
           />
 
           <div className="flex gap-2 mb-8 flex-wrap">
@@ -279,7 +275,7 @@ export default function AdminPage() {
                   setFilter(f);
                   setPage(1);
                 }}
-                className={`${FILTER_BTN}${filter === f ? "" : " hover:opacity-85"}`}
+                className={`${FILTER_BTN} ${filter === f ? FILTER_BTN_ON : FILTER_BTN_OFF}`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
               </button>
@@ -292,7 +288,7 @@ export default function AdminPage() {
             </div>
           ) : visible.length === 0 ? (
             <div className={emptyState}>
-              <span className={emptyStateMono}>_ nothing here</span>
+              <span className={emptyStateMono}>Nothing here</span>
             </div>
           ) : (
             <>
@@ -448,7 +444,7 @@ export default function AdminPage() {
             <p className={modalLabel}>Confirm action</p>
             <p className={modalTitle}>
               {pending.label}{" "}
-              <em className="not-italic text-ink-2">"{pending.title}"</em>?
+              <em className="not-italic text-pop-violet">"{pending.title}"</em>?
             </p>
             {pending.label === "Delete" && (
               <p className={modalWarn}>This cannot be undone.</p>
@@ -471,6 +467,7 @@ export default function AdminPage() {
           </div>
         </div>
       )}
-    </>
+      </div>
+    </div>
   );
 }

@@ -9,9 +9,9 @@ import ProjectCard from '@/app/components/ProjectCard'
 import { container, emptyState } from '@/lib/ui'
 
 const PILL_BASE =
-  'inline-flex items-center gap-2 px-3 py-[7px] rounded-[4px] border text-[11.5px] font-medium tracking-[0.06em] uppercase transition-[transform,background-color,color,border-color,box-shadow] duration-200'
+  'inline-flex items-center gap-2 px-3.5 py-1 rounded-full border-2 border-black text-[11.5px] font-semibold tracking-[0.04em] uppercase transition-[transform,background-color,color,box-shadow] duration-200'
 const SELECT_WRAP =
-  'inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] border border-rule bg-paper text-[11.5px] text-ink-2 tracking-[0.06em] uppercase max-[640px]:w-full max-[640px]:justify-between'
+  'inline-flex items-center gap-2 px-3.5 py-1 rounded-full border-2 border-black bg-white text-[11.5px] font-semibold text-ink tracking-[0.04em] uppercase max-[640px]:w-full max-[640px]:justify-between'
 
 function applyFilters(
   projects: Project[],
@@ -130,39 +130,27 @@ export default function ProjectsSection({
 
   return (
     <>
-      {/* Grid */}
-      <section className="pt-[97px] pb-6 max-[640px]:pt-20" id="projects">
-        <div className={container}>
-          <div className="flex items-baseline justify-between mb-5 select-none cursor-default">
-            <h3 className="text-[28px] m-0 font-bold tracking-[-0.03em] max-[640px]:text-xl">{tool !== 'All tools' ? tool : cat === 'All' ? 'All Projects' : cat}</h3>
-            <div className="text-muted text-[11px] tracking-[0.1em] uppercase">
-              <b className="text-ink font-normal">{String(filtered.length).padStart(2, '0')}</b>&nbsp;·&nbsp;results
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Filter bar */}
-      <div className="relative z-10 bg-paper border-y border-rule py-3 max-[640px]:py-2">
+      <div className="relative z-10 bg-white border-b-4 py-3 max-[640px]:py-2" id="projects">
         <div className={container}>
           <div className="flex items-center gap-3 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-1.5">
             <div className="flex gap-1.5 flex-wrap">
               {allCategories.map(c => (
                 <button
                   key={c}
-                  className={`${PILL_BASE} ${c === cat ? 'bg-accent text-white border-transparent' : 'bg-paper text-ink-2 border-rule hover:text-ink hover:border-ink'}${bouncingPill === c ? ' animate-[pillBounce_0.45s_cubic-bezier(0.34,1.56,0.64,1)]' : ''}`}
+                  className={`${PILL_BASE} ${c === cat ? 'bg-accent text-white shadow-[2px_2px_0px_0px_#000]' : 'bg-white text-ink hover:bg-paper-2'}${bouncingPill === c ? ' animate-[pillBounce_0.45s_cubic-bezier(0.34,1.56,0.64,1)]' : ''}`}
                   onClick={() => handleCatClick(c)}
                 >
                   <span>{c}</span>
-                  <span className="text-[10.5px] opacity-70 tracking-normal">{String(categoryCount(c)).padStart(2, '0')}</span>
+                  <span className="text-[10.5px] opacity-70 tracking-normal">{categoryCount(c)}</span>
                 </button>
               ))}
             </div>
 
-            <div className="w-px h-[22px] bg-rule max-[1024px]:hidden" />
+            <div className="w-[3px] h-[22px] bg-black max-[1024px]:hidden" />
 
             <div className={SELECT_WRAP}>
-              <label className="text-muted text-[10px]">Made with</label>
+              <label className="text-ink-2 text-[10px] font-bold">Made with</label>
               <CustomSelect
                 variant="filter"
                 value={tool}
@@ -172,7 +160,7 @@ export default function ProjectsSection({
             </div>
 
             <div className={SELECT_WRAP}>
-              <label className="text-muted text-[10px]">Sort</label>
+              <label className="text-ink-2 text-[10px] font-bold">Sort</label>
               <CustomSelect
                 variant="filter"
                 value={sort}
@@ -186,12 +174,16 @@ export default function ProjectsSection({
             </div>
 
             <button
-              className={`inline-flex items-center gap-2.5 px-3 py-1.5 rounded-[4px] border text-[11.5px] tracking-[0.06em] uppercase bg-paper max-[640px]:w-full max-[640px]:justify-between ${featured ? 'text-ink border-ink' : 'text-ink-2 border-rule'}`}
+              className={`inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full border-2 border-black text-[11.5px] font-semibold tracking-[0.04em] uppercase bg-white text-ink max-[640px]:w-full max-[640px]:justify-between ${featured ? 'shadow-[2px_2px_0px_0px_#000]' : ''}`}
               onClick={() => { setFeatured(f => !f); setPage(1) }}
             >
-              <span className={`relative w-7 h-4 rounded-[2px] border transition-[background-color,border-color] duration-200 after:content-[''] after:absolute after:left-px after:top-px after:w-3 after:h-3 after:transition-[transform,background-color] after:duration-200 ${featured ? 'bg-ink border-transparent after:translate-x-3 after:bg-white' : 'bg-paper-2 border-rule after:bg-paper-3'}`} />
+              <span className={`relative w-7 h-4 rounded-full border-2 border-black transition-[background-color] duration-200 after:content-[''] after:absolute after:left-px after:top-px after:w-2.5 after:h-2.5 after:rounded-full after:transition-[transform,background-color] after:duration-200 ${featured ? 'bg-pop-magenta after:translate-x-3 after:bg-white' : 'bg-paper-2 after:bg-black/30'}`} />
               Featured only
             </button>
+
+            <div className="inline-flex items-center px-3.5 py-1 rounded-full border-2 border-black bg-black text-white text-[11px] font-bold tracking-[0.1em] uppercase ml-auto max-[640px]:ml-0 max-[640px]:justify-center">
+              {filtered.length}&nbsp;·&nbsp;{tool !== 'All tools' ? tool : cat === 'All' ? 'results' : cat}
+            </div>
           </div>
         </div>
       </div>

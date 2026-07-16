@@ -2,20 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import CursorTrail from "@/app/components/CursorTrail";
+import Screentone from "@/app/components/global/Screentone";
+import penNib from "@/public/doodle-pen-nib.png";
 import Pagination from "@/app/components/Pagination";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { resolvePublicName, type Project } from "@/lib/projects";
 import {
   container,
-  seclabel,
-  seclabelNum,
-  seclabelBar,
-  submitHero,
-  submitHeroTitle,
-  submitHeroSub,
+  holt,
+  pageWrap,
+  pageBand,
+  pageBandTitle,
+  pageBandSub,
+  pageBandDoodle,
   submitMain,
   modalBackdrop,
   modal,
@@ -228,21 +230,16 @@ export default function DashboardPage() {
   const displayName = profile?.display_name ?? user.email?.split("@")[0] ?? "";
 
   return (
-    <>
-      <CursorTrail />
+    <div className={pageWrap}>
+      <div className="pt-20">
 
-      <header className={submitHero}>
-        <div className={container}>
-          <div className={`${seclabel} mb-6`}>
-            <span className={seclabelNum}>[06]</span>
-            <span>Dashboard_</span>
-            <span className={seclabelBar} />
-          </div>
-          <h1 className={submitHeroTitle}>
-            Hey, <em className="text-ink">{displayName}.</em>
-          </h1>
-          <p className={submitHeroSub}>Your submissions and liked projects.</p>
-        </div>
+      <header className={pageBand}>
+        <Screentone />
+        <Image src={penNib} alt="" className={`${pageBandDoodle} -rotate-6 -bottom-4`} />
+        <p className={`${pageBandTitle} text-pop-violet`}>
+          Hey, {displayName}!
+        </p>
+        <p className={pageBandSub}>Your submissions and liked projects.</p>
       </header>
 
       {/* Name preference modal */}
@@ -284,15 +281,13 @@ export default function DashboardPage() {
       <main className={submitMain}>
         <div className={container}>
           {/* Profile settings */}
-          <div className={`${seclabel} mb-6`}>
-            <span className={seclabelNum}>00</span>
-            <span>Profile_</span>
-            <span className={seclabelBar} />
-          </div>
+          <h2 className={`${holt} text-3xl md:text-4xl text-white mt-0 mb-6`}>
+            Profile
+          </h2>
 
-          <div className={`${form} mb-12`}>
+          <div className={`${form} mb-14`}>
             <div className={formInner}>
-              <span className={formFig}>FIG.02 — EVENT PROPOSAL FORM</span>
+              <span className={formFig}>Profile settings</span>
 
               <div className={field}>
                 <label className={fieldLabel}>
@@ -332,7 +327,7 @@ export default function DashboardPage() {
                   }}
                 />
                 {usernameError && (
-                  <span className="text-[11px] text-[#e53] mt-1">
+                  <span className="text-[11px] font-semibold text-pop-red mt-1">
                     {usernameError}
                   </span>
                 )}
@@ -340,10 +335,10 @@ export default function DashboardPage() {
 
               <div className={field}>
                 <label className={fieldLabel}>Show me as</label>
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2 mt-1 flex-wrap">
                   <button
                     type="button"
-                    className={`px-3.5 py-[7px] border border-rule text-xs tracking-[0.06em] cursor-pointer ${namePreference === "name" ? "bg-ink text-paper" : "bg-paper text-ink-2"}`}
+                    className={`px-3.5 py-1 rounded-full border-2 border-black text-xs font-semibold tracking-[0.06em] cursor-pointer ${namePreference === "name" ? "bg-black text-white shadow-[2px_2px_0px_0px_#000]" : "bg-white text-ink hover:bg-paper-2"}`}
                     onClick={() => requestNamePreference("name")}
                   >
                     My name ·{" "}
@@ -353,7 +348,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     type="button"
-                    className={`px-3.5 py-[7px] border border-rule text-xs tracking-[0.06em] ${namePreference === "public_name" ? "bg-ink text-paper" : "bg-paper text-ink-2"} ${publicName.trim() ? "cursor-pointer opacity-100" : "cursor-not-allowed opacity-40"}`}
+                    className={`px-3.5 py-1 rounded-full border-2 border-black text-xs font-semibold tracking-[0.06em] ${namePreference === "public_name" ? "bg-black text-white shadow-[2px_2px_0px_0px_#000]" : "bg-white text-ink"} ${publicName.trim() ? "cursor-pointer opacity-100 hover:bg-paper-2" : "cursor-not-allowed opacity-40"}`}
                     onClick={() =>
                       publicName.trim() && requestNamePreference("public_name")
                     }
@@ -365,7 +360,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
                 {!publicName.trim() && (
-                  <span className="text-[11px] text-muted mt-1.5">
+                  <span className="text-[11px] font-medium text-ink-2 mt-1.5">
                     Set a username above to enable this option.
                   </span>
                 )}
@@ -378,11 +373,11 @@ export default function DashboardPage() {
                       type="checkbox"
                       checked={creditConsented}
                       onChange={(e) => setCreditConsented(e.target.checked)}
-                      className="w-auto m-0"
+                      className="w-auto m-0 accent-pop-magenta"
                     />
-                    <span>Show my name on projects</span>
+                    <span className="font-semibold">Show my name on projects</span>
                   </span>
-                  <span className="text-[11px] text-muted pl-6">
+                  <span className="text-[11px] font-medium text-ink-2 pl-6">
                     Controls whether your{" "}
                     {namePreference === "public_name" && publicName.trim()
                       ? "username"
@@ -422,13 +417,13 @@ export default function DashboardPage() {
           </div>
 
           {/* My Projects */}
-          <div className={`${seclabel} mb-6`}>
-            <span className={seclabelNum}>01</span>
-            <span>My_submissions</span>
-            <span className={seclabelBar} />
+          <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+            <h2 className={`${holt} text-3xl md:text-4xl text-white m-0`}>
+              My Submissions
+            </h2>
             <Link
               href="/submit"
-              className="inline-flex items-center gap-2.5 rounded-full font-semibold border border-transparent bg-accent text-white hover:opacity-85 active:scale-[0.97] px-3 py-[5px] text-[11px] [transition:transform_0.12s_ease,background_0.2s,color_0.2s,border-color_0.2s,opacity_0.2s]"
+              className="inline-flex items-center gap-1.5 rounded-full font-semibold border-2 border-black bg-accent text-white shadow-[2px_2px_0px_0px_#000] hover:opacity-90 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none px-4 py-1 text-xs transition-[transform,box-shadow,opacity] duration-100"
             >
               + New
             </Link>
@@ -440,7 +435,7 @@ export default function DashboardPage() {
             </div>
           ) : myProjects.length === 0 ? (
             <div className={emptyState}>
-              <div className={emptyStateMono}>_ no submissions yet</div>
+              <div className={emptyStateMono}>No submissions yet</div>
               <p className="mt-2">
                 <Link href="/submit" className="underline">
                   Submit your first project →
@@ -529,11 +524,9 @@ export default function DashboardPage() {
           )}
 
           {/* Liked Projects */}
-          <div className={`${seclabel} mt-16 mb-6`}>
-            <span className={seclabelNum}>02</span>
-            <span>Liked_</span>
-            <span className={seclabelBar} />
-          </div>
+          <h2 className={`${holt} text-3xl md:text-4xl text-white mt-16 mb-6`}>
+            Liked
+          </h2>
 
           {dataLoading ? (
             <div className={emptyState}>
@@ -541,7 +534,7 @@ export default function DashboardPage() {
             </div>
           ) : likedProjects.length === 0 ? (
             <div className={emptyState}>
-              <div className={emptyStateMono}>_ nothing liked yet</div>
+              <div className={emptyStateMono}>Nothing liked yet</div>
               <p className="mt-2">
                 <Link href="/projects" className="underline">
                   Browse projects →
@@ -601,6 +594,7 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
-    </>
+      </div>
+    </div>
   );
 }

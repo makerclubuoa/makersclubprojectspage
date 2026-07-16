@@ -45,14 +45,14 @@ export default function LikeButton({ projectId, initialLikes }: LikeButtonProps)
   return (
     <>
       <button
-        className={`flex items-center gap-2 w-full px-4 py-[11px] border text-xs tracking-[0.08em] uppercase cursor-pointer transition-colors duration-200 disabled:opacity-60 disabled:cursor-default ${liked ? 'border-pop-magenta text-pop-magenta bg-[color-mix(in_oklab,var(--pop-magenta)_8%,var(--paper))]' : 'border-rule bg-paper-2 text-ink-2 hover:border-pop-magenta hover:text-pop-magenta'}`}
+        className={`inline-flex items-center gap-2 px-5 py-1.5 rounded-full border-2 border-black text-xs font-bold tracking-[0.08em] uppercase cursor-pointer shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-[background-color,color,transform,box-shadow] duration-150 disabled:opacity-60 disabled:cursor-default ${liked ? 'bg-pop-magenta text-white' : 'bg-white text-ink hover:text-pop-magenta'}`}
         onClick={handleLike}
         disabled={loading}
         title={user ? (liked ? 'Unlike this project' : 'Like this project') : 'Sign in to like'}
       >
         <span className={`text-sm leading-none transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]${liked ? ' scale-125' : ''}`}>♥</span>
         <span className="text-sm">{likes}</span>
-        <span className="ml-auto text-[10px] opacity-70">{liked ? 'Liked' : 'Like'}</span>
+        <span className="text-[10px] opacity-70">{liked ? 'Liked' : 'Like'}</span>
       </button>
 
       {showModal && (

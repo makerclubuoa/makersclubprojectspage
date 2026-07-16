@@ -2,17 +2,17 @@
 
 import { useState, useEffect, useRef, use, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Nav from '@/app/components/Nav'
-import Footer from '@/app/components/Footer'
-import CursorTrail from '@/app/components/CursorTrail'
+import Screentone from '@/app/components/global/Screentone'
+import penNib from '@/public/doodle-pen-nib.png'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES, resolvePublicName, type Project } from '@/lib/projects'
 import CustomSelect from '@/app/components/CustomSelect'
 import {
-  seclabel, seclabelNum, seclabelBar,
-  submitHero, submitHeroTitle, submitMain,
+  secHead, secHeadRow, secHint,
+  pageWrap, pageBand, pageBandTitle, pageBandDoodle, submitMain,
   form, formInner, formFig, formActions,
   field, fieldTight, fieldLabel, fieldReq, fieldInput, fieldTextarea, fieldRow,
   btnGhost, btnGradient, btnDanger, btnArr,
@@ -26,7 +26,7 @@ import {
 } from '@/lib/ui'
 
 const CONTAINER_760 = 'max-w-[760px] mx-auto px-7 max-[640px]:px-4 relative z-[1]'
-const BACK_LINK = 'inline-flex items-center gap-2 text-[10.5px] tracking-[0.14em] uppercase text-muted mb-7 no-underline transition-colors duration-200 hover:text-ink'
+const BACK_LINK = 'inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase text-ink-2 mb-2 no-underline transition-colors duration-200 hover:text-pop-magenta'
 
 const EDIT_CATEGORIES = CATEGORIES.filter(c => c !== 'All')
 
@@ -449,48 +449,39 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
   if (notAllowed) {
     return (
-      <>
-        <Nav />
-        <main className="min-h-[80vh] flex items-center justify-center p-10">
-          <div className="text-center">
-            <p className="text-muted mb-4">You can only edit your own projects.</p>
+      <div className={pageWrap}>
+        <main className="min-h-dvh flex items-center justify-center p-10">
+          <div className="text-center bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] px-10 py-12">
+            <p className="font-semibold mb-5">You can only edit your own projects.</p>
             <Link href="/dashboard" className={btnGhost}>← Back to dashboard</Link>
           </div>
         </main>
-        <Footer />
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <CursorTrail />
-      <Nav />
+    <div className={pageWrap}>
+      <div className="pt-20">
 
-      <header className={submitHero}>
-        <div className={CONTAINER_760}>
-          <Link href={backHref} className={BACK_LINK}>
-            {backLabel}
-          </Link>
-          <div className={`${seclabel} mb-6`}>
-            <span>Edit</span>
-            <span className={seclabelBar} />
-          </div>
-          <h1 className={submitHeroTitle}>
-            Edit <em className="text-ink">{project?.title}</em>
-          </h1>
-        </div>
+      <header className={pageBand}>
+        <Screentone />
+        <Image src={penNib} alt="" className={`${pageBandDoodle} -rotate-6 -bottom-4`} />
+        <Link href={backHref} className={`${BACK_LINK} relative z-[1]`}>
+          {backLabel}
+        </Link>
+        <p className={`${pageBandTitle} text-pop-violet`}>
+          Edit — {project?.title}
+        </p>
       </header>
 
       <main className={submitMain}>
         <div className={CONTAINER_760}>
           <form className={form} onSubmit={handleSave}>
             <div className={formInner}>
-              <span className={formFig}>FIG.07 — EDIT PROJECT</span>
+              <span className={formFig}>Edit project</span>
 
-              <div className={`${seclabel} mb-[18px]`}>
-                <span className={seclabelNum}>A</span><span>The basics</span><span className={seclabelBar} />
-              </div>
+              <h3 className={`${secHead} text-pop-blue mb-[18px] mt-1`}>The Basics</h3>
 
               <div className={field}>
                 <label className={fieldLabel}>Project title <span className={fieldReq}>*</span></label>
@@ -636,9 +627,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               {/* BUILD LOG */}
-              <div className={`${seclabel} mt-7 mb-[18px]`}>
-                <span className={seclabelNum}>B</span><span>Build log</span><span className={seclabelBar} />
-                <span>optional · timeline of your process</span>
+              <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                <h3 className={`${secHead} text-pop-violet`}>Build Log</h3>
+                <span className={secHint}>optional · timeline of your process</span>
               </div>
 
               {logEntries.length > 0 && (
@@ -705,9 +696,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </button>
 
               {/* GALLERY */}
-              <div className={`${seclabel} mt-7 mb-[18px]`}>
-                <span className={seclabelNum}>C</span><span>Gallery</span><span className={seclabelBar} />
-                <span>optional · process photos</span>
+              <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                <h3 className={`${secHead} text-pop-magenta`}>Gallery</h3>
+                <span className={secHint}>optional · process photos</span>
               </div>
 
               {(existingGallery.length > 0 || newGalleryPreviews.length > 0) && (
@@ -735,9 +726,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </label>
 
               {/* BOM */}
-              <div className={`${seclabel} mt-7 mb-[18px]`}>
-                <span className={seclabelNum}>D</span><span>Bill of materials</span><span className={seclabelBar} />
-                <span>optional · what did it cost?</span>
+              <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                <h3 className={`${secHead} text-pop-pink`}>Bill of Materials</h3>
+                <span className={secHint}>optional · what did it cost?</span>
               </div>
 
               {bomRows.length > 0 && (
@@ -781,9 +772,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </button>
 
               {/* RETRO */}
-              <div className={`${seclabel} mt-7 mb-[18px]`}>
-                <span className={seclabelNum}>E</span><span>What we learned</span><span className={seclabelBar} />
-                <span>optional · one item per line</span>
+              <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                <h3 className={`${secHead} text-pop-red`}>What We Learned</h3>
+                <span className={secHint}>optional · one item per line</span>
               </div>
               <div className={fieldRow}>
                 <div className={field}>
@@ -803,9 +794,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               {/* LINKS */}
-              <div className={`${seclabel} mt-7 mb-[18px]`}>
-                <span className={seclabelNum}>F</span><span>Links</span><span className={seclabelBar} />
-              </div>
+              <h3 className={`${secHead} text-pop-orange mt-8 mb-[18px]`}>Links</h3>
 
               <div className={field}>
                 <label className={fieldLabel}>GitHub / source</label>
@@ -834,8 +823,6 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </main>
 
-      <Footer />
-
       {showRemoveSelfModal && (
         <div className={modalBackdrop} onClick={() => setShowRemoveSelfModal(false)}>
           <div className={modal} onClick={e => e.stopPropagation()}>
@@ -848,6 +835,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </div>
       )}
-    </>
+      </div>
+    </div>
   )
 }

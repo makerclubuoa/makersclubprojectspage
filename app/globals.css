@@ -28,6 +28,13 @@
     #c76cf8 50%,
     #b375d5 100%
   );
+  /* Projects-area base — pop-blue family, same structure as purple-grad */
+  --background-image-blue-grad: linear-gradient(
+    180deg,
+    #567dff 0%,
+    #82a1ff 50%,
+    #6f8fe8 100%
+  );
   --background-image-grad: linear-gradient(
     146deg,
     #567dff 0%,

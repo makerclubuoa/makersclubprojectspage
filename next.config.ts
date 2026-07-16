@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: process.env.SUPABASE_URL!,
+        hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname,
         port: "",
         pathname: "/**",
       },

@@ -1,10 +1,9 @@
 'use client'
 
 const BTN =
-  'min-w-[34px] h-[34px] px-2 border rounded-[4px] text-[11px] tracking-[0.05em] transition-colors duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-default'
-const BTN_IDLE =
-  'text-ink-2 border-rule enabled:hover:border-ink enabled:hover:text-ink enabled:hover:bg-paper-2'
-const BTN_ACTIVE = 'bg-ink text-paper border-ink'
+  'min-w-[34px] h-[34px] px-2 border-2 border-black rounded-full text-[11px] font-bold tracking-[0.05em] transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-default'
+const BTN_IDLE = 'bg-white text-ink enabled:hover:bg-paper-2'
+const BTN_ACTIVE = 'bg-pop-pink text-white shadow-[2px_2px_0px_0px_#000]'
 
 function pages(current: number, total: number): (number | '…')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
@@ -32,7 +31,7 @@ export default function Pagination({ page, totalPages, onChange }: {
       <button className={`${BTN} ${BTN_IDLE}`} onClick={() => onChange(page - 1)} disabled={page === 1}>←</button>
       {pages(page, totalPages).map((p, i) =>
         p === '…'
-          ? <span key={`e${i}`} className="px-1 text-muted text-xs leading-[34px]">…</span>
+          ? <span key={`e${i}`} className="px-1 text-white text-xs font-bold leading-[34px] [text-shadow:1px_1px_0_#000]">…</span>
           : <button
               key={p}
               className={`${BTN} ${p === page ? BTN_ACTIVE : BTN_IDLE}`}

@@ -12,10 +12,10 @@ interface Props {
 }
 
 const TRIGGER_BASE =
-  'flex items-center justify-between w-full bg-transparent text-ink text-left cursor-pointer outline-none'
+  'flex items-center justify-between w-full text-ink text-left cursor-pointer outline-none'
 const TRIGGER_FIELD =
-  'border-0 border-b border-rule text-[13.5px] py-2 pr-1 transition-[border-color] duration-200 focus:border-ink'
-const TRIGGER_FILTER = 'border-0 uppercase tracking-[0.06em]'
+  'bg-white border-2 border-black rounded-[6px] text-sm px-3 py-2 transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000]'
+const TRIGGER_FILTER = 'bg-transparent border-0 uppercase font-semibold tracking-[0.06em]'
 
 export default function CustomSelect({ value, onChange, options, className, variant = 'field' }: Props) {
   const [open, setOpen] = useState(false)
@@ -55,7 +55,7 @@ export default function CustomSelect({ value, onChange, options, className, vari
       </button>
       {open && (
         <ul
-          className={`absolute top-full left-0 right-0 z-[200] mt-0.5 py-1 list-none bg-paper-2 border border-rule rounded-base shadow-[0_8px_24px_rgba(0,0,0,0.18)] max-h-[220px] overflow-y-auto${variant === 'filter' ? ' min-w-[160px]' : ''}`}
+          className={`absolute top-full left-0 right-0 z-[200] mt-1 py-1 list-none bg-white border-2 border-black rounded-[6px] shadow-[4px_4px_0px_0px_#000] max-h-[220px] overflow-y-auto${variant === 'filter' ? ' min-w-[160px]' : ''}`}
           role="listbox"
         >
           {options.map(o => (
@@ -63,7 +63,7 @@ export default function CustomSelect({ value, onChange, options, className, vari
               key={o.value}
               role="option"
               aria-selected={o.value === value}
-              className={`px-[14px] py-[9px] text-[13px] cursor-pointer transition-colors duration-100 hover:bg-paper-3 hover:text-ink ${o.value === value ? 'text-ink font-semibold' : 'text-ink-2'}`}
+              className={`px-[14px] py-[9px] text-[13px] font-medium cursor-pointer transition-colors duration-100 hover:bg-paper-2 hover:text-ink ${o.value === value ? 'text-pop-magenta font-bold' : 'text-ink-2'}`}
               onMouseDown={() => { onChange(o.value); setOpen(false) }}
             >
               {o.label}

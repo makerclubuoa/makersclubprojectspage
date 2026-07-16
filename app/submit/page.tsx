@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Nav from "@/app/components/Nav";
-import Footer from "@/app/components/Footer";
-import CursorTrail from "@/app/components/CursorTrail";
+import Image from "next/image";
+import Screentone from "@/app/components/global/Screentone";
+import solderingIron from "@/public/doodle-soldering-iron.png";
 import { resolvePublicName } from "@/lib/projects";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
@@ -12,12 +12,14 @@ import CustomSelect from "@/app/components/CustomSelect";
 import {
   container,
   projectBack,
-  seclabel,
-  seclabelNum,
-  seclabelBar,
-  submitHero,
-  submitHeroTitle,
-  submitHeroSub,
+  secHead,
+  secHeadRow,
+  secHint,
+  pageWrap,
+  pageBand,
+  pageBandTitle,
+  pageBandSub,
+  pageBandDoodle,
   submitMain,
   form,
   formInner,
@@ -556,44 +558,30 @@ export default function SubmitPage() {
   }
 
   return (
-    <>
-      <CursorTrail />
-      <Nav />
-
-      <header className={submitHero}>
-        <div className={container}>
-          <Link href="/projects" className={projectBack}>
+    <div className={pageWrap}>
+      <div className="pt-20">
+        <header className={pageBand}>
+          <Screentone />
+          <Image src={solderingIron} alt="" className={`${pageBandDoodle} h-56 -bottom-16`} />
+          <Link href="/projects" className={`${projectBack} relative z-[1] mb-2`}>
             ← Back to projects
           </Link>
-          <div className={`${seclabel} mb-6`}>
-            <span className={seclabelNum}>[04]</span>
-            <span>Submit_</span>
-            <span className={seclabelBar} />
-            <span>OPEN · ROLLING</span>
-          </div>
-          <h1 className={submitHeroTitle}>
-            Add your thing
-            <br />
-            to the <em className="text-ink">archive.</em>
-          </h1>
-          <p className={submitHeroSub}>
+          <p className={`${pageBandTitle} text-pop-pink`}>
+            Submit a Project
+          </p>
+          <p className={pageBandSub}>
             Half-finished counts. Weird is good. Fill in what you know and
             we&rsquo;ll sort the rest.
           </p>
-        </div>
-      </header>
+        </header>
 
       <main className={submitMain}>
         <div className={container}>
           <div className="grid grid-cols-[1fr_1.2fr] gap-16 items-start max-[900px]:grid-cols-1 max-[900px]:gap-10">
             {/* ── Left: info ───────────────────── */}
-            <div>
-              <div className={`${seclabel} mb-7`}>
-                <span className={seclabelNum}>01</span>
-                <span>What_we_archive</span>
-                <span className={seclabelBar} />
-              </div>
-              <p className="text-ink-2 text-sm leading-[1.7] max-w-[46ch]">
+            <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8">
+              <h3 className={`${secHead} text-pop-pink mb-5`}>What We Archive</h3>
+              <p className="font-medium text-sm leading-[1.7] max-w-[46ch]">
                 We log everything our members make — solo or group, finished or
                 still in progress. Hardware, software, food, textiles, art. If
                 you made it, it belongs here.
@@ -607,40 +595,36 @@ export default function SubmitPage() {
                 ].map((item) => (
                   <div
                     key={item}
-                    className="flex items-start gap-3 text-[13px] text-ink-2 leading-[1.5]"
+                    className="flex items-center gap-3 text-[13px] font-semibold text-ink leading-[1.5]"
                   >
-                    <span className="text-pop-magenta text-xs shrink-0 mt-px">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border-2 border-black bg-pop-magenta text-white text-[10px] font-bold shrink-0 shadow-[1.5px_1.5px_0px_0px_#000]">
                       ✓
                     </span>
                     {item}
                   </div>
                 ))}
               </div>
-              <div className={`${seclabel} mb-5 mt-12`}>
-                <span className={seclabelNum}>02</span>
-                <span>Stats_</span>
-                <span className={seclabelBar} />
-              </div>
-              <div className="grid grid-cols-3 border border-rule">
-                <div className="px-4 py-3.5 border-r border-rule last:border-r-0">
-                  <div className="text-[10px] tracking-[0.12em] uppercase text-muted">
+              <h3 className={`${secHead} text-pop-violet mb-5 mt-12`}>The Numbers</h3>
+              <div className="grid grid-cols-3 border-2 border-black rounded-[6px] overflow-hidden">
+                <div className="px-4 py-3.5 border-r-2 border-black last:border-r-0">
+                  <div className="text-[10px] font-bold tracking-[0.12em] uppercase text-ink-2">
                     In the archive
                   </div>
-                  <div className="text-[22px] mt-1.5">{statsTotal ?? "—"}</div>
+                  <div className="text-[22px] font-bold mt-1.5">{statsTotal ?? "—"}</div>
                 </div>
-                <div className="px-4 py-3.5 border-r border-rule last:border-r-0">
-                  <div className="text-[10px] tracking-[0.12em] uppercase text-muted">
+                <div className="px-4 py-3.5 border-r-2 border-black last:border-r-0">
+                  <div className="text-[10px] font-bold tracking-[0.12em] uppercase text-ink-2">
                     Added this year
                   </div>
-                  <div className="text-[22px] mt-1.5">
+                  <div className="text-[22px] font-bold mt-1.5">
                     {statsThisYear ?? "—"}
                   </div>
                 </div>
-                <div className="px-4 py-3.5 border-r border-rule last:border-r-0">
-                  <div className="text-[10px] tracking-[0.12em] uppercase text-muted">
+                <div className="px-4 py-3.5 border-r-2 border-black last:border-r-0">
+                  <div className="text-[10px] font-bold tracking-[0.12em] uppercase text-ink-2">
                     Members
                   </div>
-                  <div className="text-[22px] mt-1.5">{memberTotal ?? "—"}</div>
+                  <div className="text-[22px] font-bold mt-1.5">{memberTotal ?? "—"}</div>
                 </div>
               </div>
             </div>
@@ -662,7 +646,7 @@ export default function SubmitPage() {
               ) : sent ? (
                 <div className={submitSuccess}>
                   <div className={submitSuccessIcon}>★</div>
-                  <h2 className={submitSuccessH2}>// Filed.</h2>
+                  <h2 className={submitSuccessH2}>Filed!</h2>
                   <p className={submitSuccessP}>
                     Your project is in the queue. We review submissions every
                     Tuesday — if anything&rsquo;s unclear we&rsquo;ll reach out
@@ -676,15 +660,13 @@ export default function SubmitPage() {
                 <div className={form}>
                   <div className={formInner}>
                     <span className={formFig}>
-                      FIG.02 — EVENT PROPOSAL FORM
+                      Project submission
                     </span>
 
                     {/* ── THE BASICS ──────────────────── */}
-                    <div className={`${seclabel} mb-[18px]`}>
-                      <span className={seclabelNum}>A</span>
-                      <span>The_basics</span>
-                      <span className={seclabelBar} />
-                    </div>
+                    <h3 className={`${secHead} text-pop-blue mb-[18px] mt-1`}>
+                      The Basics
+                    </h3>
 
                     {/* Title */}
                     <div className={field}>
@@ -982,11 +964,9 @@ export default function SubmitPage() {
                     </div>
 
                     {/* ── BUILD LOG ───────────────────── */}
-                    <div className={`${seclabel} mt-7 mb-[18px]`}>
-                      <span className={seclabelNum}>B</span>
-                      <span>Build_log</span>
-                      <span className={seclabelBar} />
-                      <span>optional · timeline of your process</span>
+                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                      <h3 className={`${secHead} text-pop-violet`}>Build Log</h3>
+                      <span className={secHint}>optional · timeline of your process</span>
                     </div>
 
                     {logEntries.length > 0 && (
@@ -1128,11 +1108,9 @@ export default function SubmitPage() {
                     </button>
 
                     {/* ── GALLERY ─────────────────────── */}
-                    <div className={`${seclabel} mt-7 mb-[18px]`}>
-                      <span className={seclabelNum}>C</span>
-                      <span>Gallery</span>
-                      <span className={seclabelBar} />
-                      <span>optional · process photos</span>
+                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                      <h3 className={`${secHead} text-pop-magenta`}>Gallery</h3>
+                      <span className={secHint}>optional · process photos</span>
                     </div>
 
                     {galleryPreviews.length > 0 && (
@@ -1168,11 +1146,9 @@ export default function SubmitPage() {
                     </label>
 
                     {/* ── BOM ─────────────────────────── */}
-                    <div className={`${seclabel} mt-7 mb-[18px]`}>
-                      <span className={seclabelNum}>D</span>
-                      <span>Bill_of_materials</span>
-                      <span className={seclabelBar} />
-                      <span>optional · what did it cost?</span>
+                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                      <h3 className={`${secHead} text-pop-pink`}>Bill of Materials</h3>
+                      <span className={secHint}>optional · what did it cost?</span>
                     </div>
 
                     {bomRows.length > 0 && (
@@ -1271,11 +1247,9 @@ export default function SubmitPage() {
                     </button>
 
                     {/* ── RETRO ───────────────────────── */}
-                    <div className={`${seclabel} mt-7 mb-[18px]`}>
-                      <span className={seclabelNum}>E</span>
-                      <span>What_we_learned</span>
-                      <span className={seclabelBar} />
-                      <span>optional · one item per line</span>
+                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                      <h3 className={`${secHead} text-pop-red`}>What We Learned</h3>
+                      <span className={secHint}>optional · one item per line</span>
                     </div>
                     <div className={fieldRow}>
                       <div className={field}>
@@ -1309,11 +1283,9 @@ export default function SubmitPage() {
                     </div>
 
                     {/* ── LINKS + CONTACT ─────────────── */}
-                    <div className={`${seclabel} mt-7 mb-[18px]`}>
-                      <span className={seclabelNum}>F</span>
-                      <span>Links_</span>
-                      <span className={seclabelBar} />
-                    </div>
+                    <h3 className={`${secHead} text-pop-orange mt-8 mb-[18px]`}>
+                      Links
+                    </h3>
                     <div className={fieldRow}>
                       <div className={field}>
                         <label className={fieldLabel}>GitHub / source</label>
@@ -1397,6 +1369,7 @@ export default function SubmitPage() {
           </div>
         </div>
       </main>
-    </>
+      </div>
+    </div>
   );
 }

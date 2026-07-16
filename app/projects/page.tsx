@@ -1,11 +1,12 @@
 import { Suspense } from "react";
-import Nav from "../components/Nav";
+import Image from "next/image";
 import ProjectsSection from "../components/ProjectsSection";
-import Footer from "../components/Footer";
 import CTACarousel from "../components/CTACarousel";
-import Link from "next/link";
+import LinkButton from "../components/global/LinkButton";
+import Screentone from "../components/global/Screentone";
+import pliers from "@/public/doodle-pliers.png";
 import { fetchProjects, fetchMakerDisplay } from "@/lib/projects";
-import { container, btnDark } from "@/lib/ui";
+import { container, pageWrap, pageBand, pageBandTitle, pageBandSub, pageBandDoodle, holt } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -32,43 +33,56 @@ export default async function ProjectsPage() {
   ];
 
   return (
-    <>
-      <Suspense fallback={null}>
-        <ProjectsSection
-          projects={projects}
-          allTools={allTools}
-          allCategories={allCategories}
-          makerDisplays={makerDisplays}
-        />
-      </Suspense>
-      <div className="py-20 bg-paper-2 text-ink">
-        <div
-          className={`${container} flex items-center gap-16 max-[900px]:flex-col max-[900px]:gap-10`}
-        >
-          <div className="flex-[0_0_380px] max-[900px]:flex-none">
-            <h4 className="text-[clamp(24px,3vw,36px)] mt-0 mb-3.5 font-bold leading-[1.15] text-ink">
-              Got a thing you <em className="not-italic">made</em>?
-            </h4>
-            <p className="opacity-65 max-w-[44ch] text-[15px] leading-[1.6] text-ink mt-0 mb-7">
-              Submissions are open all the time. Half-finished, broken, or weird
-              is welcome — that&rsquo;s usually where the good stuff is.
-            </p>
-            <Link href="/submit" className={btnDark}>
-              Submit a project
-            </Link>
-          </div>
-          <CTACarousel
-            images={projects
-              .filter((p) => p.image)
-              .slice(0, 8)
-              .map((p) => ({
-                id: p.id,
-                src: p.image!,
-                alt: p.title,
-              }))}
+    <div className={pageWrap}>
+      <div className="pt-20">
+        <div className={pageBand}>
+          <Screentone />
+          <Image src={pliers} alt="" className={pageBandDoodle} />
+          <p className={`${pageBandTitle} text-pop-blue`}>Projects</p>
+          <p className={pageBandSub}>
+            {`Things we've made. Hardware, software, textiles, art, food — if a
+            member built it, it belongs in the archive.`}
+          </p>
+        </div>
+
+        <Suspense fallback={null}>
+          <ProjectsSection
+            projects={projects}
+            allTools={allTools}
+            allCategories={allCategories}
+            makerDisplays={makerDisplays}
           />
+        </Suspense>
+
+        <div className="border-y-4 bg-white py-16">
+          <div
+            className={`${container} flex items-center gap-16 max-[900px]:flex-col max-[900px]:gap-10`}
+          >
+            <div className="flex-[0_0_380px] max-[900px]:flex-none">
+              <h4 className={`${holt} text-2xl md:text-3xl text-pop-pink mt-0 mb-3.5`}>
+                Got a thing you made?
+              </h4>
+              <p className="font-semibold max-w-[44ch] text-base leading-[1.6] text-ink mt-0 mb-7">
+                Submissions are open all the time. Half-finished, broken, or weird
+                is welcome — that&rsquo;s usually where the good stuff is.
+              </p>
+              <LinkButton link="/submit" bgColour="pop-pink" textColour="white">
+                Submit a Project
+              </LinkButton>
+            </div>
+            <CTACarousel
+              images={projects
+                .filter((p) => p.image)
+                .slice(0, 8)
+                .map((p) => ({
+                  id: p.id,
+                  src: p.image!,
+                  alt: p.title,
+                }))}
+            />
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

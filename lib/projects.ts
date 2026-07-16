@@ -137,6 +137,37 @@ export function categoryColor(category: string | null): string {
   );
 }
 
+// Solid pop text colour per category (aligned with each gradient's dominant
+// hue) for Holtwood display headings. Unknown categories hash onto the palette
+// so custom "Other" categories still get a stable colour.
+const POP_TEXT_CLASSES = [
+  "text-pop-blue",
+  "text-pop-violet",
+  "text-pop-magenta",
+  "text-pop-pink",
+  "text-pop-red",
+  "text-pop-orange",
+];
+const CATEGORY_POP_TEXT: Record<string, string> = {
+  Electronics: "text-pop-blue",
+  "3D Print": "text-pop-violet",
+  Code: "text-pop-magenta",
+  Textiles: "text-pop-pink",
+  Art: "text-pop-orange",
+  Food: "text-pop-red",
+  Wood: "text-pop-orange",
+  Workshops: "text-pop-blue",
+};
+export function categoryPopText(category: string | null): string {
+  if (category && CATEGORY_POP_TEXT[category])
+    return CATEGORY_POP_TEXT[category];
+  if (!category) return "text-pop-blue";
+  let h = 0;
+  for (let i = 0; i < category.length; i++)
+    h = (h * 31 + category.charCodeAt(i)) >>> 0;
+  return POP_TEXT_CLASSES[h % POP_TEXT_CLASSES.length];
+}
+
 export const CATEGORIES = [
   "All",
   "Electronics",
