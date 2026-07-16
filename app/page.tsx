@@ -51,7 +51,7 @@ export default async function Home() {
         bgColour="pop-violet"
         colour="white"
       />
-      <div className="mt-20 md:mt-40 lg:mt-26 overflow-x-hidden">
+      <div className="mt-20 md:mt-40 lg:mt-26 ">
         <TimelineSection timelines={timelines} />
       </div>
       <div className="z-50">
