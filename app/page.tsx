@@ -37,7 +37,7 @@ export default async function Home() {
         <MovingText />
       </div>
       <WhatsNewSection upcomingEvent={upcomingEvent} photos={photos} />
-      <div className="w-full flex items-center justify-center">
+      <div className="w-full flex items-center justify-center pb-5">
         <LinkButton link={`events/`} bgColour="pop-pink" textColour="white">
           See More Events
         </LinkButton>
@@ -47,11 +47,11 @@ export default async function Home() {
       <Header
         text="Semester 2. Fully loaded."
         rotation={0}
-        typeOverride="z-20 relative top-22 md:top-45 lg:top-31 h-20 pl-5 md:pl-10 xl:top-30 xl:p-15 overflow-x-hidden"
+        typeOverride="z-20 relative top-22 md:top-30 lg:top-31 h-20 pl-5 md:pl-10 xl:top-30 xl:p-15 overflow-x-hidden"
         bgColour="pop-violet"
         colour="white"
       />
-      <div className="mt-20 md:mt-40 lg:mt-26 ">
+      <div className="mt-20 md:mt-30 lg:mt-26 ">
         <TimelineSection timelines={timelines} />
       </div>
       <div className="z-50">
