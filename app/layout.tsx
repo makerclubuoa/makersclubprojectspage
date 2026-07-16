@@ -3,13 +3,10 @@ import "./globals.css";
 import AuthProvider from "@/app/components/AuthProvider";
 import { DM_Sans } from "next/font/google";
 import { Holtwood_One_SC } from "next/font/google";
-import Nav from "./components/Nav";
-import Footer from "./components/Footer";
-import JoinSection from "./components/homepage/JoinSection";
 
 export const metadata: Metadata = {
   title: "Maker Club",
-  icons: { icon: "/logo.png" },
+  icons: { icon: "/logoNew.png" },
 };
 
 const dmSans = DM_Sans({
