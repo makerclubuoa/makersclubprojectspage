@@ -2,7 +2,6 @@
 import Image from "next/image";
 import art from "@/public/maker-club-art.png";
 import artVert from "@/public/maker-club-art-vert.png";
-import Button from "../global/Button";
 import LinkButton from "../global/LinkButton";
 import Socials from "../global/Socials";
 
