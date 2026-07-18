@@ -18,6 +18,8 @@ import LinkButton from "./components/global/LinkButton";
 import Image from "next/image";
 import { getRandomProduct } from "@/lib/stripe";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const timelines: TimelineType[] = await getYearTimeline();
   const makeathon = await getMakeathon();

@@ -10,6 +10,8 @@ import LinkButton from "../components/global/LinkButton";
 import JoinSection from "../components/homepage/JoinSection";
 import Footer from "../components/Footer";
 
+export const dynamic = "force-dynamic";
+
 export default async function Events() {
   const upcomingEvent = await getLatestUpcomingEvent();
   const timelines: TimelineType[] = await getYearTimeline();

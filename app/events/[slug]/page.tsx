@@ -6,6 +6,8 @@ import Image from "next/image";
 import JoinSection from "@/app/components/homepage/JoinSection";
 import Footer from "@/app/components/Footer";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

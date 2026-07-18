@@ -5,6 +5,8 @@ import JoinSection from "../components/homepage/JoinSection";
 import LinkButton from "../components/global/LinkButton";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function FAQ() {
   const photos = await getPhotos();
   return (

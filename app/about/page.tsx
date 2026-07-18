@@ -6,6 +6,8 @@ import LinkButton from "../components/global/LinkButton";
 import PhotoCarousel from "../components/global/PhotoCarousel";
 import Footer from "../components/Footer";
 
+export const dynamic = "force-dynamic";
+
 export default async function About() {
   const photos = await getPhotos();
   return (
