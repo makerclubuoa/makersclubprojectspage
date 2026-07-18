@@ -1,6 +1,5 @@
 import { api } from "@/lib/ghost-api";
 import { DOMParser } from "@xmldom/xmldom";
-import { propagateServerField } from "next/dist/server/lib/render-server";
 export interface MakeathonType {
   title: string;
   date: string;

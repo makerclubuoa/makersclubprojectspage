@@ -6,6 +6,7 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "minify": true,
   "vars": {
     "GHOST_URL": "https://makeuoa.nz",
     "RESEND_FROM": "MAKE_UOA <noreply@makeuoa.nz>",

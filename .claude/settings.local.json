@@ -31,7 +31,11 @@
       "Bash(npm ls *)",
       "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('has playwright'\\)}catch\\(e\\){console.log\\('no playwright'\\)}\")",
       "Bash(npx eslint *)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "PowerShell(Get-ChildItem -Force | Where-Object { $_.Name -ne 'node_modules' } | Select-Object Mode, Length, Name | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem .open-next\\\\server-functions\\\\default -Recurse -File -ErrorAction SilentlyContinue | Sort-Object Length -Descending | Select-Object -First 15 @{n='MB';e={[math]::Round\\($_.Length/1MB,2\\)}}, FullName | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem app,lib -Recurse -File | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\\(Get-Location\\).Path + '\\\\', ''\\) })",
+      "PowerShell(Get-ChildItem *)"
     ]
   }
 }

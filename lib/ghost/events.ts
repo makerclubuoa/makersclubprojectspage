@@ -1,5 +1,5 @@
 import { api } from "@/lib/ghost-content-api";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeGhostHtml } from "@/lib/sanitize";
 import { PostOrPage, PostsOrPages } from "@tryghost/content-api";
 import * as chrono from "chrono-node";
 export interface Event {
@@ -39,7 +39,7 @@ export default async function getLatestUpcomingEvent(): Promise<Event> {
     src: upcomingEvent.feature_image ?? undefined,
     date: date ?? "TBA | No date provided.",
     html: upcomingEvent.html
-      ? DOMPurify.sanitize(upcomingEvent.html)
+      ? sanitizeGhostHtml(upcomingEvent.html)
       : "No body provided.",
     excerpt: upcomingEvent.excerpt ?? "No except provided.",
   };

@@ -1,6 +1,6 @@
 import { api } from "@/lib/ghost-content-api";
 import { Event } from "./events";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeGhostHtml } from "@/lib/sanitize";
 
 interface EventDetail extends Event {
   location: string;
@@ -39,7 +39,7 @@ export async function getEvent(slug: string): Promise<EventDetail> {
     date: date ?? "TBA | No date provided.",
     location: location ?? "Location TBA.",
     html: event.html
-      ? DOMPurify.sanitize(event.html)
+      ? sanitizeGhostHtml(event.html)
       : "No description provided.",
     excerpt: event.excerpt ?? "No excerpt provided.",
   };
