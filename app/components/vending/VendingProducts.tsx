@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   VendingTag,
   formatVendPrice,
@@ -91,13 +92,18 @@ export default function VendingProducts({
                 product.shelf_loc ? "" : "opacity-50 pointer-events-none select-none"
               }`}
             >
-              <div className="aspect-square border-b-[3px] border-black bg-paper-2 overflow-hidden">
+              <div className="relative aspect-square border-b-[3px] border-black bg-paper-2 overflow-hidden">
                 {product.image && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                  // Served via the site's image optimizer rather than a direct
+                  // files.stripe.com hotlink: same-origin + CDN-cached, which
+                  // sidesteps browsers flaking on the Stripe file-link host,
+                  // and resizes the full-res upload down to card size.
+                  <Image
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="288px"
+                    className="object-cover"
                   />
                 )}
               </div>

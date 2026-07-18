@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import {
   VendingTag,
@@ -329,10 +330,11 @@ export default function VendingAdminPanel() {
                     <div className="flex items-center gap-2">
                       <span className={`${dashStatus} bg-white`}>{slot}</span>
                       {product.image && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
+                        <Image
                           src={product.image}
                           alt=""
+                          width={32}
+                          height={32}
                           className="w-8 h-8 rounded-[4px] border-2 border-black object-cover ml-auto"
                         />
                       )}
@@ -555,10 +557,11 @@ function ProductTable({
               <td className={TD}>
                 <div className="flex items-center gap-2.5 min-w-[14rem]">
                   {product.image && (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <Image
                       src={product.image}
                       alt=""
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-[4px] border-2 border-black object-cover shrink-0"
                     />
                   )}
