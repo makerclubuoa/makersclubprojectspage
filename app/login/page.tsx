@@ -20,6 +20,8 @@ import {
   btnArr,
 } from "@/lib/ui";
 
+export const dynamic = "force-dynamic";
+
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();

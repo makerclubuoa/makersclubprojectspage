@@ -25,6 +25,8 @@ import {
   galleryUpload, galleryGrid, galleryThumb, galleryThumbImg, galleryThumbRemove,
 } from '@/lib/ui'
 
+export const dynamic = 'force-dynamic'
+
 const CONTAINER_760 = 'max-w-[760px] mx-auto px-7 max-[640px]:px-4 relative z-[1]'
 const BACK_LINK = 'inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase text-ink-2 mb-2 no-underline transition-colors duration-200 hover:text-pop-magenta'
 

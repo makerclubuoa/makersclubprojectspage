@@ -53,6 +53,8 @@ import {
   dashRowDelete,
 } from "@/lib/ui";
 
+export const dynamic = "force-dynamic";
+
 function statusLabel(status: string | null, featured: boolean | null) {
   const s = status?.toUpperCase();
   if (!status)

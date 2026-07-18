@@ -88,6 +88,8 @@ import {
   submitSuccessP,
 } from "@/lib/ui";
 
+export const dynamic = "force-dynamic";
+
 const TOOL_SUGGESTIONS = [
   "Arduino",
   "Raspberry Pi",

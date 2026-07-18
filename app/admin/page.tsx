@@ -43,6 +43,8 @@ import {
   btnDanger,
 } from "@/lib/ui";
 
+export const dynamic = "force-dynamic";
+
 const ADMIN_EMAIL = "makerclubuoa@gmail.com";
 
 // Small comic pill used for the status filters.
