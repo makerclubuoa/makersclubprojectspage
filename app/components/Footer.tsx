@@ -54,9 +54,9 @@ export default function Footer() {
             </Link>
           </li>
           <li>
-            <a className={FOOTERLINK} href="https://vend.makeuoa.nz/">
+            <Link className={FOOTERLINK} href="/vending">
               Vending Machine
-            </a>
+            </Link>
           </li>
         </ul>
 

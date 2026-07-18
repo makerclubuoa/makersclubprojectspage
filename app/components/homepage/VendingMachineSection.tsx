@@ -34,7 +34,7 @@ export default function VendingMachineSection({
               {`Check out what we have in store below!`}
             </p>
             <div className="items-center sm:items-start pt-3 lg:pt-5 flex flex-col sm:flex-row gap-2">
-              <LinkButton link="https://vend.makeuoa.nz/">
+              <LinkButton link="/vending">
                 See What's in Stock!
               </LinkButton>
               <LinkButton link="/wares">Apply to Sell</LinkButton>
@@ -54,7 +54,7 @@ export default function VendingMachineSection({
               {`Check out what we have in store below!`}
             </p>
             <div className="mr-5 pt-3 lg:pt-5 flex flex-col md:flex-row gap-2">
-              <LinkButton link="https://vend.makeuoa.nz/">
+              <LinkButton link="/vending">
                 See What's in Stock!
               </LinkButton>
               <LinkButton link="/wares">Apply to Sell</LinkButton>
