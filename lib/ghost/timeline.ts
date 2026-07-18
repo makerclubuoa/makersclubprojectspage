@@ -1,5 +1,4 @@
-import { api } from "@/lib/ghost-api";
-import { PostOrPage } from "@tryghost/content-api";
+import { adminBrowsePosts, AdminPost } from "@/lib/ghost-admin";
 import { Document, DOMParser } from "@xmldom/xmldom";
 
 export interface TimelineType {
@@ -9,12 +8,8 @@ export interface TimelineType {
 }
 
 export async function getYearTimeline(): Promise<TimelineType[]> {
-  const yearRoadmap: PostOrPage = (
-    await api().posts.browse({
-      filter: "tag:roadmap",
-      formats: "html,lexical",
-      limit: 1,
-    })
+  const yearRoadmap: AdminPost = (
+    await adminBrowsePosts("filter=tag:roadmap&formats=html&limit=1")
   )[0];
   if (!yearRoadmap.html) throw new Error("Roadmap not found.");
   //NOTE: this is needed because xmldom requires one parent root

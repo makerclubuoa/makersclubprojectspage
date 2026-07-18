@@ -1,6 +1,5 @@
 import { tapeMappings } from "@/app/components/global/Photo";
-import { api } from "@/lib/ghost-api";
-import { PostsOrPages } from "@tryghost/content-api";
+import { adminBrowsePosts, AdminPost } from "@/lib/ghost-admin";
 
 type TapeKey = keyof typeof tapeMappings;
 
@@ -16,12 +15,8 @@ export interface PhotosType {
 }
 
 export async function getPhotos(): Promise<PhotosType[]> {
-  const photos: PostsOrPages = (
-    await api().posts.browse({
-      filter: "title:'Photos'",
-      format: "html,lexical",
-      limit: 1,
-    })
+  const photos: AdminPost = (
+    await adminBrowsePosts("filter=title:'Photos'&formats=lexical&limit=1")
   )[0];
   //@ts-ignore
   const imagesArr = JSON.parse(photos.lexical).root.children;

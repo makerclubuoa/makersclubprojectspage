@@ -43,6 +43,24 @@ async function ghostFetch(path: string, init?: RequestInit): Promise<Response> {
   })
 }
 
+export interface AdminPost {
+  title?: string
+  slug?: string
+  html?: string | null
+  lexical?: string | null
+  feature_image?: string | null
+}
+
+// Browse posts via the Admin API (sees drafts, unlike the Content API).
+// The @tryghost/admin-api SDK cannot be used here: its axios layer sends GET
+// requests with a body, which fetch() on the Workers runtime rejects.
+export async function adminBrowsePosts(query: string): Promise<AdminPost[]> {
+  const res = await ghostFetch(`posts/?${query}`)
+  if (!res.ok) throw new Error(`Ghost admin posts browse ${res.status}: ${await res.text()}`)
+  const json = (await res.json()) as { posts?: AdminPost[] }
+  return json.posts ?? []
+}
+
 export async function ghostMemberExists(email: string): Promise<boolean> {
   const filter = encodeURIComponent(`email:'${email}'`)
   const res = await ghostFetch(`members/?filter=${filter}&limit=1`)

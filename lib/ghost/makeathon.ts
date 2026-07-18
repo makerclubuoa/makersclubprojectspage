@@ -1,4 +1,4 @@
-import { api } from "@/lib/ghost-api";
+import { adminBrowsePosts } from "@/lib/ghost-admin";
 import { DOMParser } from "@xmldom/xmldom";
 export interface MakeathonType {
   title: string;
@@ -9,11 +9,7 @@ export interface MakeathonType {
 
 export async function getMakeathon(): Promise<MakeathonType> {
   const makeathonDetail = (
-    await api().posts.browse({
-      filter: "title:'Makeathon'",
-      formats: "html,lexical",
-      limit: 1,
-    })
+    await adminBrowsePosts("filter=title:'Makeathon'&formats=html&limit=1")
   )[0];
   if (!makeathonDetail.html) throw new Error("Roadmap not found.");
   //NOTE: this is needed because xmldom requires one parent root
@@ -44,6 +40,6 @@ export async function getMakeathon(): Promise<MakeathonType> {
     title: title ?? "Join our Make-A-Thon",
     date: date ?? "No date set.",
     description: description,
-    image: makeathonDetail.feature_image,
+    image: makeathonDetail.feature_image ?? "",
   };
 }
