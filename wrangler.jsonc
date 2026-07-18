@@ -8,7 +8,7 @@
   ],
   "minify": true,
   "vars": {
-    "GHOST_URL": "https://makeuoa.nz",
+    "NEXT_PUBLIC_GHOST_URL": "https://makeuoa.nz",
     "RESEND_FROM": "MAKE_UOA <noreply@makeuoa.nz>",
     "NEXT_PUBLIC_BASE_URL": "https://projects.makeuoa.nz"
   },

@@ -30,8 +30,8 @@ function adminToken(): string {
 }
 
 async function ghostFetch(path: string, init?: RequestInit): Promise<Response> {
-  const base = env('GHOST_URL')
-  if (!base) throw new Error('GHOST_URL is not set')
+  const base = env('NEXT_PUBLIC_GHOST_URL')
+  if (!base) throw new Error('NEXT_PUBLIC_GHOST_URL is not set')
   return fetch(`${base}/ghost/api/admin/${path}`, {
     ...init,
     headers: {
