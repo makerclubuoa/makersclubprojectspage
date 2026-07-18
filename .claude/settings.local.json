@@ -37,7 +37,13 @@
       "PowerShell(Get-ChildItem app,lib -Recurse -File | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\\(Get-Location\\).Path + '\\\\', ''\\) })",
       "PowerShell(Get-ChildItem *)",
       "PowerShell(npx wrangler whoami 2>$null | Select-Object -First 12)",
-      "PowerShell(foreach \\($p in @\\('/faq','/events','/wares','/projects','/about'\\)\\) { $code = curl.exe -s -o NUL -w \"%{http_code}\" \"https://projects.makeuoa.nz$p\" --max-time 30; \"$p -> $code\" })"
+      "PowerShell(foreach \\($p in @\\('/faq','/events','/wares','/projects','/about'\\)\\) { $code = curl.exe -s -o NUL -w \"%{http_code}\" \"https://projects.makeuoa.nz$p\" --max-time 30; \"$p -> $code\" })",
+      "Bash(curl -s -o /dev/null -w 'home: %{http_code}\\\\n' --max-time 40 https://projects.makeuoa.nz/)",
+      "Bash(curl -s -o /dev/null -w 'events: %{http_code}\\\\n' --max-time 40 https://projects.makeuoa.nz/events)",
+      "PowerShell(npx wrangler dev -c scripts/workerd-test/wrangler.jsonc --port 8799)",
+      "Bash(curl -s --max-time 20 \"https://makeuoa.nz/ghost/api/content/posts/?key=c75dced5a6f93991260f2509f8&filter=title:'Makeathon'&formats=html&limit=1\")",
+      "Bash(curl -s --max-time 20 \"https://makeuoa.nz/ghost/api/content/pages/?key=c75dced5a6f93991260f2509f8&filter=title:'Makeathon'&limit=1\")",
+      "Bash(curl -s --max-time 20 \"https://makeuoa.nz/ghost/api/content/posts/?key=c75dced5a6f93991260f2509f8&filter=title:~'Makeathon'&limit=5&fields=title,slug,visibility\")"
     ]
   }
 }
