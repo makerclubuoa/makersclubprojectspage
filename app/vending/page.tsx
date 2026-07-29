@@ -10,7 +10,7 @@ export default async function VendingPage() {
     <div className="bg-pop-pink min-h-dvh">
       <div className="pt-20">
         <div className={pageBand}>
-          <p className={`${pageBandTitle} text-pop-pink`}>Vending Machine!</p>
+          <p className={`${pageBandTitle} text-pink-300`}>Vending Machine!</p>
           <p className={`${pageBandSub} max-w-[75ch]`}>
             Welcome to the Maker Club&apos;s vending machine, located at the
             University of Auckland Makerspace. We&apos;re providing a space for
@@ -30,7 +30,7 @@ export default async function VendingPage() {
         </a>
         <Link
           href="/wares"
-          className="rounded-full px-5 py-0.5 lg:px-7 lg:py-1 font-semibold border-2 border-black shadow-[2px_2px_0px_0px_#000] bg-pop-violet text-white text-lg md:text-xl lg:text-2xl"
+          className="rounded-full px-5 py-0.5 lg:px-7 lg:py-1 font-semibold border-2 border-black shadow-[2px_2px_0px_0px_#000] bg-pop-pink text-white text-lg md:text-xl lg:text-2xl"
         >
           Apply to Sell
         </Link>

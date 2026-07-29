@@ -6,7 +6,15 @@ import LinkButton from "../components/global/LinkButton";
 import Screentone from "../components/global/Screentone";
 import pliers from "@/public/doodle-pliers.png";
 import { fetchProjects, fetchMakerDisplay } from "@/lib/projects";
-import { container, pageWrap, pageBand, pageBandTitle, pageBandSub, pageBandDoodle, holt } from "@/lib/ui";
+import {
+  container,
+  pageWrap,
+  pageBand,
+  pageBandTitle,
+  pageBandSub,
+  pageBandDoodle,
+  holt,
+} from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -36,9 +44,7 @@ export default async function ProjectsPage() {
     <div className={pageWrap}>
       <div className="pt-20">
         <div className={pageBand}>
-          <Screentone />
-          <Image src={pliers} alt="" className={pageBandDoodle} />
-          <p className={`${pageBandTitle} text-pop-blue`}>Projects</p>
+          <p className={`${pageBandTitle} text-indigo-300`}>Projects</p>
           <p className={pageBandSub}>
             {`Things we've made. Hardware, software, textiles, art, food — if a
             member built it, it belongs in the archive.`}
@@ -59,12 +65,14 @@ export default async function ProjectsPage() {
             className={`${container} flex items-center gap-16 max-[900px]:flex-col max-[900px]:gap-10`}
           >
             <div className="flex-[0_0_380px] max-[900px]:flex-none">
-              <h4 className={`${holt} text-2xl md:text-3xl text-pop-pink mt-0 mb-3.5`}>
+              <h4
+                className={`${holt} text-2xl md:text-3xl text-pop-pink mt-0 mb-3.5`}
+              >
                 Got a thing you made?
               </h4>
               <p className="font-semibold max-w-[44ch] text-base leading-[1.6] text-ink mt-0 mb-7">
-                Submissions are open all the time. Half-finished, broken, or weird
-                is welcome — that&rsquo;s usually where the good stuff is.
+                Submissions are open all the time. Half-finished, broken, or
+                weird is welcome — that&rsquo;s usually where the good stuff is.
               </p>
               <LinkButton link="/submit" bgColour="pop-pink" textColour="white">
                 Submit a Project
