@@ -1,9 +1,10 @@
+import { StaticImageData } from "next/image";
 import Photo from "../global/Photo";
 import Polaroid from "../global/Polaroid";
 
 interface EventSlideProps {
   title: string;
-  src: string;
+  src: string | StaticImageData;
   excerpt?: string;
   slug?: string;
 }

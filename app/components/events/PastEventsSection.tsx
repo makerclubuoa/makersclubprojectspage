@@ -3,6 +3,7 @@ import { getPastEvents, type Event } from "@/lib/ghost/events";
 import { useEffect, useState } from "react";
 import EventSlide from "./EventSlide";
 import Button from "../global/Button";
+import placeholder from "@/public/placeholder.png";
 
 export default function PastEventsSection() {
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
@@ -35,7 +36,7 @@ export default function PastEventsSection() {
           {pastEvents.map((event, index) => {
             return (
               <EventSlide
-                src={event.src ?? ""}
+                src={event.src ?? placeholder}
                 title={event.title}
                 slug={event.slug}
                 key={index}
