@@ -9,9 +9,14 @@ export interface MakeathonType {
 
 export async function getMakeathon(): Promise<MakeathonType> {
   const makeathonDetail = (
-    await adminBrowsePosts("filter=title:'Makeathon'&formats=html&limit=1")
+    await adminBrowsePosts(
+      "filter=title:'Makeathon Section'&formats=html&limit=1",
+    )
   )[0];
-  if (!makeathonDetail.html) throw new Error("Roadmap not found.");
+  if (!makeathonDetail.html)
+    throw new Error(
+      "Makeathon Section not found. Please make a DRAFT page called 'Makeathon Section' (without quotes).",
+    );
   //NOTE: this is needed because xmldom requires one parent root
   const wrappedHtml = `
 <!DOCTYPE html>
