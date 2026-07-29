@@ -83,9 +83,9 @@ export default function Nav() {
         <a href="/events" className={NAVLINK} onClick={close}>
           Events
         </a>
-        <a href="https://vend.makeuoa.nz/" className={NAVLINK} onClick={close}>
+        <Link href="/vending" className={NAVLINK} onClick={close}>
           Vending Machine
-        </a>
+        </Link>
         <Link href="/projects" className={NAVLINK} onClick={close}>
           Projects
         </Link>

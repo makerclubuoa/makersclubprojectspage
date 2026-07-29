@@ -10,6 +10,7 @@ import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import type { Project } from "@/lib/projects";
 import Pagination from "@/app/components/Pagination";
+import VendingAdminPanel from "@/app/components/vending/VendingAdminPanel";
 import {
   container,
   pageWrap,
@@ -57,6 +58,13 @@ const DASH_ACTION =
   "text-[10.5px] font-bold tracking-[0.08em] uppercase shrink-0 px-2 py-1 transition-colors duration-150";
 
 type Filter = "all" | "pending" | "live" | "featured" | "rejected";
+type Tab = "projects" | "vending";
+
+// Section tabs (Projects / Vending Machine) — larger cousins of FILTER_BTN.
+const TAB_BTN =
+  "inline-flex items-center gap-2 rounded-full font-bold border-2 border-black px-5 py-1.5 text-[13px] uppercase tracking-[0.04em] transition-[background-color,color,box-shadow,transform] duration-150 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none";
+const TAB_BTN_ON = "bg-black text-white shadow-[2px_2px_0px_0px_#000]";
+const TAB_BTN_OFF = "bg-white text-ink hover:bg-paper-2";
 
 function statusLabel(status: string | null, featured: boolean | null) {
   if (status === "DRAFT") return { text: "Pending", cls: dashStatusDraft };
@@ -84,6 +92,21 @@ export default function AdminPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<Tab>("projects");
+
+  // Deep-link support: /admin?tab=vending opens on the vending tab.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") === "vending") setTab("vending");
+  }, []);
+
+  function switchTab(next: Tab) {
+    setTab(next);
+    const url = new URL(window.location.href);
+    if (next === "projects") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", next);
+    window.history.replaceState(null, "", url);
+  }
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -244,12 +267,33 @@ export default function AdminPage() {
         <Image src={pliers} alt="" className={pageBandDoodle} />
         <p className={`${pageBandTitle} text-pop-red`}>Admin</p>
         <p className={pageBandSub}>
-          Approve, feature, reject, or delete any project.
+          {tab === "projects"
+            ? "Approve, feature, reject, or delete any project."
+            : "Manage the vending machine: stock, prices, shelves, and the dispense queue."}
         </p>
       </header>
 
       <main className={submitMain}>
         <div className={container}>
+          <div className="flex gap-2.5 mb-8 flex-wrap">
+            <button
+              className={`${TAB_BTN} ${tab === "projects" ? TAB_BTN_ON : TAB_BTN_OFF}`}
+              onClick={() => switchTab("projects")}
+            >
+              Projects
+            </button>
+            <button
+              className={`${TAB_BTN} ${tab === "vending" ? TAB_BTN_ON : TAB_BTN_OFF}`}
+              onClick={() => switchTab("vending")}
+            >
+              Vending Machine
+            </button>
+          </div>
+
+          {tab === "vending" && <VendingAdminPanel />}
+
+          {tab === "projects" && (
+            <>
           {actionError && (
             <div className="mb-4 px-3.5 py-2.5 bg-white border-2 border-black rounded-[6px] shadow-[2px_2px_0px_0px_#000] text-pop-red text-xs font-bold tracking-[0.04em]">
               Error: {actionError}
@@ -435,6 +479,8 @@ export default function AdminPage() {
                 totalPages={totalPages}
                 onChange={setPage}
               />
+            </>
+          )}
             </>
           )}
         </div>

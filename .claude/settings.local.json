@@ -37,7 +37,11 @@
       "PowerShell(Get-ChildItem app,lib -Recurse -File | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\\(Get-Location\\).Path + '\\\\', ''\\) })",
       "PowerShell(Get-ChildItem *)",
       "PowerShell(npx wrangler whoami 2>$null | Select-Object -First 12)",
-      "PowerShell(foreach \\($p in @\\('/faq','/events','/wares','/projects','/about'\\)\\) { $code = curl.exe -s -o NUL -w \"%{http_code}\" \"https://projects.makeuoa.nz$p\" --max-time 30; \"$p -> $code\" })"
+      "PowerShell(foreach \\($p in @\\('/faq','/events','/wares','/projects','/about'\\)\\) { $code = curl.exe -s -o NUL -w \"%{http_code}\" \"https://projects.makeuoa.nz$p\" --max-time 30; \"$p -> $code\" })",
+      "Read(//c/Users/ibrah/OneDrive/Documents/GitHub/vending-web-ui/**)",
+      "Read(//c/Users/ibrah/OneDrive/Documents/GitHub/**)",
+      "PowerShell(npx eslint app/vending app/components/vending lib/vending.ts lib/vending-shared.ts app/api/vending 2>&1 | Select-Object -First 40)",
+      "Skill(run)"
     ]
   }
 }
