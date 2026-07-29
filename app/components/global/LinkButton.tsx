@@ -29,6 +29,7 @@ export default function LinkButton({
           ${bgColour ? `bg-${bgColour}` : "bg-white"}
           ${textColour ? `text-${textColour}` : "text-black"}
           text-lg md:text-xl lg:text-2xl
+active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-[transform,box-shadow,opacity,background-color] duration-100 disabled:opacity-60
         `,
         typeOverride,
       )}
