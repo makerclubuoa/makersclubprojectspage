@@ -16,7 +16,9 @@ export default function VendingLayout({
     <div>
       <Nav></Nav>
       {children}
-      <Footer />
+      <div className="w-full border-t-4">
+        <Footer />
+      </div>
     </div>
   );
 }
