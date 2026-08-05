@@ -235,6 +235,6 @@ export const submitGateP =
 export const submitSuccess =
   "bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] py-12 px-9 text-center";
 export const submitSuccessIcon = "text-[36px] text-pop-magenta mb-4";
-export const submitSuccessH2 = `${holt} text-2xl md:text-3xl text-pop-magenta mt-0 mb-3`;
+export const submitSuccessH2 = `${holt} text-2xl md:text-3xl text-pink-300 mt-0 mb-3`;
 export const submitSuccessP =
   "text-ink-2 font-semibold text-sm max-w-[44ch] mx-auto leading-[1.6]";
