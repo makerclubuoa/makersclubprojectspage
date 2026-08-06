@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase";
 import type { Project } from "@/lib/projects";
 import Pagination from "@/app/components/Pagination";
 import VendingAdminPanel from "@/app/components/vending/VendingAdminPanel";
+import TimelineAdminPanel from "@/app/components/timeline/TimelineAdminPanel";
 import {
   container,
   pageWrap,
@@ -58,7 +59,7 @@ const DASH_ACTION =
   "text-[10.5px] font-bold tracking-[0.08em] uppercase shrink-0 px-2 py-1 transition-colors duration-150";
 
 type Filter = "all" | "pending" | "live" | "featured" | "rejected";
-type Tab = "projects" | "vending";
+type Tab = "projects" | "vending" | "timeline";
 
 // Section tabs (Projects / Vending Machine) — larger cousins of FILTER_BTN.
 const TAB_BTN =
@@ -94,10 +95,12 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<Tab>("projects");
 
-  // Deep-link support: /admin?tab=vending opens on the vending tab.
+  // Deep-link support: /admin?tab=vending or ?tab=timeline opens on that tab.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("tab") === "vending") setTab("vending");
+    const t = params.get("tab");
+    if (t === "vending") setTab("vending");
+    else if (t === "timeline") setTab("timeline");
   }, []);
 
   function switchTab(next: Tab) {
@@ -105,7 +108,7 @@ export default function AdminPage() {
     const url = new URL(window.location.href);
     if (next === "projects") url.searchParams.delete("tab");
     else url.searchParams.set("tab", next);
-    window.history.replaceState(null, "", url);
+    window.history.replaceState(null, "", url.toString());
   }
 
   useEffect(() => {
@@ -269,7 +272,9 @@ export default function AdminPage() {
         <p className={pageBandSub}>
           {tab === "projects"
             ? "Approve, feature, reject, or delete any project."
-            : "Manage the vending machine: stock, prices, shelves, and the dispense queue."}
+            : tab === "vending"
+              ? "Manage the vending machine: stock, prices, shelves, and the dispense queue."
+              : "Add or remove events shown on the homepage timeline."}
         </p>
       </header>
 
@@ -288,9 +293,17 @@ export default function AdminPage() {
             >
               Vending Machine
             </button>
+            <button
+              className={`${TAB_BTN} ${tab === "timeline" ? TAB_BTN_ON : TAB_BTN_OFF}`}
+              onClick={() => switchTab("timeline")}
+            >
+              Timeline
+            </button>
           </div>
 
           {tab === "vending" && <VendingAdminPanel />}
+
+          {tab === "timeline" && <TimelineAdminPanel />}
 
           {tab === "projects" && (
             <>

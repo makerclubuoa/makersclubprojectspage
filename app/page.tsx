@@ -1,4 +1,5 @@
-import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
+import { TimelineType } from "@/lib/ghost/timeline";
+import { getTimelineItems } from "@/lib/timeline";
 import Header from "./components/homepage/Header";
 import MakeathonSection from "./components/homepage/MakeathonSection";
 import MovingText from "./components/homepage/MovingText";
@@ -21,7 +22,7 @@ import { getRandomProduct } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const timelines: TimelineType[] = await getYearTimeline();
+  const timelines: TimelineType[] = await getTimelineItems();
   const makeathon = await getMakeathon();
   const photos = await getPhotos();
   const upcomingEvent = await getLatestUpcomingEvent();
