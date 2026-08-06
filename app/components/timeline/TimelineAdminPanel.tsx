@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   fieldInput,
@@ -35,6 +35,7 @@ interface TimelineItem {
   name: string;
   date: string;
   description: string;
+  sort_order: number;
   created_at: string;
 }
 
@@ -48,11 +49,11 @@ export default function TimelineAdminPanel() {
   const [description, setDescription] = useState("");
   const [pending, setPending] = useState<TimelineItem | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+  const dragIndex = useRef<number | null>(null);
 
   async function authHeader() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     return { Authorization: `Bearer ${session?.access_token ?? ""}` };
   }
 
@@ -63,9 +64,7 @@ export default function TimelineAdminPanel() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -73,10 +72,7 @@ export default function TimelineAdminPanel() {
     setError(null);
     const res = await fetch("/api/admin/timeline", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(await authHeader()),
-      },
+      headers: { "Content-Type": "application/json", ...(await authHeader()) },
       body: JSON.stringify({ name, date, description }),
     });
     if (res.ok) {
@@ -97,10 +93,7 @@ export default function TimelineAdminPanel() {
     setError(null);
     const res = await fetch("/api/admin/timeline", {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        ...(await authHeader()),
-      },
+      headers: { "Content-Type": "application/json", ...(await authHeader()) },
       body: JSON.stringify({ id: item.id }),
     });
     if (res.ok) {
@@ -111,6 +104,47 @@ export default function TimelineAdminPanel() {
     }
     setPending(null);
     setDeleting(null);
+  }
+
+  async function persistOrder(reordered: TimelineItem[]) {
+    const headers = { "Content-Type": "application/json", ...(await authHeader()) };
+    await fetch("/api/admin/timeline", {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        order: reordered.map((item, i) => ({ id: item.id, sort_order: i + 1 })),
+      }),
+    });
+  }
+
+  function onDragStart(index: number, e: React.DragEvent) {
+    dragIndex.current = index;
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function onDragOver(index: number, e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver(index);
+  }
+
+  function onDrop(index: number) {
+    if (dragIndex.current === null || dragIndex.current === index) {
+      setDragOver(null);
+      return;
+    }
+    const reordered = [...items];
+    const [moved] = reordered.splice(dragIndex.current, 1);
+    reordered.splice(index, 0, moved);
+    dragIndex.current = null;
+    setDragOver(null);
+    setItems(reordered);
+    persistOrder(reordered);
+  }
+
+  function onDragEnd() {
+    dragIndex.current = null;
+    setDragOver(null);
   }
 
   return (
@@ -158,11 +192,7 @@ export default function TimelineAdminPanel() {
               />
             </div>
             <div className="flex justify-end mt-2">
-              <button
-                type="submit"
-                className={btnGradient}
-                disabled={saving}
-              >
+              <button type="submit" className={btnGradient} disabled={saving}>
                 {saving ? "Adding…" : "+ Add Event"}
               </button>
             </div>
@@ -188,8 +218,24 @@ export default function TimelineAdminPanel() {
           </div>
         ) : (
           <div className={dashTable}>
-            {items.map((item) => (
-              <div key={item.id} className={`${dashRow} flex-wrap gap-y-1.5`}>
+            {items.map((item, index) => (
+              <div
+                key={item.id}
+                draggable
+                onDragStart={(e) => onDragStart(index, e)}
+                onDragOver={(e) => onDragOver(index, e)}
+                onDrop={() => onDrop(index)}
+                onDragEnd={onDragEnd}
+                className={`${dashRow} flex-wrap gap-y-1.5 transition-colors duration-100 ${
+                  dragOver === index ? "bg-paper-2 outline outline-2 outline-pop-violet" : ""
+                }`}
+              >
+                <span
+                  className="cursor-grab text-ink-2 select-none shrink-0 text-xl leading-none pr-1 active:cursor-grabbing"
+                  title="Drag to reorder"
+                >
+                  ≡
+                </span>
                 <div className={dashRowMain}>
                   <span className={dashRowTitle}>{item.name}</span>
                   <span className={dashRowMeta}>
@@ -223,10 +269,7 @@ export default function TimelineAdminPanel() {
               <button className={btnGhost} onClick={() => setPending(null)}>
                 Cancel
               </button>
-              <button
-                className={btnDanger}
-                onClick={() => handleDelete(pending)}
-              >
+              <button className={btnDanger} onClick={() => handleDelete(pending)}>
                 Delete
               </button>
             </div>
