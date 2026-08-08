@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { type Project } from "@/lib/projects";
-import Photo from "@/app/components/global/Photo";
 import LinkButton from "../global/LinkButton";
+import ProjectPreviewCard from "./ProjectPreviewCard";
 
 const TAPES = [
   "-top-2 -left-3 -rotate-12 bg-pop-red",
@@ -21,38 +20,11 @@ export default function ProjectsPreviewSection({
       {featured.length > 0 && (
         <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-10 px-6 pt-12 w-full max-w-[100rem] ">
           {featured.map((project, i) => (
-            <Link
+            <ProjectPreviewCard
               key={project.id}
-              href={`/projects/${project.id}`}
-              className="w-full md:w-72 md:h-fit flex flex-col justify-start items-start"
-            >
-              <div className="relative w-full aspect-square">
-                <div
-                  className={`absolute z-20 w-16 h-5 outline-2 outline-black ${TAPES[i % TAPES.length]}`}
-                />
-                <div className="absolute inset-0 outline-3 outline-black overflow-hidden">
-                  {project.image ? (
-                    <Photo
-                      src={project.image}
-                      alt={`Photo of ${project.title}.`}
-                      typeOverride="w-full h-full"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100 px-2 text-sm font-semibold text-center text-gray-500">
-                      {project.title}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <p className="pt-3 text-lg font-bold text-black">
-                {project.title}
-              </p>
-              {project.blurb && (
-                <p className="text-sm font-semibold text-black">
-                  {project.blurb}
-                </p>
-              )}
-            </Link>
+              project={project}
+              tape={TAPES[i % TAPES.length]}
+            />
           ))}
         </div>
       )}

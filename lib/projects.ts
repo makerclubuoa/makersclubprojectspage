@@ -1,4 +1,7 @@
 import { supabase } from "./supabase";
+import type { ProjectMedia } from "./media";
+
+export type { ProjectMedia, MediaKind } from "./media";
 
 export interface BuildLogEntry {
   date: string;
@@ -47,6 +50,7 @@ export interface Project {
   build_time: string | null;
   build_log: BuildLogEntry[] | null;
   gallery_images: string[] | null;
+  media: ProjectMedia[] | null;
   bom: BOMItem[] | null;
   retro_wins: string[] | null;
   retro_fixes: string[] | null;

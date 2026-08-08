@@ -6,9 +6,15 @@ import Image from "next/image";
 import Screentone from "@/app/components/global/Screentone";
 import solderingIron from "@/public/doodle-soldering-iron.png";
 import { resolvePublicName } from "@/lib/projects";
+import { compressForUpload } from "@/lib/image-compress";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import CustomSelect from "@/app/components/CustomSelect";
+import FormSection from "@/app/components/FormSection";
+import MediaUploader, {
+  uploadMediaDrafts,
+  type DraftMedia,
+} from "@/app/components/MediaUploader";
 import {
   container,
   projectBack,
@@ -185,6 +191,9 @@ export default function SubmitPage() {
   // Gallery images
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+
+  // Music & video
+  const [mediaDrafts, setMediaDrafts] = useState<DraftMedia[]>([]);
 
   // Build log
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
@@ -405,11 +414,14 @@ export default function SubmitPage() {
     // Cover image
     let imageUrl: string | null = null;
     if (imageFile) {
-      const ext = imageFile.name.split(".").pop();
-      const path = `${id}/cover.${ext}`;
+      const shrunk = await compressForUpload(imageFile, "cover");
+      const path = `${id}/cover.${shrunk.ext}`;
       const { error: uploadError } = await supabase.storage
         .from("Project Images")
-        .upload(path, imageFile, { upsert: true });
+        .upload(path, shrunk.blob, {
+          upsert: true,
+          contentType: shrunk.contentType,
+        });
       if (uploadError) {
         setSubmitError(`Cover upload failed: ${uploadError.message}`);
         setSubmitting(false);
@@ -425,11 +437,14 @@ export default function SubmitPage() {
     const galleryUrls: string[] = [];
     for (let i = 0; i < galleryFiles.length; i++) {
       const file = galleryFiles[i];
-      const ext = file.name.split(".").pop();
-      const path = `${id}/gallery/${i}.${ext}`;
+      const shrunk = await compressForUpload(file, "inline");
+      const path = `${id}/gallery/${i}.${shrunk.ext}`;
       const { error: gErr } = await supabase.storage
         .from("Project Images")
-        .upload(path, file, { upsert: true });
+        .upload(path, shrunk.blob, {
+          upsert: true,
+          contentType: shrunk.contentType,
+        });
       if (gErr) {
         setSubmitError(`Gallery image ${i + 1} failed: ${gErr.message}`);
         setSubmitting(false);
@@ -439,6 +454,17 @@ export default function SubmitPage() {
         data: { publicUrl },
       } = supabase.storage.from("Project Images").getPublicUrl(path);
       galleryUrls.push(publicUrl);
+    }
+
+    // Music & video
+    const { media, error: mediaError } = await uploadMediaDrafts(
+      id,
+      mediaDrafts,
+    );
+    if (mediaError) {
+      setSubmitError(mediaError);
+      setSubmitting(false);
+      return;
     }
 
     // Parse retro
@@ -456,11 +482,14 @@ export default function SubmitPage() {
     for (let i = 0; i < logEntries.length; i++) {
       const file = logEntryFiles[i];
       if (file) {
-        const ext = file.name.split(".").pop();
-        const path = `${id}/log/${Date.now()}-${i}.${ext}`;
+        const shrunk = await compressForUpload(file, "inline");
+        const path = `${id}/log/${Date.now()}-${i}.${shrunk.ext}`;
         const { error: lErr } = await supabase.storage
           .from("Project Images")
-          .upload(path, file, { upsert: true });
+          .upload(path, shrunk.blob, {
+            upsert: true,
+            contentType: shrunk.contentType,
+          });
         if (lErr) {
           setSubmitError(`Log image ${i + 1} failed: ${lErr.message}`);
           setSubmitting(false);
@@ -500,7 +529,7 @@ export default function SubmitPage() {
     const anonCount = coMakers.filter((m) => !m.credit_consented).length;
     const makerNames = consentedCoMakers.map((m) => resolvePublicName(m));
 
-    const { error } = await supabase.from("Projects").insert({
+    const payload: Record<string, unknown> = {
       id,
       title: title.trim(),
       category:
@@ -525,7 +554,13 @@ export default function SubmitPage() {
       bom: bom.length > 0 ? bom : null,
       retro_wins: retro_wins.length > 0 ? retro_wins : null,
       retro_fixes: retro_fixes.length > 0 ? retro_fixes : null,
-    });
+    };
+    // Only sent when there's something to store, so an ordinary submission
+    // still goes through on a database that hasn't had the media migration
+    // (scripts/add-project-media.sql) applied yet.
+    if (media) payload.media = media;
+
+    const { error } = await supabase.from("Projects").insert(payload);
     setSubmitting(false);
     if (error) {
       setSubmitError(error.message);
@@ -558,6 +593,22 @@ export default function SubmitPage() {
 
     setSent(true);
   }
+
+  // Collapsed sections advertise what's already inside them, so nothing a
+  // submitter filled in can hide behind a closed header.
+  const storyBits = [
+    description.trim() && "story",
+    startDate && "dates",
+    buildTime.trim() && "build time",
+  ].filter(Boolean) as string[];
+  const storySummary = storyBits.length > 0 ? storyBits.join(" · ") : undefined;
+  const logCount = logEntries.filter((e) => e.title.trim()).length;
+  const bomCount = bomRows.filter((r) => r.item.trim()).length;
+  const retroCount = [
+    ...retroWins.split("\n"),
+    ...retroFixes.split("\n"),
+  ].filter((l) => l.trim()).length;
+  const linksCount = [github, website, contact].filter((v) => v.trim()).length;
 
   return (
     <div className={pageWrap}>
@@ -826,42 +877,6 @@ export default function SubmitPage() {
                       />
                     </div>
 
-                    {/* Story */}
-                    <div className={field}>
-                      <label className={fieldLabel}>Tell the full story</label>
-                      <textarea
-                        className={`${fieldTextarea} min-h-[120px]`}
-                        placeholder="How did it start? What was hard? What are you proud of? Anything goes."
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
-                    </div>
-
-                    {/* Start date + build time */}
-                    <div className={fieldRow}>
-                      <div className={field}>
-                        <label className={fieldLabel}>When did it start?</label>
-                        <input
-                          className={fieldInput}
-                          type="date"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                        />
-                      </div>
-                      <div className={field}>
-                        <label className={fieldLabel}>
-                          How long did it take?
-                        </label>
-                        <input
-                          className={fieldInput}
-                          type="text"
-                          placeholder="e.g. ~3 weeks"
-                          value={buildTime}
-                          onChange={(e) => setBuildTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
                     {/* Cover image */}
                     <div className={field}>
                       <label className={fieldLabel}>Cover photo</label>
@@ -910,11 +925,67 @@ export default function SubmitPage() {
                       </label>
                     </div>
 
+                    {/* ── OPTIONAL EXTRAS ─────────────── */}
+                    <div className={`${secHeadRow} mt-9`}>
+                      <h3 className={`${secHead} text-pop-violet`}>Add More</h3>
+                      <span className={secHint}>
+                        all optional · open what you need
+                      </span>
+                    </div>
+                    <p className="text-[12.5px] font-medium text-ink-2 leading-[1.55] mt-1.5 mb-1">
+                      That&rsquo;s the required part done. Everything below is
+                      extra — add what you&rsquo;ve got and skip the rest.
+                    </p>
+
+                    <FormSection
+                      title="The Full Story"
+                      colorClass="text-pop-blue"
+                      blurb="How it started, what broke, what you're proud of."
+                      summary={storySummary}
+                    >
+                      <div className={field}>
+                        <label className={fieldLabel}>Tell the full story</label>
+                        <textarea
+                          className={`${fieldTextarea} min-h-[120px]`}
+                          placeholder="How did it start? What was hard? What are you proud of? Anything goes."
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                        />
+                      </div>
+                      <div className={fieldRow}>
+                        <div className={field}>
+                          <label className={fieldLabel}>
+                            When did it start?
+                          </label>
+                          <input
+                            className={fieldInput}
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                          />
+                        </div>
+                        <div className={field}>
+                          <label className={fieldLabel}>
+                            How long did it take?
+                          </label>
+                          <input
+                            className={fieldInput}
+                            type="text"
+                            placeholder="e.g. ~3 weeks"
+                            value={buildTime}
+                            onChange={(e) => setBuildTime(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </FormSection>
+
                     {/* Tools */}
-                    <div className={field}>
-                      <label className={fieldLabel}>
-                        Tools &amp; materials used
-                      </label>
+                    <FormSection
+                      title="Tools & Materials"
+                      colorClass="text-pop-violet"
+                      blurb="What you built it with. Becomes a filter on the archive."
+                      summary={tools.length > 0 ? `${tools.length} picked` : undefined}
+                    >
                       <div className={toolTags}>
                         {TOOL_SUGGESTIONS.map((t) => (
                           <button
@@ -963,13 +1034,36 @@ export default function SubmitPage() {
                           )}
                         </span>
                       </div>
-                    </div>
+                    </FormSection>
+
+                    {/* ── MUSIC & VIDEO ───────────────── */}
+                    <FormSection
+                      title="Music & Video"
+                      colorClass="text-pop-blue"
+                      blurb="Upload a track, or link a YouTube/Vimeo video — then pick the moment previews start from."
+                      summary={
+                        mediaDrafts.length > 0
+                          ? `${mediaDrafts.length} file${mediaDrafts.length === 1 ? "" : "s"}`
+                          : undefined
+                      }
+                    >
+                      <MediaUploader
+                        items={mediaDrafts}
+                        onChange={setMediaDrafts}
+                      />
+                    </FormSection>
 
                     {/* ── BUILD LOG ───────────────────── */}
-                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
-                      <h3 className={`${secHead} text-pop-violet`}>Build Log</h3>
-                      <span className={secHint}>optional · timeline of your process</span>
-                    </div>
+                    <FormSection
+                      title="Build Log"
+                      colorClass="text-pop-violet"
+                      blurb="A timeline of your process, entry by entry."
+                      summary={
+                        logCount > 0
+                          ? `${logCount} ${logCount === 1 ? "entry" : "entries"}`
+                          : undefined
+                      }
+                    >
 
                     {logEntries.length > 0 && (
                       <div className={dynList}>
@@ -1108,12 +1202,19 @@ export default function SubmitPage() {
                     >
                       + Add log entry
                     </button>
+                    </FormSection>
 
                     {/* ── GALLERY ─────────────────────── */}
-                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
-                      <h3 className={`${secHead} text-pop-magenta`}>Gallery</h3>
-                      <span className={secHint}>optional · process photos</span>
-                    </div>
+                    <FormSection
+                      title="Photo Gallery"
+                      colorClass="text-pop-magenta"
+                      blurb="Process shots, close-ups, the messy bits."
+                      summary={
+                        galleryPreviews.length > 0
+                          ? `${galleryPreviews.length} photo${galleryPreviews.length === 1 ? "" : "s"}`
+                          : undefined
+                      }
+                    >
 
                     {galleryPreviews.length > 0 && (
                       <div className={galleryGrid}>
@@ -1146,12 +1247,19 @@ export default function SubmitPage() {
                         onChange={(e) => addGalleryFiles(e.target.files)}
                       />
                     </label>
+                    </FormSection>
 
                     {/* ── BOM ─────────────────────────── */}
-                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
-                      <h3 className={`${secHead} text-pop-pink`}>Bill of Materials</h3>
-                      <span className={secHint}>optional · what did it cost?</span>
-                    </div>
+                    <FormSection
+                      title="Bill of Materials"
+                      colorClass="text-pop-pink"
+                      blurb="Parts, quantities and what it cost to build."
+                      summary={
+                        bomCount > 0
+                          ? `${bomCount} item${bomCount === 1 ? "" : "s"}`
+                          : undefined
+                      }
+                    >
 
                     {bomRows.length > 0 && (
                       <div className={dynList}>
@@ -1247,12 +1355,19 @@ export default function SubmitPage() {
                     >
                       + Add item
                     </button>
+                    </FormSection>
 
                     {/* ── RETRO ───────────────────────── */}
-                    <div className={`${secHeadRow} mt-8 mb-[18px]`}>
-                      <h3 className={`${secHead} text-pop-red`}>What We Learned</h3>
-                      <span className={secHint}>optional · one item per line</span>
-                    </div>
+                    <FormSection
+                      title="What We Learned"
+                      colorClass="text-pop-red"
+                      blurb="Honest notes — what worked, what you'd do differently. One per line."
+                      summary={
+                        retroCount > 0
+                          ? `${retroCount} note${retroCount === 1 ? "" : "s"}`
+                          : undefined
+                      }
+                    >
                     <div className={fieldRow}>
                       <div className={field}>
                         <label className={fieldLabel}>
@@ -1283,11 +1398,17 @@ export default function SubmitPage() {
                         />
                       </div>
                     </div>
+                    </FormSection>
 
                     {/* ── LINKS + CONTACT ─────────────── */}
-                    <h3 className={`${secHead} text-pop-orange mt-8 mb-[18px]`}>
-                      Links
-                    </h3>
+                    <FormSection
+                      title="Links & Contact"
+                      colorClass="text-pop-orange"
+                      blurb="Source code, a demo site, and how we can reach you."
+                      summary={
+                        linksCount > 0 ? `${linksCount} added` : undefined
+                      }
+                    >
                     <div className={fieldRow}>
                       <div className={field}>
                         <label className={fieldLabel}>GitHub / source</label>
@@ -1320,6 +1441,7 @@ export default function SubmitPage() {
                         onChange={(e) => setContact(e.target.value)}
                       />
                     </div>
+                    </FormSection>
 
                     {submitError && (
                       <p className="text-pop-red text-xs mt-2 tracking-[0.04em]">

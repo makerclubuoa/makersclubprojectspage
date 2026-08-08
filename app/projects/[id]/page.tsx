@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import LikeButton from "@/app/components/LikeButton";
 import CommentsSection from "@/app/components/CommentsSection";
 import {
@@ -10,6 +11,7 @@ import {
   categoryColor,
   categoryPopText,
 } from "@/lib/projects";
+import { embedUrl, formatClock, providerLabel } from "@/lib/media";
 import {
   container,
   pageWrap,
@@ -160,6 +162,8 @@ export default async function ProjectPage({
 
   // Which sections exist?
   const hasStory = !!project.description;
+  const mediaItems = project.media ?? [];
+  const hasMedia = mediaItems.length > 0;
   const hasBuildLog = (project.build_log ?? []).length > 0;
   const hasGallery = (project.gallery_images ?? []).length > 0;
   const hasBOM = bomItems.length > 0;
@@ -171,6 +175,7 @@ export default async function ProjectPage({
 
   const tocEntries = [
     ...(hasStory ? [{ href: "#story", label: "Story" }] : []),
+    ...(hasMedia ? [{ href: "#media", label: "Listen & watch" }] : []),
     ...(hasBuildLog ? [{ href: "#log", label: "Build log" }] : []),
     ...(hasGallery ? [{ href: "#gallery", label: "Gallery" }] : []),
     ...(hasBOM ? [{ href: "#bom", label: "Bill of materials" }] : []),
@@ -302,9 +307,13 @@ export default async function ProjectPage({
                 <div className="aspect-[4/5] relative bg-white outline-solid outline-3 outline-black p-4 pb-12 max-[980px]:aspect-[4/3]">
                   <div className="relative w-full h-full overflow-hidden outline-2 outline-black">
                     {project.image ? (
-                      <div
-                        className={`${ph} inset-0`}
-                        style={{ backgroundImage: `url(${project.image})` }}
+                      <Image
+                        src={project.image}
+                        alt={project.title}
+                        fill
+                        sizes="(max-width: 980px) 100vw, 440px"
+                        className="object-cover"
+                        priority
                       />
                     ) : (
                       <div className={ph} style={{ backgroundImage: color }}>
@@ -346,6 +355,70 @@ export default async function ProjectPage({
                             {para}
                           </p>
                         ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Music & video */}
+                {hasMedia && (
+                  <section className={SECTION} id="media">
+                    <div className={`${secHeadRow} mb-5`}>
+                      <h3 className={`${secHead} text-pop-blue`}>
+                        Listen &amp; Watch
+                      </h3>
+                      <span className={secHint}>
+                        {mediaItems.length}{" "}
+                        {mediaItems.length === 1 ? "track" : "tracks"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-3.5">
+                      {mediaItems.map((m, i) => (
+                        <div
+                          key={i}
+                          className="border-2 border-black rounded-[6px] bg-paper-2 p-3.5"
+                        >
+                          <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2.5">
+                            <h4 className="text-[15px] font-bold m-0 flex items-center gap-2">
+                              <span
+                                className="text-pop-violet"
+                                aria-hidden
+                              >
+                                {m.kind === "video" ? "▶" : "♪"}
+                              </span>
+                              {m.title || project.title}
+                            </h4>
+                            <span className="text-[10px] font-bold tracking-[0.08em] uppercase text-ink-2">
+                              {m.provider ? providerLabel(m.provider) : "Audio"}
+                              {m.preview_start > 0
+                                ? ` · card preview from ${formatClock(m.preview_start)}`
+                                : ""}
+                            </span>
+                          </div>
+                          {m.provider ? (
+                            // Linked video: the provider carries the bandwidth,
+                            // and lazy loading keeps it off the initial render.
+                            <div className="relative w-full aspect-video border-2 border-black rounded-[4px] overflow-hidden bg-black">
+                              <iframe
+                                src={embedUrl(m) ?? undefined}
+                                className="absolute inset-0 w-full h-full"
+                                allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+                                allowFullScreen
+                                loading="lazy"
+                                title={m.title || project.title}
+                              />
+                            </div>
+                          ) : (
+                            // preload="none" keeps the file off the wire until
+                            // somebody presses play.
+                            <audio
+                              className="w-full"
+                              controls
+                              preload="none"
+                              src={m.url}
+                            />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </section>
                 )}
@@ -393,13 +466,15 @@ export default async function ProjectPage({
                               </span>
                             )}
                             {entry.image && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={entry.image}
-                                alt={entry.title}
-                                className="block mt-3 max-w-full max-h-[320px] border-2 border-black object-cover"
-                                loading="lazy"
-                              />
+                              <div className="relative mt-3 w-full max-w-[560px] h-[320px] border-2 border-black overflow-hidden">
+                                <Image
+                                  src={entry.image}
+                                  alt={entry.title}
+                                  fill
+                                  sizes="(max-width: 720px) 100vw, 560px"
+                                  className="object-cover"
+                                />
+                              </div>
                             )}
                           </div>
                         </div>
@@ -423,13 +498,19 @@ export default async function ProjectPage({
                           key={i}
                           className={`relative bg-white outline-solid outline-2 outline-black p-1 overflow-visible ${i === 0 ? "col-span-2 row-span-2 aspect-square max-[720px]:row-span-1 max-[720px]:aspect-[4/3]" : "aspect-[4/3]"} ${i % 3 === 1 ? "rotate-1" : i % 3 === 2 ? "-rotate-1" : ""}`}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={src}
-                            alt={`Gallery image ${i + 1}`}
-                            loading="lazy"
-                            className="w-full h-full object-cover block"
-                          />
+                          <div className="relative w-full h-full">
+                            <Image
+                              src={src}
+                              alt={`Gallery image ${i + 1}`}
+                              fill
+                              sizes={
+                                i === 0
+                                  ? "(max-width: 720px) 100vw, 60vw"
+                                  : "(max-width: 720px) 50vw, 30vw"
+                              }
+                              className="object-cover"
+                            />
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -618,13 +699,21 @@ export default async function ProjectPage({
                         >
                           <div
                             className="aspect-[4/3] relative overflow-hidden bg-cover bg-center border-b-2 border-black"
-                            style={{
-                              backgroundImage: r.image
-                                ? `url(${r.image})`
-                                : categoryColor(r.category),
-                            }}
+                            style={
+                              r.image
+                                ? undefined
+                                : { backgroundImage: categoryColor(r.category) }
+                            }
                           >
-                            {!r.image && (
+                            {r.image ? (
+                              <Image
+                                src={r.image}
+                                alt={r.title}
+                                fill
+                                sizes="(max-width: 720px) 100vw, (max-width: 980px) 50vw, 25vw"
+                                className="object-cover"
+                              />
+                            ) : (
                               <div className={ph}>
                                 <span className={phLabel}>{r.title}</span>
                               </div>

@@ -1,7 +1,11 @@
 'use client'
 
+import { useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { categoryColor, type Project } from '@/lib/projects'
+import { pickPreviewMedia } from '@/lib/media'
+import ProjectMediaPlayer from '@/app/components/ProjectMediaPlayer'
 
 export function formatDate(iso: string) {
   const d = new Date(iso)
@@ -36,6 +40,8 @@ export default function ProjectCard({
 }) {
   const router = useRouter()
   const color = categoryColor(project.category)
+  const previewMedia = pickPreviewMedia(project.media)
+  const [hovered, setHovered] = useState(false)
 
   // Bento layout — mirrors the old `.bento > .card:nth-child()` rules, keyed
   // off the card's position in the grid (nth-child(k) === index k-1).
@@ -58,12 +64,27 @@ export default function ProjectCard({
       style={{ '--card-rotate': `${rotate}deg` } as React.CSSProperties}
       href={`/projects/${project.id}`}
       onClick={handleClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className={`absolute z-10 w-16 h-5 outline-2 outline-black ${TAPES[index % TAPES.length]}`} />
       <div className={`${media} relative overflow-hidden bg-paper-2 border-b-[3px] border-black`}>
+        {/* next/image rather than a CSS background: covers come off the phone
+            at 3-4 MB, and the grid only ever shows them a few hundred px wide. */}
+        {project.image && (
+          <Image
+            src={project.image}
+            alt=""
+            fill
+            sizes={wide
+              ? '(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 66vw'
+              : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'}
+            className="object-cover"
+          />
+        )}
         <div
           className="absolute inset-0 flex items-end justify-start p-2.5 text-[10px] tracking-[0.04em] text-white/[0.92] bg-cover bg-center before:content-[''] before:absolute before:inset-0 before:pointer-events-none before:[background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.06)_0_6px,transparent_6px_14px)]"
-          style={{ backgroundImage: project.image ? `url(${project.image})` : color }}
+          style={project.image ? undefined : { backgroundImage: color }}
         >
           {!project.image && <span className="relative z-[1] opacity-95 uppercase">{project.title}</span>}
         </div>
@@ -78,6 +99,9 @@ export default function ProjectCard({
             <span className={`${BADGE} bg-accent inline-flex items-center gap-[5px]`}>★ FEATURED</span>
           )}
         </div>
+        {previewMedia && (
+          <ProjectMediaPlayer media={previewMedia} poster={project.image} hovered={hovered} />
+        )}
       </div>
       <div className={`p-4 pb-[18px] flex flex-col gap-2 ${tall ? 'flex-none' : 'flex-1'}`}>
         <h4 className="text-[18px] leading-[1.2] font-bold tracking-[-0.02em] m-0 max-[640px]:text-[16px]">{project.title}</h4>

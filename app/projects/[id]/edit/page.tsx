@@ -9,7 +9,9 @@ import penNib from '@/public/doodle-pen-nib.png'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES, resolvePublicName, type Project } from '@/lib/projects'
+import { compressForUpload } from '@/lib/image-compress'
 import CustomSelect from '@/app/components/CustomSelect'
+import MediaUploader, { draftFromStored, uploadMediaDrafts, type DraftMedia } from '@/app/components/MediaUploader'
 import {
   secHead, secHeadRow, secHint,
   pageWrap, pageBand, pageBandTitle, pageBandDoodle, submitMain,
@@ -95,6 +97,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const [existingGallery, setExistingGallery]       = useState<string[]>([])
   const [newGalleryFiles, setNewGalleryFiles]       = useState<File[]>([])
   const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([])
+
+  // Music & video
+  const [mediaDrafts, setMediaDrafts] = useState<DraftMedia[]>([])
 
   // Build log
   const [logEntries, setLogEntries] = useState<LogEntry[]>([])
@@ -182,6 +187,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       setTools(data.tools ?? [])
       setImagePreview(data.image ?? null)
       setExistingGallery(data.gallery_images ?? [])
+      setMediaDrafts((data.media ?? []).map(draftFromStored))
 
       if (data.build_log) {
         const entries = data.build_log.map((e: { date?: string; title?: string; body?: string; milestone?: boolean; tag?: string; image?: string }) => ({
@@ -334,11 +340,11 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     if (clearImage) {
       imageUrl = null
     } else if (imageFile) {
-      const ext = imageFile.name.split('.').pop()
-      const path = `${id}/cover.${ext}`
+      const shrunk = await compressForUpload(imageFile, 'cover')
+      const path = `${id}/cover.${shrunk.ext}`
       const { error: uploadError } = await supabase.storage
         .from('Project Images')
-        .upload(path, imageFile, { upsert: true })
+        .upload(path, shrunk.blob, { upsert: true, contentType: shrunk.contentType })
       if (uploadError) {
         setSaveError(`Image upload failed: ${uploadError.message}`)
         setSaving(false)
@@ -353,11 +359,11 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     const uploadedGalleryUrls: string[] = []
     for (let i = 0; i < newGalleryFiles.length; i++) {
       const file = newGalleryFiles[i]
-      const ext  = file.name.split('.').pop()
-      const path = `${id}/gallery/${Date.now()}-${i}.${ext}`
+      const shrunk = await compressForUpload(file, 'inline')
+      const path = `${id}/gallery/${Date.now()}-${i}.${shrunk.ext}`
       const { error: gErr } = await supabase.storage
         .from('Project Images')
-        .upload(path, file, { upsert: true })
+        .upload(path, shrunk.blob, { upsert: true, contentType: shrunk.contentType })
       if (gErr) { setSaveError(`Gallery image ${i + 1} failed: ${gErr.message}`); setSaving(false); return }
       const { data: { publicUrl } } = supabase.storage
         .from('Project Images')
@@ -366,6 +372,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     }
     const galleryImages = [...existingGallery, ...uploadedGalleryUrls]
 
+    const { media, error: mediaError } = await uploadMediaDrafts(id, mediaDrafts)
+    if (mediaError) { setSaveError(mediaError); setSaving(false); return }
+
     const retro_wins  = retroWins.split('\n').map(l => l.trim()).filter(Boolean)
     const retro_fixes = retroFixes.split('\n').map(l => l.trim()).filter(Boolean)
 
@@ -373,9 +382,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     for (let i = 0; i < logEntries.length; i++) {
       const file = logEntryFiles[i]
       if (file) {
-        const ext = file.name.split('.').pop()
-        const path = `${id}/log/${Date.now()}-${i}.${ext}`
-        const { error: lErr } = await supabase.storage.from('Project Images').upload(path, file, { upsert: true })
+        const shrunk = await compressForUpload(file, 'inline')
+        const path = `${id}/log/${Date.now()}-${i}.${shrunk.ext}`
+        const { error: lErr } = await supabase.storage.from('Project Images').upload(path, shrunk.blob, { upsert: true, contentType: shrunk.contentType })
         if (lErr) { setSaveError(`Log image ${i + 1} failed: ${lErr.message}`); setSaving(false); return }
         const { data: { publicUrl } } = supabase.storage.from('Project Images').getPublicUrl(path)
         logImageUrls.push(publicUrl)
@@ -437,6 +446,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       retro_fixes:    retro_fixes.length > 0 ? retro_fixes : null,
     }
     if (imageUrl !== undefined) update.image = imageUrl
+    // Sent when there's media now, or when there was some to clear — an edit to
+    // a project that never had any still saves on a pre-migration database.
+    if (media || (project?.media ?? null) !== null) update.media = media
 
     let query = supabase.from('Projects').update(update).eq('id', id)
     if (!isAdmin && !isProjectOwner) query = query.contains('maker_ids', [user!.id])
@@ -726,6 +738,13 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                 <input type="file" accept="image/*" multiple className="hidden"
                   onChange={e => addGalleryFiles(e.target.files)} />
               </label>
+
+              {/* MUSIC & VIDEO */}
+              <div className={`${secHeadRow} mt-8 mb-[18px]`}>
+                <h3 className={`${secHead} text-pop-blue`}>Music &amp; Video</h3>
+                <span className={secHint}>optional · plays on cards</span>
+              </div>
+              <MediaUploader items={mediaDrafts} onChange={setMediaDrafts} />
 
               {/* BOM */}
               <div className={`${secHeadRow} mt-8 mb-[18px]`}>

@@ -46,7 +46,8 @@
       "Bash(nslookup -type=MX makeuoa.nz 8.8.8.8)",
       "Bash(nslookup -type=TXT makeuoa.nz 8.8.8.8)",
       "Bash(nslookup -type=NS makeuoa.nz 8.8.8.8)",
-      "Bash(curl -s -o /dev/null -w \"admin:%{http_code}\\\\n\" \"http://localhost:3000/admin?tab=vending\")"
+      "Bash(curl -s -o /dev/null -w \"admin:%{http_code}\\\\n\" \"http://localhost:3000/admin?tab=vending\")",
+      "WebFetch(domain:opennext.js.org)"
     ]
   }
 }
