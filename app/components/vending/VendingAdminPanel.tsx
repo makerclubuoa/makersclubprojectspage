@@ -33,8 +33,16 @@ const SECTION =
 const TH =
   "text-left px-3 py-2.5 text-[10px] font-bold tracking-[0.12em] uppercase text-ink bg-paper-2 border-b-2 border-black whitespace-nowrap";
 const TD = "px-3 py-2.5 border-b border-black/10 align-middle text-sm";
-const TAG_CHIP =
-  "inline-flex items-center px-2 py-px rounded-full border-2 border-black bg-pop-violet text-white text-[9px] font-bold tracking-[0.06em] uppercase";
+// Shelf-view tag pills: colour-only markers (explained by the key above the
+// shelf) so the slot cards can spend their space on the product photo.
+const PILL = "block h-3 w-5 rounded-full border-2 border-black shrink-0";
+const TAG_PILL: Record<VendingTag, string> = {
+  [VendingTag.featured]: "bg-[#ffeb3b]",
+  [VendingTag.unique]: "bg-pop-violet",
+  [VendingTag.limited]: "bg-pop-magenta",
+  [VendingTag.token]: "bg-pop-blue",
+};
+const OUT_OF_STOCK_PILL = "bg-pop-red";
 const SMALL_BTN =
   "inline-flex items-center justify-center px-3 py-0.5 rounded-full font-semibold text-[11px] border-2 border-black shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-[transform,box-shadow] duration-100 disabled:opacity-50";
 
@@ -64,6 +72,24 @@ const dateToInput = (iso: string) => {
   const d = new Date(iso);
   return `${d.getFullYear()}-${`0${d.getMonth() + 1}`.slice(-2)}-${`0${d.getDate()}`.slice(-2)}`;
 };
+
+type Marker = { label: string; cls: string };
+
+// Legend for the shelf-view pills, in the order the pills are drawn.
+const SHELF_KEY: Marker[] = [
+  ...Object.values(VendingTag).map((tag) => ({ label: tag, cls: TAG_PILL[tag] })),
+  { label: "Out of stock", cls: OUT_OF_STOCK_PILL },
+];
+
+function slotMarkers(product: VendableProduct) {
+  const markers: Marker[] = Object.values(VendingTag)
+    .filter((tag) => product.tags.includes(tag))
+    .map((tag) => ({ label: tag, cls: TAG_PILL[tag] }));
+  if (product.stock !== undefined && product.stock <= 0) {
+    markers.push({ label: "Out of stock", cls: OUT_OF_STOCK_PILL });
+  }
+  return markers;
+}
 
 function Meter({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
@@ -312,6 +338,20 @@ export default function VendingAdminPanel() {
         <h2 className={`${holt} text-xl md:text-2xl text-pop-violet mt-0 mb-4`}>
           Shelf View
         </h2>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 border-2 border-black rounded-[6px] bg-paper-2 px-3.5 py-2">
+          <span className="text-[10px] font-bold tracking-[0.12em] uppercase text-ink-2">
+            Key
+          </span>
+          {SHELF_KEY.map(({ label, cls }) => (
+            <span
+              key={label}
+              className="inline-flex items-center gap-1.5 text-[10.5px] font-bold tracking-[0.06em] uppercase"
+            >
+              <span className={`${PILL} ${cls}`} />
+              {label}
+            </span>
+          ))}
+        </div>
         <div className="flex flex-col gap-3">
           {shelfLayout.map((shelf, rowIdx) => (
             <div
@@ -325,57 +365,74 @@ export default function VendingAdminPanel() {
                 return product ? (
                   <div
                     key={slot}
-                    className="relative bg-white border-2 border-black rounded-[6px] p-2.5 flex flex-col gap-1.5 min-h-[9rem]"
+                    className="relative bg-white border-2 border-black rounded-[6px] overflow-hidden flex flex-col min-h-[9rem]"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className={`${dashStatus} bg-white`}>{slot}</span>
-                      {product.image && (
+                    <div className="relative aspect-square border-b-2 border-black bg-paper-2">
+                      {product.image ? (
                         <Image
                           src={product.image}
                           alt=""
-                          width={32}
-                          height={32}
-                          className="w-8 h-8 rounded-[4px] border-2 border-black object-cover ml-auto"
+                          fill
+                          sizes="240px"
+                          className="object-cover"
                         />
+                      ) : (
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tracking-[0.1em] uppercase text-ink-2">
+                          No photo
+                        </span>
                       )}
-                    </div>
-                    <p className="m-0 text-[13px] font-bold leading-tight">
-                      {product.name}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      <span className={`${TAG_CHIP} bg-white text-black`}>
-                        {product.price === null
-                          ? "Any"
-                          : `$${product.price.toFixed(2)}`}
+                      <span
+                        className={`${dashStatus} bg-white absolute top-1.5 left-1.5`}
+                      >
+                        {slot}
                       </span>
-                      {product.tags.map((tag) => (
-                        <span key={tag} className={TAG_CHIP}>
-                          {tag}
-                        </span>
-                      ))}
-                      {product.stock !== undefined && product.stock <= 0 && (
-                        <span className={`${TAG_CHIP} bg-pop-red`}>
-                          Out of stock
-                        </span>
-                      )}
+                      <div className="absolute top-1.5 right-1.5 flex flex-wrap justify-end gap-1 max-w-[45%]">
+                        {slotMarkers(product).map((marker) => (
+                          <span
+                            key={marker.label}
+                            className={`${PILL} ${marker.cls}`}
+                            title={marker.label}
+                            aria-label={marker.label}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <div className="mt-auto flex gap-1.5 pt-1">
-                      <button
-                        disabled={busy}
-                        className={`${SMALL_BTN} bg-white`}
-                        onClick={() =>
-                          setReplacing({ slot, oldProduct: product })
-                        }
-                      >
-                        Replace
-                      </button>
-                      <button
-                        disabled={busy}
-                        className={`${SMALL_BTN} bg-pop-violet text-white`}
-                        onClick={() => setEditing(product)}
-                      >
-                        Edit
-                      </button>
+                    <div className="flex flex-col gap-1 p-2.5 flex-1">
+                      <p className="m-0 text-[13px] font-bold leading-tight">
+                        {product.name}
+                      </p>
+                      {product.description && (
+                        <p className="m-0 text-[10.5px] font-medium leading-snug text-ink-2 line-clamp-2">
+                          {product.description}
+                        </p>
+                      )}
+                      <p className="m-0 text-[11px] font-bold">
+                        {product.price === null
+                          ? "Any price"
+                          : `$${product.price.toFixed(2)}`}
+                        <span className="font-semibold text-ink-2">
+                          {" "}
+                          · {product.stock ?? "∞"} left
+                        </span>
+                      </p>
+                      <div className="mt-auto flex gap-1.5 pt-1">
+                        <button
+                          disabled={busy}
+                          className={`${SMALL_BTN} bg-white`}
+                          onClick={() =>
+                            setReplacing({ slot, oldProduct: product })
+                          }
+                        >
+                          Replace
+                        </button>
+                        <button
+                          disabled={busy}
+                          className={`${SMALL_BTN} bg-pop-violet text-white`}
+                          onClick={() => setEditing(product)}
+                        >
+                          Edit
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -469,6 +526,8 @@ export default function VendingAdminPanel() {
 
 type SortKey = "loc" | "total" | "income" | "count" | "stock";
 
+const PRODUCTS_PER_PAGE = 10;
+
 function ProductTable({
   data,
   busy,
@@ -479,6 +538,7 @@ function ProductTable({
   onEdit: (p: VendableProduct) => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("loc");
+  const [page, setPage] = useState(1);
   const topItems = data.stats.topItems;
   const item = (id: string) => topItems.find((t) => t.product_id === id);
 
@@ -522,13 +582,24 @@ function ProductTable({
   const sortBtn = (key: SortKey, label: string) => (
     <button
       className={`uppercase tracking-[0.12em] text-[10px] font-bold ${sortKey === key ? "text-pop-magenta" : ""}`}
-      onClick={() => setSortKey(key)}
+      onClick={() => {
+        setSortKey(key);
+        setPage(1);
+      }}
     >
       {label} {sortKey === key ? "▾" : ""}
     </button>
   );
 
+  // Clamped rather than reset in an effect, so the page stays valid when a
+  // save shrinks the product list underneath us.
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PRODUCTS_PER_PAGE));
+  const current = Math.min(page, totalPages);
+  const firstIdx = (current - 1) * PRODUCTS_PER_PAGE;
+  const visible = sorted.slice(firstIdx, firstIdx + PRODUCTS_PER_PAGE);
+
   return (
+    <>
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
@@ -551,7 +622,7 @@ function ProductTable({
               </td>
             </tr>
           )}
-          {sorted.map((product) => (
+          {visible.map((product) => (
             <tr key={product.id} className={product.active ? "" : "opacity-60"}>
               <td className={TD}>{product.shelf_loc}</td>
               <td className={TD}>
@@ -629,6 +700,33 @@ function ProductTable({
         </tbody>
       </table>
     </div>
+    {sorted.length > PRODUCTS_PER_PAGE && (
+      <div className="flex items-center justify-between gap-3 flex-wrap pt-3.5">
+        <span className="text-[10.5px] font-bold tracking-[0.08em] uppercase text-ink-2">
+          Showing {firstIdx + 1}–{firstIdx + visible.length} of {sorted.length}
+        </span>
+        <div className="flex items-center gap-2.5">
+          <button
+            className={`${SMALL_BTN} bg-white`}
+            disabled={current === 1}
+            onClick={() => setPage(current - 1)}
+          >
+            ← Prev
+          </button>
+          <span className="text-[10.5px] font-bold tracking-[0.08em] uppercase">
+            Page {current} / {totalPages}
+          </span>
+          <button
+            className={`${SMALL_BTN} bg-white`}
+            disabled={current === totalPages}
+            onClick={() => setPage(current + 1)}
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

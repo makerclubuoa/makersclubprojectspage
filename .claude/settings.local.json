@@ -41,7 +41,12 @@
       "Read(//c/Users/ibrah/OneDrive/Documents/GitHub/vending-web-ui/**)",
       "Read(//c/Users/ibrah/OneDrive/Documents/GitHub/**)",
       "PowerShell(npx eslint app/vending app/components/vending lib/vending.ts lib/vending-shared.ts app/api/vending 2>&1 | Select-Object -First 40)",
-      "Skill(run)"
+      "Skill(run)",
+      "Bash(nslookup mail.makeuoa.nz 8.8.8.8)",
+      "Bash(nslookup -type=MX makeuoa.nz 8.8.8.8)",
+      "Bash(nslookup -type=TXT makeuoa.nz 8.8.8.8)",
+      "Bash(nslookup -type=NS makeuoa.nz 8.8.8.8)",
+      "Bash(curl -s -o /dev/null -w \"admin:%{http_code}\\\\n\" \"http://localhost:3000/admin?tab=vending\")"
     ]
   }
 }

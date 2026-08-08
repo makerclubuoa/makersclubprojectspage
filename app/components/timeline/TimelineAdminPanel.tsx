@@ -202,8 +202,10 @@ export default function TimelineAdminPanel() {
 
       <div>
         <div className={`${secHeadRow} mb-4`}>
-          <h3 className={`${secHead} text-ink`}>Timeline Events</h3>
-          <span className="text-[11px] font-semibold text-ink-2 uppercase tracking-[0.06em]">
+          {/* White (not text-ink) — secHead carries a 6px black stroke, so a
+              black fill renders as an unreadable blob on the page gradient. */}
+          <h3 className={`${secHead} text-white`}>Timeline Events</h3>
+          <span className="text-[11px] font-semibold text-white uppercase tracking-[0.06em] [text-shadow:1px_1px_0_#000]">
             {items.length} event{items.length !== 1 ? "s" : ""}
           </span>
         </div>
