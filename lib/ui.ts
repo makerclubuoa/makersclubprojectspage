@@ -37,6 +37,43 @@ export const secHead = `${holt} text-xl md:text-2xl m-0`;
 export const secHint =
   "text-[11px] font-semibold text-ink-2 uppercase tracking-[0.06em] max-[640px]:hidden";
 
+/* ── Event cards + post header ──────────────────────── */
+// Same card grammar as ProjectCard (white, 3px black outline, hard offset
+// shadow on hover) so the past-events grid reads as the same family.
+export const eventCard =
+  "group relative flex h-full flex-col bg-white outline-solid outline-3 outline-black will-change-transform transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#000]";
+export const eventCardMedia =
+  "relative aspect-[4/3] overflow-hidden border-b-[3px] border-black bg-paper-2";
+export const eventCardBody = "flex flex-1 flex-col gap-2 p-4";
+export const eventCardTitle =
+  "m-0 text-[17px] font-bold leading-[1.25] tracking-[-0.01em] text-ink";
+export const eventCardMeta =
+  "mt-auto flex items-center justify-between gap-3 border-t-2 border-black/10 pt-2.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-2";
+// Date / location chip for the event post header (sits on the hero photo).
+export const eventChip =
+  "inline-flex items-center gap-1.5 rounded-full border-2 border-black bg-white/95 px-3 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-ink shadow-[2px_2px_0px_0px_#000]";
+// White comic card holding a Ghost post body.
+export const postBody =
+  "mx-auto max-w-[820px] bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-9 md:p-11 max-[640px]:p-5";
+
+/* ── FAQ accordion ──────────────────────────────────── */
+// A group of questions lives in one comic card; each <details> is a row,
+// ruled off like a dashboard row. The marker is a pop-coloured pill that
+// rotates from + to × when its row opens.
+export const faqCard =
+  "bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000]";
+export const faqItem =
+  "group border-b-2 border-black/10 last:border-b-0 open:bg-paper-2 transition-colors duration-150";
+export const faqQ =
+  "flex items-start gap-3 list-none cursor-pointer px-[18px] py-3.5 text-[15px] md:text-base font-bold text-ink leading-[1.45] transition-colors duration-150 hover:bg-paper-2 [&::-webkit-details-marker]:hidden";
+export const faqMark =
+  "shrink-0 mt-px grid place-items-center w-[22px] h-[22px] rounded-full border-2 border-black bg-pop-violet text-white text-[13px] font-bold leading-none transition-transform duration-200 group-open:rotate-45";
+// [&>*]:m-0 — Preflight is off, so p/ul/ol keep their UA margins; the column
+// gap owns the spacing instead.
+export const faqAns =
+  "flex flex-col gap-3 px-[18px] pb-[18px] pl-[52px] text-[13.5px] md:text-sm font-medium text-ink-2 leading-[1.65] [&>*]:m-0 max-[640px]:pl-[18px]";
+export const faqList = "list-disc pl-5 flex flex-col gap-1.5";
+
 /* ── Buttons ────────────────────────────────────────── */
 export const btn =
   "inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-full font-semibold text-sm md:text-base border-2 border-black shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-[transform,box-shadow,opacity,background-color] duration-100 disabled:opacity-60";

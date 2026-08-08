@@ -1,88 +1,110 @@
-import getLatestUpcomingEvent, { getPastEvents } from "@/lib/ghost/events";
-import Header from "../components/homepage/Header";
+import getLatestUpcomingEvent from "@/lib/ghost/events";
+import Image from "next/image";
 import placeholder from "@/public/placeholder.png";
+import solderingIron from "@/public/doodle-soldering-iron.png";
 import PinnedPostSnippet from "../components/global/PinnedPostSnippet";
 import Photo from "../components/global/Photo";
 import PastEventsSection from "../components/events/PastEventsSection";
 import TimelineSection from "../components/homepage/TimelineSection";
+import Screentone from "../components/global/Screentone";
 import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
 import LinkButton from "../components/global/LinkButton";
 import JoinSection from "../components/homepage/JoinSection";
 import Footer from "../components/Footer";
+import {
+  container,
+  pageBand,
+  pageBandTitle,
+  pageBandSub,
+  pageBandDoodle,
+  secHeadRow,
+  secHead,
+  secHint,
+} from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function Events() {
   const upcomingEvent = await getLatestUpcomingEvent();
   const timelines: TimelineType[] = await getYearTimeline();
+
   return (
     <div className="bg-purple-grad min-h-dvh">
       <div className="pt-20">
-        <div className="flex-col border-y-4 bg-white min-h-36 flex jusitfy-center py-10 px-5 md:px-10">
-          <p
-            className="font-bold text-4xl md:text-5xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-purple-300"
-          >
-            Events
+        <div className={pageBand}>
+          <Screentone />
+          <p className={`${pageBandTitle} text-purple-300`}>Events</p>
+          <p className={`${pageBandSub} max-w-[75ch]`}>
+            {`Stay up to date with the Maker Club. These posts went out as emails to
+            our members and are archived here in case you need to see what we've
+            been up to!`}
           </p>
-          <p className="text-md md:text-lg font-semibold">
-            {`Stay up to date with the Maker Club. 
+          <Image src={solderingIron} alt="" className={pageBandDoodle} />
+        </div>
 
-          These posts went out as emails to our members and are archived here in case you need to see what we've been up to!`}
-          </p>
-        </div>
-        <div>
-          <div className="pt-5 flex justify-center">
-            <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
-              <Photo
-                src={upcomingEvent.src ?? placeholder}
-                alt=""
-                rotation={2.3}
-                link={`events/${upcomingEvent.slug}`}
-              />
-              <PinnedPostSnippet upcomingEvent={upcomingEvent} pinned={true}>
-                <div className="flex w-full justify-center md:justify-end-safe mt-4">
-                  <LinkButton
-                    link={`events/${upcomingEvent.slug}`}
-                    typeOverride="text-md md:text-md lg:text-md"
-                  >
-                    Sign Me Up!
-                  </LinkButton>
-                </div>
-              </PinnedPostSnippet>
-            </div>
+        <section className={`${container} py-12 max-[640px]:py-9`}>
+          <div className={secHeadRow}>
+            <h2 className={`${secHead} text-white text-2xl md:text-3xl`}>
+              Next Up
+            </h2>
+            <span className={`${secHint} text-white/90`}>
+              Register before the spots go
+            </span>
           </div>
-        </div>
-      </div>
-      {/* <div className="mt-10 flex-col border-y-4 bg-white min-h-36 flex justify-center px-5 md:px-10"> */}
-      {/*   <p className="text-center font-semibold text-2xl"> */}
-      {/*     Want a sneak peak at what’s coming? Check out our Semester-long events */}
-      {/*     timeline! */}
-      {/*   </p> */}
-      {/*   <div>Button Placeholder</div> */}
-      {/* </div> */}
-      <p
-        className="font-bold text-4xl md:text-5xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-white p-10"
-      >
-        Past Events
-      </p>
-      <PastEventsSection />
-      <div className="mt-10">
-        <div className="flex-col border-y-4 bg-white min-h-36 flex jusitfy-center py-10 px-5 md:px-10">
-          <p
-            className="font-bold text-4xl md:text-5xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-purple-300"
-          >
+          <div className="mt-6 flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:gap-10">
+            <Photo
+              src={upcomingEvent.src ?? placeholder}
+              alt=""
+              rotation={2.3}
+              link={`/events/${upcomingEvent.slug}`}
+            />
+            <PinnedPostSnippet
+              upcomingEvent={upcomingEvent}
+              pinned={true}
+              typeOverride="shadow-[6px_6px_0px_0px_#000]"
+            >
+              <div className="mt-4 flex w-full justify-center md:justify-end-safe">
+                <LinkButton
+                  link={`/events/${upcomingEvent.slug}`}
+                  bgColour="pop-violet"
+                  textColour="white"
+                  typeOverride="text-md md:text-md lg:text-md"
+                >
+                  Learn More!
+                </LinkButton>
+              </div>
+            </PinnedPostSnippet>
+          </div>
+        </section>
+
+        <section className={`${container} pb-14 max-[640px]:pb-10`}>
+          <div className={`${secHeadRow} mb-6`}>
+            <h2 className={`${secHead} text-white text-2xl md:text-3xl`}>
+              Past Events
+            </h2>
+            <span className={`${secHint} text-white/90`}>
+              The archive, newest first
+            </span>
+          </div>
+          <PastEventsSection />
+        </section>
+
+        <div className={pageBand}>
+          <Screentone />
+          <p className={`${pageBandTitle} text-purple-300`}>
             Future Events Timeline
+          </p>
+          <p className={pageBandSub}>
+            What&apos;s already locked in for the rest of the year.
           </p>
         </div>
         <TimelineSection timelines={timelines} />
+
+        <div className="bg-white h-[50dvh]">
+          <JoinSection />
+        </div>
+        <Footer />
       </div>
-      <div className="bg-white h-[50dvh]">
-        <JoinSection />
-      </div>
-      <Footer />
     </div>
   );
 }

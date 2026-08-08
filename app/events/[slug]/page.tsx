@@ -3,8 +3,20 @@ import placeholder from "@/public/placeholder.png";
 import { getEvent } from "@/lib/ghost/event";
 import { getYearTimeline } from "@/lib/ghost/timeline";
 import Image from "next/image";
+import Link from "next/link";
 import JoinSection from "@/app/components/homepage/JoinSection";
 import Footer from "@/app/components/Footer";
+import Screentone from "@/app/components/global/Screentone";
+import {
+  container,
+  holt,
+  eventChip,
+  postBody,
+  pageBand,
+  pageBandTitle,
+  pageBandSub,
+  projectBack,
+} from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +40,15 @@ export async function generateMetadata({
   };
 }
 
+// The date / location / excerpt fields fall back to apologetic placeholders
+// ("TBA | No date provided.") when a post is missing its tags. Keep whatever
+// is genuinely useful and drop the rest rather than printing it on the hero.
+function tidy(value: string | undefined, ...emptyPrefixes: string[]) {
+  const head = (value ?? "").split("|")[0].trim();
+  const lower = head.toLowerCase();
+  return emptyPrefixes.some((p) => lower.startsWith(p)) ? "" : head;
+}
+
 export default async function Event({
   params,
 }: {
@@ -37,68 +58,69 @@ export default async function Event({
   const event = await getEvent(slug);
   const timelines = await getYearTimeline();
 
+  const date = tidy(event.date, "no date");
+  const location = tidy(event.location, "location tba");
+  const excerpt = tidy(event.excerpt, "no excerpt", "no except");
+
   return (
-    <div>
-      <div className="h-dvh w-full">
-        <div className=" min-h-[30rem] h-1/3 xl:h-1/2 w-full flex flex-col justify-center">
-          <div className="w-full min-h-[30rem] h-1/3 xl:h-1/2 absolute border-b-4">
-            <Image
-              src={event.src ?? placeholder}
-              alt="Background."
-              fill
-              sizes="100vh"
-              className="blur-[3.5px] brightness-75 object-cover -z-10"
-            />
-            <Image
-              src={event.src ?? placeholder}
-              alt="Background."
-              fill
-              sizes="100vh"
-              className="brightness-75 object-cover -z-20"
-            />
-          </div>
-          <div className=" p-16">
-            <p className="font-semibold text-white text-shadow-lg">
-              {event.date}
+    <div className="bg-purple-grad min-h-dvh">
+      <header className="relative flex min-h-[24rem] w-full items-end overflow-hidden border-b-4">
+        <Image
+          src={event.src ?? placeholder}
+          alt=""
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
+        />
+        {/* Scrim rather than a flat brightness filter, so the photo stays
+            readable at the top and the copy stays legible at the bottom. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/25" />
+        <div className={`${container} relative z-[1] pt-28 pb-10`}>
+          <Link href="/events" className={`${projectBack} text-white/85`}>
+            ← All Events
+          </Link>
+          {(date || location) && (
+            <div className="mb-3.5 flex flex-wrap gap-2">
+              {date && <span className={eventChip}>{date}</span>}
+              {location && <span className={eventChip}>{location}</span>}
+            </div>
+          )}
+          <h1 className={`${holt} m-0 text-4xl md:text-5xl text-white`}>
+            {event.title}
+          </h1>
+          {excerpt && (
+            <p className="mt-4 mb-0 max-w-[70ch] text-md md:text-lg font-semibold text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.6)]">
+              {excerpt}
             </p>
-            <p className="font-semibold text-white text-shadow-lg">
-              {event.location}
-            </p>
-            <p
-              className={`font-bold text-4xl md:text-5xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-white`}
-            >
-              {event.title}
-            </p>
-            <p className="max-w-[150rem] font-semibold text-white text-shadow-lg text-md lg:text-lg">
-              {event.excerpt}
-            </p>
-          </div>
+          )}
         </div>
-        <div className="w-full flex justify-center">
-          <div className="py-10 px-20 md:w-3/4">
-            <div
-              className="ghost-content"
-              dangerouslySetInnerHTML={{ __html: event.html }}
-            ></div>
-          </div>
-        </div>
-        <div className="mt-10">
-          <div className="flex-col border-y-4 min-h-36 flex jusitfy-center bg-pop-pink py-10 px-5 md:px-10">
-            <p
-              className="font-bold text-4xl md:text-5xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-white"
-            >
-              Future Events Timeline
-            </p>
-          </div>
-          <TimelineSection timelines={timelines} />
-          <div className="h-[50dvh]">
-            <JoinSection />
-          </div>
-          <Footer />
-        </div>
+      </header>
+
+      <div className={`${container} py-14 max-[640px]:py-9`}>
+        <article className={postBody}>
+          <div
+            className="ghost-content"
+            dangerouslySetInnerHTML={{ __html: event.html }}
+          />
+        </article>
       </div>
+
+      <div className={pageBand}>
+        <Screentone />
+        <p className={`${pageBandTitle} text-purple-300`}>
+          Future Events Timeline
+        </p>
+        <p className={pageBandSub}>
+          What&apos;s already locked in for the rest of the year.
+        </p>
+      </div>
+      <TimelineSection timelines={timelines} />
+
+      <div className="bg-white h-[50dvh]">
+        <JoinSection />
+      </div>
+      <Footer />
     </div>
   );
 }

@@ -221,43 +221,154 @@ input[type="date"] {
   }
 }
 
+/* ── Ghost post body ──────────────────────────────────────────────────────
+   Event posts arrive as raw HTML from Ghost, so this is the one place the
+   design language has to be written as element CSS instead of utility classes
+   — there are no classNames to hang utilities on. Preflight is off, so every
+   margin here is set explicitly rather than reset first. */
 .ghost-content {
-  line-height: 2;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  font-weight: 500;
+  color: var(--ink);
 }
 
+.ghost-content > *:first-child {
+  margin-top: 0;
+}
+.ghost-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.ghost-content p {
+  margin: 0 0 1.15rem;
+}
+
+.ghost-content h1,
+.ghost-content h2,
+.ghost-content h3,
+.ghost-content h4 {
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin: 2rem 0 0.75rem;
+}
+.ghost-content h1 {
+  font-size: 1.75rem;
+}
+.ghost-content h2 {
+  font-size: 1.5rem;
+}
+.ghost-content h3 {
+  font-size: 1.25rem;
+}
+.ghost-content h4 {
+  font-size: 1.0625rem;
+}
+
+.ghost-content ul,
+.ghost-content ol {
+  margin: 0 0 1.15rem;
+  padding-left: 1.35rem;
+}
+.ghost-content li + li {
+  margin-top: 0.4rem;
+}
+
+.ghost-content strong {
+  font-weight: 800;
+}
+
+/* Inline links stay inline — see the CTA rule below for standalone ones. */
 .ghost-content a {
+  color: var(--pop-violet);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+.ghost-content a:hover {
+  color: var(--pop-magenta);
+}
+
+/* A paragraph containing nothing but a link is the post's call to action —
+   Ghost authors put those on their own line — so render it as a site button.
+   (The old rule did this to *every* link, which turned mid-sentence links into
+   full-width purple buttons.) */
+.ghost-content p > a:only-child {
   display: block;
-  width: max-content; /* Or a specific width like 200px */
-  margin: 0 auto;
-  box-shadow: 2px 2px 0px 0px #000;
+  width: max-content;
+  max-width: 100%;
+  margin: 2rem auto 0.5rem;
+  padding: 0.25rem 1.5rem;
+  border: 2px solid #000;
   border-radius: 9999px;
-  margin-top: 2rem;
-  padding: 0.125rem 1.25rem;
+  box-shadow: 2px 2px 0px 0px #000;
+  background-color: var(--pop-violet);
+  color: #fff;
+  font-size: 1.0625rem;
   font-weight: 600;
-  border: 3px solid black;
-  background-color: #9f42d1;
-  color: white;
-  font-size: 1.125rem;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    opacity 0.1s ease;
+}
+.ghost-content p > a:only-child:hover {
+  color: #fff;
+  opacity: 0.9;
+}
+.ghost-content p > a:only-child:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .ghost-content img {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 1.75rem 0;
+  border: 3px solid #000;
 }
 
-.faq-q {
-  font-weight: 700;
-  font-size: 1.25rem;
+.ghost-content figure {
+  margin: 1.75rem 0;
+}
+.ghost-content figure img {
+  margin: 0;
+}
+.ghost-content figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--ink-2);
 }
 
-.faq-ans {
-  padding-left: 1rem;
-  font-size: 1.25rem;
-  font-weight: 500;
+.ghost-content blockquote {
+  margin: 1.75rem 0;
+  padding: 1rem 1.15rem;
+  border: 2px solid #000;
+  border-left-width: 8px;
+  border-left-color: var(--pop-pink);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-weight: 600;
+}
+.ghost-content blockquote p:last-child {
+  margin-bottom: 0;
 }
 
-.faq {
-  padding-bottom: 1.5rem;
+.ghost-content hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 2px solid var(--rule);
+}
+
+.ghost-content audio,
+.ghost-content video {
+  display: block;
+  width: 100%;
+  margin: 1.75rem 0;
 }

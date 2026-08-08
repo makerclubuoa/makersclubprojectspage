@@ -1,18 +1,26 @@
 import { Event } from "@/lib/ghost/events";
+import { twMerge } from "tailwind-merge";
 
 interface PinnedPostSnippetProps {
   upcomingEvent: Event;
   children?: React.ReactNode;
   pinned?: boolean;
+  typeOverride?: string;
 }
 
 export default async function PinnedPostSnippet({
   upcomingEvent,
   children,
   pinned,
+  typeOverride,
 }: PinnedPostSnippetProps) {
   return (
-    <div className="p-5 min-h-52 bg-white justify-center outline-black relative w-full outline-3 lg:items-center">
+    <div
+      className={twMerge(
+        "p-5 min-h-52 bg-white justify-center outline-black relative w-full outline-3 lg:items-center",
+        typeOverride,
+      )}
+    >
       {pinned !== true ? (
         <>
           <div className="absolute w-15 h-5 bg-pop-blue -right-5 -bottom-1 -rotate-[25deg] outline-2"></div>
