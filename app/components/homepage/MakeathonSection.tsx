@@ -1,6 +1,3 @@
-"use client";
-import useScreenSize from "@/app/hooks/useScreenSize";
-import Button from "../global/Button";
 import Polaroid from "../global/Polaroid";
 import Header from "../homepage/Header";
 import Screentone from "../global/Screentone";
@@ -12,47 +9,21 @@ export default function MakeathonSection({
 }: {
   makeathon: MakeathonType;
 }) {
-  const screenSize = useScreenSize();
-
   return (
     <div className="">
       <Header
         text={makeathon.title}
         rotation={1.54}
-        typeOverride="relative top-5 lg:top-12 h-20 pl-5 md:pl-10"
+        typeOverride="relative top-5 lg:top-12 pl-5 md:pl-10"
         bgColour="pop-red"
         colour="white"
       />
-      {screenSize <= 768 ? (
-        <div className="pt-10 w-full flex flex-col items-center">
-          <Polaroid
-            src={makeathon.image}
-            onClick={undefined}
-            description={makeathon.date}
-          >
-            <div className="hidden md:visible">
-              <Screentone />
-            </div>
-          </Polaroid>
-          <div className="pt-24 w-2/3 pr-5 lg:pr-20 text-lg lg:text-2xl font-bold flex justify-center flex-col">
-            {formatParagraph(makeathon.description)}
-            {/* <div className="flex justify-center py-3 lg:pt-5"> */}
-            {/*   <Button onClick={() => {}} bgColour="pop-pink" textColour="white"> */}
-            {/*     Learn More */}
-            {/*   </Button> */}
-            {/* </div> */}
-          </div>
-        </div>
-      ) : (
-        <div className="pt-10 flex flex-row justify-center lg:top-12 relative gap-1 px-5">
-          <div className="w-2/3 pr-20 text-lg lg:text-2xl font-semibold flex justify-center flex-col">
-            {formatParagraph(makeathon.description)}
-            {/* <div className="pt-3 lg:pt-5"> */}
-            {/*   <Button onClick={() => {}} bgColour="pop-pink" textColour="white"> */}
-            {/*     Register for Semester 2! */}
-            {/*   </Button> */}
-            {/* </div> */}
-          </div>
+
+      {/* Single CSS-responsive layout — the previous version branched on a
+          useScreenSize() hook that reads 0 until after mount, so desktop
+          rendered the mobile arrangement on first paint. */}
+      <div className="flex flex-col items-center gap-10 px-5 pt-10 md:flex-row md:items-start md:justify-center md:gap-6 lg:top-12 lg:relative">
+        <div className="order-first md:order-last md:shrink-0">
           <Polaroid
             src={makeathon.image}
             onClick={undefined}
@@ -61,7 +32,11 @@ export default function MakeathonSection({
             <Screentone />
           </Polaroid>
         </div>
-      )}
+
+        <div className="w-full md:w-2/3 md:pr-10 lg:pr-20 text-lg lg:text-2xl font-semibold flex flex-col justify-center">
+          {formatParagraph(makeathon.description)}
+        </div>
+      </div>
     </div>
   );
 }

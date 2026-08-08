@@ -9,9 +9,16 @@ import ProjectCard from '@/app/components/ProjectCard'
 import { container, emptyState } from '@/lib/ui'
 
 const PILL_BASE =
-  'inline-flex items-center gap-2 px-3.5 py-1 rounded-full border-2 border-black text-[11.5px] font-semibold tracking-[0.04em] uppercase transition-[transform,background-color,color,box-shadow] duration-200'
+  'inline-flex shrink-0 items-center gap-2 px-3.5 py-1.5 rounded-full border-2 border-black text-[11.5px] font-semibold tracking-[0.04em] uppercase transition-[transform,background-color,color,box-shadow] duration-200'
 const SELECT_WRAP =
-  'inline-flex items-center gap-2 px-3.5 py-1 rounded-full border-2 border-black bg-white text-[11.5px] font-semibold text-ink tracking-[0.04em] uppercase max-[640px]:w-full max-[640px]:justify-between'
+  'inline-flex items-center gap-2 px-3.5 py-1 rounded-full border-2 border-black bg-white text-[11.5px] font-semibold text-ink tracking-[0.04em] uppercase max-[640px]:w-full max-[640px]:justify-between max-[640px]:py-2'
+const COUNT_PILL =
+  'inline-flex items-center px-3.5 py-1 rounded-full border-2 border-black bg-black text-white text-[11px] font-bold tracking-[0.1em] uppercase whitespace-nowrap'
+// Mobile-only disclosure that hides Made with / Sort / Featured. Laid out flat
+// they were three full-width rows stacked above the grid, so a phone opened the
+// archive to a screen of controls and no projects.
+const FILTER_TOGGLE =
+  'inline-flex items-center gap-2 px-3.5 py-2 rounded-full border-2 border-black bg-white text-[11.5px] font-bold tracking-[0.06em] uppercase text-ink'
 
 function applyFilters(
   projects: Project[],
@@ -52,6 +59,7 @@ export default function ProjectsSection({
   const [bouncingPill, setBouncingPill] = useState<string | null>(null)
   const [page, setPage] = useState(() => parseInt(searchParams.get('page') ?? '1', 10))
   const [pageSize, setPageSize] = useState(12)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const gridRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -106,14 +114,21 @@ export default function ProjectsSection({
     setPage(1)
   }
 
-  function resetFilters(e: React.MouseEvent) {
-    e.preventDefault()
+  function resetFilters(e?: React.MouseEvent) {
+    e?.preventDefault()
     setCat('All')
     setTool('All tools')
     setSort('newest')
     setFeatured(false)
     setPage(1)
   }
+
+  // Category lives in its own always-visible strip, so it isn't counted here —
+  // this badge is about what the collapsed panel is hiding.
+  const activeFilters =
+    (tool !== 'All tools' ? 1 : 0) +
+    (sort !== 'newest' ? 1 : 0) +
+    (featured ? 1 : 0)
 
   function handlePageChange(p: number) {
     setPage(p)
@@ -131,10 +146,14 @@ export default function ProjectsSection({
   return (
     <>
       {/* Filter bar */}
-      <div className="relative z-10 bg-white border-b-4 py-3 max-[640px]:py-2" id="projects">
+      <div className="relative z-10 bg-white border-b-4 py-3 max-[640px]:py-2.5" id="projects">
         <div className={container}>
-          <div className="flex items-center gap-3 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-1.5">
-            <div className="flex gap-1.5 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-2">
+            {/* Categories. One swipeable row on a phone rather than a wrapped
+                block that can run twelve pills deep before the grid starts.
+                The negative margin lets it bleed to the screen edges so the
+                strip reads as scrollable. */}
+            <div className="scroll-strip flex gap-1.5 flex-wrap max-[640px]:flex-nowrap max-[640px]:overflow-x-auto max-[640px]:-mx-4 max-[640px]:px-4">
               {allCategories.map(c => (
                 <button
                   key={c}
@@ -147,41 +166,76 @@ export default function ProjectsSection({
               ))}
             </div>
 
+            {/* Mobile-only: disclosure + live result count. */}
+            <div className="hidden max-[640px]:flex items-center gap-2">
+              <button
+                className={FILTER_TOGGLE}
+                onClick={() => setFiltersOpen(o => !o)}
+                aria-expanded={filtersOpen}
+              >
+                <span>Filters</span>
+                {activeFilters > 0 && (
+                  <span className="grid place-items-center min-w-[18px] h-[18px] px-1 rounded-full bg-pop-magenta text-white text-[10px] font-bold">
+                    {activeFilters}
+                  </span>
+                )}
+                <span aria-hidden className="text-[10px]">{filtersOpen ? '▲' : '▼'}</span>
+              </button>
+              {activeFilters > 0 && (
+                <button
+                  className="px-2 py-2 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-2 underline"
+                  onClick={resetFilters}
+                >
+                  Clear
+                </button>
+              )}
+              <div className={`${COUNT_PILL} ml-auto`}>
+                {filtered.length}&nbsp;·&nbsp;{tool !== 'All tools' ? tool : cat === 'All' ? 'results' : cat}
+              </div>
+            </div>
+
             <div className="w-[3px] h-[22px] bg-black max-[1024px]:hidden" />
 
-            <div className={SELECT_WRAP}>
-              <label className="text-ink-2 text-[10px] font-bold">Made with</label>
-              <CustomSelect
-                variant="filter"
-                value={tool}
-                onChange={v => { setTool(v); setPage(1) }}
-                options={allTools.map(t => ({ value: t, label: t }))}
-              />
-            </div>
-
-            <div className={SELECT_WRAP}>
-              <label className="text-ink-2 text-[10px] font-bold">Sort</label>
-              <CustomSelect
-                variant="filter"
-                value={sort}
-                onChange={v => { setSort(v); setPage(1) }}
-                options={[
-                  { value: 'newest', label: 'Newest' },
-                  { value: 'popular', label: 'Most loved' },
-                  { value: 'az', label: 'A — Z' },
-                ]}
-              />
-            </div>
-
-            <button
-              className={`inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full border-2 border-black text-[11.5px] font-semibold tracking-[0.04em] uppercase bg-white text-ink max-[640px]:w-full max-[640px]:justify-between ${featured ? 'shadow-[2px_2px_0px_0px_#000]' : ''}`}
-              onClick={() => { setFeatured(f => !f); setPage(1) }}
+            {/* `contents` keeps these three as direct flex children of the bar
+                on desktop, so that layout is untouched; below 640px the wrapper
+                becomes a real column that the toggle can collapse. */}
+            <div
+              className={`contents ${filtersOpen ? 'max-[640px]:flex max-[640px]:flex-col max-[640px]:gap-2 max-[640px]:pt-1' : 'max-[640px]:hidden'}`}
             >
-              <span className={`relative w-7 h-4 rounded-full border-2 border-black transition-[background-color] duration-200 after:content-[''] after:absolute after:left-px after:top-px after:w-2.5 after:h-2.5 after:rounded-full after:transition-[transform,background-color] after:duration-200 ${featured ? 'bg-pop-magenta after:translate-x-3 after:bg-white' : 'bg-paper-2 after:bg-black/30'}`} />
-              Featured only
-            </button>
+              <div className={SELECT_WRAP}>
+                <label className="text-ink-2 text-[10px] font-bold">Made with</label>
+                <CustomSelect
+                  variant="filter"
+                  value={tool}
+                  onChange={v => { setTool(v); setPage(1) }}
+                  options={allTools.map(t => ({ value: t, label: t }))}
+                />
+              </div>
 
-            <div className="inline-flex items-center px-3.5 py-1 rounded-full border-2 border-black bg-black text-white text-[11px] font-bold tracking-[0.1em] uppercase ml-auto max-[640px]:ml-0 max-[640px]:justify-center">
+              <div className={SELECT_WRAP}>
+                <label className="text-ink-2 text-[10px] font-bold">Sort</label>
+                <CustomSelect
+                  variant="filter"
+                  value={sort}
+                  onChange={v => { setSort(v); setPage(1) }}
+                  options={[
+                    { value: 'newest', label: 'Newest' },
+                    { value: 'popular', label: 'Most loved' },
+                    { value: 'az', label: 'A — Z' },
+                  ]}
+                />
+              </div>
+
+              <button
+                className={`inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full border-2 border-black text-[11.5px] font-semibold tracking-[0.04em] uppercase bg-white text-ink max-[640px]:w-full max-[640px]:justify-between max-[640px]:py-2.5 ${featured ? 'shadow-[2px_2px_0px_0px_#000]' : ''}`}
+                onClick={() => { setFeatured(f => !f); setPage(1) }}
+              >
+                <span className={`relative w-7 h-4 rounded-full border-2 border-black transition-[background-color] duration-200 after:content-[''] after:absolute after:left-px after:top-px after:w-2.5 after:h-2.5 after:rounded-full after:transition-[transform,background-color] after:duration-200 ${featured ? 'bg-pop-magenta after:translate-x-3 after:bg-white' : 'bg-paper-2 after:bg-black/30'}`} />
+                Featured only
+              </button>
+            </div>
+
+            <div className={`${COUNT_PILL} ml-auto max-[640px]:hidden`}>
               {filtered.length}&nbsp;·&nbsp;{tool !== 'All tools' ? tool : cat === 'All' ? 'results' : cat}
             </div>
           </div>

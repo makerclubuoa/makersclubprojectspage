@@ -71,7 +71,9 @@ export default function VendingProducts({
     <>
       <div className="flex flex-wrap justify-center gap-8 mx-auto max-w-screen-lg px-5">
         {products.map((product) => (
-          <div key={product.id} className="relative">
+          // w-full/max-w rather than a hard w-72: 288px plus the row's 40px of
+          // padding overflowed a 320px phone and gave the page a sideways scroll.
+          <div key={product.id} className="relative w-full max-w-72">
             {product.indicator && (
               <div
                 className={`${STICKER} -top-3 -right-2 rotate-3 bg-pop-magenta text-white`}
@@ -88,7 +90,7 @@ export default function VendingProducts({
               </div>
             )}
             <div
-              className={`w-72 flex flex-col bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] ${
+              className={`w-full h-full flex flex-col bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] ${
                 product.shelf_loc ? "" : "opacity-50 pointer-events-none select-none"
               }`}
             >
@@ -102,7 +104,7 @@ export default function VendingProducts({
                     src={product.image}
                     alt={product.name}
                     fill
-                    sizes="288px"
+                    sizes="(max-width: 380px) 100vw, 288px"
                     className="object-cover"
                   />
                 )}

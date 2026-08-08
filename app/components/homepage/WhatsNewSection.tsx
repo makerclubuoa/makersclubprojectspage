@@ -23,7 +23,9 @@ export default function WhatsNewSection({
         colour="white"
       />
       <div className="flex justify-center">
-        <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
+        {/* px-20 applied to every width, so a 375px phone lost 160px of it to
+            padding. Small gutters on mobile, roomier once there's space. */}
+        <div className="w-full items-center lg:items-stretch lg:w-3/4 px-5 md:px-10 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-8 lg:gap-10">
           {/* TODO: change this to a placeholder photo */}
           <Photo
             link={`events/${upcomingEvent.slug}`}

@@ -14,7 +14,7 @@ interface Props {
 const TRIGGER_BASE =
   'flex items-center justify-between w-full text-ink text-left cursor-pointer outline-none'
 const TRIGGER_FIELD =
-  'bg-white border-2 border-black rounded-[6px] text-sm px-3 py-2 transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000]'
+  'bg-white border-2 border-black rounded-[6px] text-sm max-[640px]:text-base px-3 py-2 transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000]'
 const TRIGGER_FILTER = 'bg-transparent border-0 uppercase font-semibold tracking-[0.06em]'
 
 export default function CustomSelect({ value, onChange, options, className, variant = 'field' }: Props) {
@@ -63,7 +63,7 @@ export default function CustomSelect({ value, onChange, options, className, vari
               key={o.value}
               role="option"
               aria-selected={o.value === value}
-              className={`px-[14px] py-[9px] text-[13px] font-medium cursor-pointer transition-colors duration-100 hover:bg-paper-2 hover:text-ink ${o.value === value ? 'text-pop-magenta font-bold' : 'text-ink-2'}`}
+              className={`px-[14px] py-[9px] max-[640px]:py-3 text-[13px] max-[640px]:text-sm font-medium cursor-pointer transition-colors duration-100 hover:bg-paper-2 hover:text-ink ${o.value === value ? 'text-pop-magenta font-bold' : 'text-ink-2'}`}
               onMouseDown={() => { onChange(o.value); setOpen(false) }}
             >
               {o.label}

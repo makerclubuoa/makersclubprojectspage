@@ -117,7 +117,7 @@ export default async function Event({
       </div>
       <TimelineSection timelines={timelines} />
 
-      <div className="bg-white h-[50dvh]">
+      <div className="bg-white min-h-[50dvh]">
         <JoinSection />
       </div>
       <Footer />

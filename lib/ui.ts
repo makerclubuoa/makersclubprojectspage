@@ -13,8 +13,11 @@ export const container =
 
 /* ── Comic display heading (Holtwood + black stroke) ── */
 // Colour is supplied per use site (text-white, text-pop-blue, …).
+// The stroke scales with the breakpoint: 6px is the desktop look, but the same
+// 6px against the smaller mobile type sizes closes up the counters and the
+// heading turns into a black blob. 3px keeps the comic weight and stays legible.
 export const holt =
-  "font-holt font-bold text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill]";
+  "font-holt font-bold text-shadow-lg [-webkit-text-stroke:3px_black] md:[-webkit-text-stroke:6px_black] [paint-order:stroke_fill]";
 
 /* ── Page shell (gradient page + white banner band) ─── */
 // Blue gradient base — the projects-area identity (events owns purple).
@@ -76,7 +79,7 @@ export const faqList = "list-disc pl-5 flex flex-col gap-1.5";
 
 /* ── Buttons ────────────────────────────────────────── */
 export const btn =
-  "inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-full font-semibold text-sm md:text-base border-2 border-black shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-[transform,box-shadow,opacity,background-color] duration-100 disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 px-5 py-1.5 min-h-[40px] rounded-full font-semibold text-sm md:text-base border-2 border-black shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-[transform,box-shadow,opacity,background-color] duration-100 disabled:opacity-60";
 export const btnPrimary = `${btn} bg-black text-white hover:opacity-90`;
 export const btnGhost = `${btn} bg-white text-black hover:bg-paper-2`;
 export const btnGradient = `${btn} bg-white text-black hover:opacity-90`;
@@ -89,12 +92,20 @@ export const btnDark = `${btn} bg-[#2e2e2e] text-white hover:opacity-90`;
 export const field = "flex flex-col gap-1.5 mb-4";
 export const fieldTight = "flex flex-col gap-1.5"; // field without the bottom margin
 export const fieldLabel =
-  "text-[11px] font-bold tracking-[0.1em] uppercase text-ink flex justify-between";
+  "text-[11px] font-bold tracking-[0.1em] uppercase text-ink flex justify-between gap-2 flex-wrap";
 export const fieldReq = "text-pop-magenta";
 // input / select — boxed comic style. (font: inherit comes from the base reset.)
+// 16px on small screens: iOS Safari zooms the whole page in whenever a focused
+// input's text is smaller than that, and the zoom never comes back out.
 export const fieldInput =
-  "text-sm text-ink bg-white border-2 border-black rounded-[6px] px-3 py-2 outline-none w-full transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000] placeholder:text-muted";
+  "text-sm max-[640px]:text-base text-ink bg-white border-2 border-black rounded-[6px] px-3 py-2 outline-none w-full transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000] placeholder:text-muted";
 export const fieldTextarea = `${fieldInput} min-h-[90px] resize-y`;
+// Marks an input whose value failed validation, so the box itself says so
+// rather than only the message underneath it.
+export const fieldInputError =
+  "border-pop-red shadow-[2px_2px_0px_0px_var(--pop-red)]";
+export const fieldError =
+  "flex items-start gap-1.5 text-[11.5px] font-semibold text-pop-red leading-[1.45] mt-0.5";
 export const fieldRow = "grid grid-cols-2 gap-[14px] max-[640px]:grid-cols-1";
 
 /* ── Form shell ─────────────────────────────────────── */
@@ -106,9 +117,24 @@ export const formFig =
   "absolute -top-[15px] left-[18px] z-10 bg-pop-violet text-white border-2 border-black rounded-full px-3.5 py-0.5 text-[11px] font-bold tracking-[0.08em] uppercase -rotate-2 shadow-[2px_2px_0px_0px_#000]";
 
 /* ── Form actions row (footer of a form) ────────────── */
+// The primary button goes full-width on phones — a right-aligned pill at the
+// bottom of a long form is both easy to miss and awkward to reach one-handed.
 export const formActions =
-  "flex items-center justify-between mt-[22px] pt-4 border-t-2 border-black/10 gap-[14px] flex-wrap";
+  "flex items-center justify-between mt-[22px] pt-4 border-t-2 border-black/10 gap-[14px] flex-wrap max-[640px]:flex-col max-[640px]:items-stretch [&>button]:max-[640px]:w-full [&>button]:max-[640px]:justify-center [&>button]:max-[640px]:py-2.5";
 export const formActionsSmall = "text-[11px] font-semibold text-ink-2";
+
+/* ── Validation summary (what's missing, above the submit button) ── */
+export const formErrorBox =
+  "border-2 border-pop-red border-l-8 border-l-pop-red bg-pop-red/8 rounded-[6px] px-4 py-3.5 mb-4 flex flex-col gap-2";
+export const formErrorTitle =
+  "m-0 flex items-baseline gap-2 text-[13px] font-bold text-pop-red leading-[1.45]";
+export const formErrorList =
+  "list-none m-0 p-0 flex flex-col gap-1.5 text-[12.5px] font-semibold text-ink";
+export const formErrorItem = "flex items-baseline gap-2";
+// Jump-to-field link inside the summary — the offending input can be several
+// screens away on a phone.
+export const formErrorLink =
+  "text-left underline underline-offset-2 decoration-pop-red/60 hover:text-pop-red transition-colors duration-150";
 
 /* ── Type-picker pills ──────────────────────────────── */
 export const typepick = "flex flex-wrap gap-1.5";
@@ -118,14 +144,19 @@ export const typepickBtnOn =
   "bg-black text-white shadow-[2px_2px_0px_0px_#000]";
 
 /* ── Submit / dashboard main area ───────────────────── */
-export const submitMain = "pt-[50px] pb-[100px]";
+export const submitMain =
+  "pt-[50px] pb-[100px] max-[640px]:pt-8 max-[640px]:pb-14";
 
 /* ── Dashboard / admin table ────────────────────────── */
 export const dashTable =
   "flex flex-col bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000]";
+// Status + Edit + Remove take ~260px of fixed width, which leaves a phone about
+// four characters for the title. Below 640px the row becomes two lines: title
+// block on top, controls wrapped underneath it.
 export const dashRow =
-  "flex items-center gap-4 px-[18px] py-3.5 border-b-2 border-black/10 transition-colors duration-150 last:border-b-0 hover:bg-paper-2";
-export const dashRowMain = "flex-1 min-w-0 flex flex-col gap-[3px]";
+  "flex items-center gap-4 px-[18px] py-3.5 border-b-2 border-black/10 transition-colors duration-150 last:border-b-0 hover:bg-paper-2 max-[640px]:flex-wrap max-[640px]:gap-x-3 max-[640px]:gap-y-2 max-[640px]:px-4";
+export const dashRowMain =
+  "flex-1 min-w-0 flex flex-col gap-[3px] max-[640px]:basis-full";
 export const dashRowTitle =
   "text-base font-bold text-ink whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:text-pop-magenta";
 export const dashRowMeta =
@@ -139,15 +170,17 @@ export const dashStatusRejected = "bg-pop-red text-white";
 export const dashStatusLiked = "bg-pop-magenta text-white";
 export const dashStatusComaker = "bg-pop-violet text-white";
 export const dashRowEdit =
-  "text-[10.5px] font-bold tracking-[0.08em] uppercase text-pop-blue shrink-0 px-2 py-1 transition-colors duration-150 hover:text-pop-violet";
+  "text-[10.5px] font-bold tracking-[0.08em] uppercase text-pop-blue shrink-0 px-2 py-1 transition-colors duration-150 hover:text-pop-violet max-[640px]:px-2.5 max-[640px]:py-1.5";
 export const dashRowDelete =
-  "text-[10.5px] font-bold tracking-[0.08em] uppercase text-ink-2 shrink-0 px-2 py-1 transition-colors duration-150 hover:text-pop-red";
+  "text-[10.5px] font-bold tracking-[0.08em] uppercase text-ink-2 shrink-0 px-2 py-1 transition-colors duration-150 hover:text-pop-red max-[640px]:px-2.5 max-[640px]:py-1.5 max-[640px]:ml-auto";
 
 /* ── Modal ──────────────────────────────────────────── */
+// items-start + overflow-y-auto on the backdrop: a centred modal taller than a
+// phone's viewport would otherwise have its top and bottom cut off unreachably.
 export const modalBackdrop =
-  "fixed inset-0 z-[1000] bg-black/55 backdrop-blur-[3px] flex items-center justify-center p-6";
+  "fixed inset-0 z-[1000] bg-black/55 backdrop-blur-[3px] flex items-center justify-center p-6 overflow-y-auto max-[640px]:items-start max-[640px]:p-4 max-[640px]:py-16";
 export const modal =
-  "bg-white outline-solid outline-3 outline-black p-7 pb-6 max-w-[420px] w-full shadow-[6px_6px_0px_0px_#000]";
+  "bg-white outline-solid outline-3 outline-black p-7 pb-6 max-w-[420px] w-full shadow-[6px_6px_0px_0px_#000] max-[640px]:p-5 max-[640px]:pb-4";
 export const modalLabel =
   "text-[10px] font-bold tracking-[0.12em] uppercase text-pop-violet mb-2.5";
 export const modalTitle = "text-lg font-bold text-ink mb-2 leading-[1.4]";
@@ -156,7 +189,7 @@ export const modalActions = "flex gap-2.5 justify-end mt-6";
 
 /* ── Empty state ────────────────────────────────────── */
 export const emptyState =
-  "p-[60px] text-center font-semibold text-ink bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000]";
+  "p-[60px] max-[640px]:px-5 max-[640px]:py-10 text-center font-semibold text-ink bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000]";
 export const emptyStateMono =
   "text-[12px] font-bold tracking-[0.1em] uppercase";
 
@@ -183,8 +216,10 @@ export const makersChipAdd =
   "inline-flex items-center gap-[7px] px-3 py-1 rounded-full border-2 border-dashed border-black bg-white text-xs font-semibold tracking-[0.04em] text-ink-2 cursor-pointer transition-colors duration-150 hover:text-ink hover:bg-paper-2";
 export const makersChipTag =
   "text-[9px] font-bold tracking-[0.1em] uppercase opacity-80";
+// -my-1/-mr-1.5 keeps the chip the same visual size while the button's own hit
+// area grows out to something a fingertip can actually land on.
 export const makersChipRemove =
-  "text-[10px] p-0 leading-none opacity-70 transition-opacity duration-150 hover:opacity-100";
+  "text-[10px] leading-none opacity-70 transition-opacity duration-150 hover:opacity-100 grid place-items-center w-6 h-6 -my-1 -mr-1.5 shrink-0";
 export const makersSearch = "relative";
 export const makersDropdown =
   "absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black rounded-[6px] z-20 max-h-[220px] overflow-y-auto shadow-[4px_4px_0px_0px_#000]";
@@ -217,17 +252,22 @@ export const toolTagOn =
   "px-3 py-1 rounded-full border-2 border-black bg-pop-violet text-white text-[11px] font-semibold tracking-[0.05em] cursor-pointer shadow-[2px_2px_0px_0px_#000] transition-[background,box-shadow] duration-150 hover:opacity-85";
 export const toolTagOther =
   "inline-flex items-center gap-1 rounded-full border-2 border-black pl-3 pr-1.5 bg-white";
+// 16px on phones for the same iOS focus-zoom reason as fieldInput; the pill
+// widens to match so the placeholder still fits.
 export const toolTagOtherInput =
-  "border-none bg-transparent text-ink text-[11px] font-semibold w-20 py-1 outline-none placeholder:text-muted";
+  "border-none bg-transparent text-ink text-[11px] max-[640px]:text-base font-semibold w-20 max-[640px]:w-28 py-1 outline-none placeholder:text-muted";
 export const toolTagOtherBtn =
   "border-none bg-transparent text-ink-2 text-sm font-bold cursor-pointer px-1 py-0.5 leading-none transition-colors duration-150 hover:text-ink";
 
 /* Dynamic list rows (build log / BOM) */
 export const dynList = "flex flex-col gap-2.5 mb-2";
+// pt-9 reserves a clear strip for the ✕ button. It used to sit on top of the
+// first field's label, which on a one-column phone layout meant the button
+// overlapped the first input and swallowed taps meant for it.
 export const dynRow =
-  "border-2 border-black rounded-[6px] px-3.5 py-3 bg-paper-2 relative flex flex-col gap-2";
+  "border-2 border-black rounded-[6px] px-3.5 pt-9 pb-3 bg-paper-2 relative flex flex-col gap-2 max-[640px]:px-3";
 export const dynRowRemove =
-  "absolute top-2 right-2 text-[11px] font-bold text-ink-2 px-1.5 py-0.5 transition-colors duration-150 hover:text-pop-red";
+  "absolute top-0.5 right-0.5 grid place-items-center w-8 h-8 text-[13px] font-bold text-ink-2 transition-colors duration-150 hover:text-pop-red";
 export const dynRowCols3 = "grid gap-2 grid-cols-3 max-[640px]:grid-cols-1";
 export const dynRowCols4 =
   "grid gap-2 grid-cols-[2fr_60px_90px_1fr] max-[640px]:grid-cols-1";
@@ -241,12 +281,12 @@ export const dynAdd =
 /* Gallery upload */
 export const galleryUpload =
   "rounded-[6px] border-2 border-dashed border-black bg-paper-2 p-4 cursor-pointer transition-[background] duration-200 flex items-center justify-center gap-2 text-[11.5px] font-bold tracking-[0.08em] uppercase text-ink hover:bg-paper-3";
-export const galleryGrid = "grid grid-cols-3 gap-1.5 mb-2";
+export const galleryGrid = "grid grid-cols-3 gap-1.5 mb-2 max-[640px]:grid-cols-2";
 export const galleryThumb =
   "relative aspect-[4/3] overflow-hidden border-2 border-black rounded-[6px]";
 export const galleryThumbImg = "w-full h-full object-cover block";
 export const galleryThumbRemove =
-  "absolute top-1 right-1 rounded-full border-2 border-black bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 cursor-pointer leading-[1.4] hover:bg-pop-red";
+  "absolute top-1 right-1 grid place-items-center w-7 h-7 rounded-full border-2 border-black bg-black/70 text-white text-[11px] font-bold cursor-pointer leading-none hover:bg-pop-red";
 
 /* Submit notice (consent + review warning) */
 export const submitNotice =
@@ -264,13 +304,13 @@ export const submitNoticeConsentSmall = "text-[11px] font-medium text-ink-2";
 
 /* Auth gate + success panels */
 export const submitGate =
-  "bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] py-14 px-9 text-center";
+  "bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] py-14 px-9 text-center max-[640px]:py-10 max-[640px]:px-5";
 export const submitGateIcon = "text-[36px] text-pop-violet mb-4";
 export const submitGateH2 = `${holt} text-2xl md:text-3xl text-pop-violet mt-0 mb-2.5`;
 export const submitGateP =
   "text-ink-2 font-semibold text-[13.5px] max-w-[38ch] mx-auto leading-[1.6]";
 export const submitSuccess =
-  "bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] py-12 px-9 text-center";
+  "bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] py-12 px-9 text-center max-[640px]:py-9 max-[640px]:px-5";
 export const submitSuccessIcon = "text-[36px] text-pop-magenta mb-4";
 export const submitSuccessH2 = `${holt} text-2xl md:text-3xl text-pink-300 mt-0 mb-3`;
 export const submitSuccessP =

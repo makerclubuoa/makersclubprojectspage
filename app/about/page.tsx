@@ -12,29 +12,32 @@ export default async function About() {
   const photos = await getPhotos();
   return (
     <div className="">
-      <div className="h-dvh w-full">
-        <div className="relative min-h-1/3 border-b-4 w-full flex flex-col justify-center">
-          <div className="w-full h-1/3 ">
-            <Image
-              src={photos[1].src ?? placeholder}
-              alt="Background."
-              fill
-              sizes="100vh"
-              className="brightness-75 object-cover -z-10"
-            />
-            <div className="flex h-full w-full items-center justify-center">
-              <p
-                className={`font-bold text-4xl md:text-5xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-white`}
-              >
-                About Us
-              </p>
-            </div>
+      {/* The page used to sit inside a fixed `h-dvh` box that also contained a
+          second full-viewport JoinSection, so everything past the first screen
+          spilled out of its own container. Height is content-driven now. */}
+      <div className="w-full">
+        {/* pt-20 clears the fixed nav, which was overlapping the heading. */}
+        <div className="relative flex min-h-[38dvh] w-full flex-col justify-center overflow-hidden border-b-4 px-5 pt-20 pb-10">
+          <Image
+            src={photos[1]?.src ?? placeholder}
+            alt=""
+            fill
+            sizes="100vw"
+            priority
+            className="brightness-75 object-cover -z-10"
+          />
+          <div className="flex w-full items-center justify-center">
+            <p
+              className={`font-bold text-4xl md:text-5xl font-holt
+          text-shadow-lg [-webkit-text-stroke:3px_black] md:[-webkit-text-stroke:6px_black] [paint-order:stroke_fill] text-white`}
+            >
+              About Us
+            </p>
           </div>
         </div>
-        <div className="min-h-2/3 w-full flex justify-between flex-col items-center gap-5">
-          <div className="flex items-center flex-col p-10 md:w-3/4">
-            <div className="pb-10 font-semibold text-xl md:text-2xl">
+        <div className="w-full flex justify-center">
+          <div className="flex items-center flex-col px-5 py-10 md:p-10 md:w-3/4">
+            <div className="pb-10 font-semibold text-lg sm:text-xl md:text-2xl">
               <p className="">
                 We make stuff!
                 <br />
@@ -46,7 +49,7 @@ export default async function About() {
                 <br />
                 <br />
                 With regular events and more, this is the University of
-                Auckland's home for all who make.
+                Auckland&apos;s home for all who make.
               </p>
             </div>
             <div>
@@ -60,7 +63,7 @@ export default async function About() {
             </div>
           </div>
         </div>
-        <div className="h-dvh">
+        <div className="min-h-dvh">
           <JoinSection />
         </div>
         <Footer />

@@ -168,6 +168,24 @@
   }
 }
 
+/* ── Motion preferences ───────────────────────────────────────────────────
+   The site leans on continuous marquees (MovingText, the projects CTA column
+   scroll) and the swiper autoplay. Those are decorative, so honour the OS
+   "reduce motion" switch rather than animating regardless. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ── Reveal-on-scroll (toggled by an IntersectionObserver adding `.is-in`) ── */
 .reveal {
   opacity: 0;
@@ -183,6 +201,18 @@
 
 input[type="date"] {
   color-scheme: light;
+}
+
+/* Horizontal chip strips (mobile filter rows) scroll by swipe, so the bar
+   itself is noise — hide it without losing the scrolling. */
+.scroll-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.scroll-strip::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Keyframes (referenced from JSX via animate-[…]) ── */

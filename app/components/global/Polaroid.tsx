@@ -26,7 +26,7 @@ export default function Polaroid({
     return (
       <Link href={link} className="w-full flex justify-center">
         <div
-          className={`min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride ? typeOverride : ""}`}
+          className={`min-h-90 md:min-h-96 w-full max-w-80 md:w-1/2 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride ? typeOverride : ""}`}
         >
           <div className="bg-gray-100 -z-10">{children}</div>
           <div className="outline-gray-200 outline-3 w-4/5 h-6/8 bg-gray-100  min-h-64 px-3 relative">
@@ -50,7 +50,7 @@ export default function Polaroid({
   }
   return (
     <div
-      className={`min-h-90 md:min-h-96 w-80 md:w-1/2 md:max-w-80 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride ? typeOverride : ""}`}
+      className={`min-h-90 md:min-h-96 w-full max-w-80 md:w-1/2 bg-outline-gray-100 bg-white shadow-2xl outline-gray-200 outline-3 flex flex-col items-center pt-7 relative ${typeOverride ? typeOverride : ""}`}
       onClick={onClick ? onClick : () => {}}
     >
       <div className="bg-gray-200 -z-10">{children}</div>

@@ -6,9 +6,9 @@ import { useAuth } from "@/app/components/AuthProvider";
 import LinkButton from "./global/LinkButton";
 
 const NAVLINK =
-  "text-semibold text-white px-2 lg:px-[11px] py-1.5 rounded-full transition-colors duration-150 whitespace-nowrap hover:bg-white/15 max-md:px-6 max-md:py-4 max-md:rounded-none max-md:text-base max-md:font-medium max-md:text-left max-md:w-full max-md:border-b max-md:border-white/15 max-md:last:border-b-0";
+  "text-semibold text-white px-2 lg:px-[11px] py-1.5 rounded-full transition-colors duration-150 whitespace-nowrap hover:bg-white/15 max-md:px-6 max-md:py-4 max-md:rounded-none max-md:text-lg max-md:font-semibold max-md:text-left max-md:w-full max-md:border-b max-md:border-black/15 max-md:last:border-b-0";
 const NAVAUTH =
-  "text-white px-2 lg:px-3 py-[7px] rounded-full font-[550] text-sm transition-opacity duration-200 whitespace-nowrap hover:opacity-70";
+  "text-white px-2 lg:px-3 py-[7px] rounded-full font-[550] text-sm transition-opacity duration-200 whitespace-nowrap hover:opacity-70 max-md:py-2.5";
 const HBAR =
   "block w-5 h-[1.5px] bg-white rounded-[2px] transition-[transform,opacity] duration-200";
 
@@ -21,6 +21,23 @@ export default function Nav() {
     else document.body.style.overflow = "";
     return () => {
       document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  // The drawer only exists below md. Rotating a phone into landscape crosses
+  // that breakpoint, which used to hide the drawer while leaving the body
+  // scroll-locked — the page looked frozen. Close it as soon as we're desktop.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onWide = (e: MediaQueryListEvent) => e.matches && setMenuOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    if (mq.matches) setMenuOpen(false);
+    mq.addEventListener("change", onWide);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      mq.removeEventListener("change", onWide);
+      document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
 
@@ -42,15 +59,16 @@ export default function Nav() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-8 py-3.5 to-transparent text-[15px] max-md:grid-cols-[1fr_auto] max-md:px-5 max-md:overflow-visible  ${menuOpen ? "max-md:bg-pop-pink/80 max-md:border-b-2 max-md:border-black/20" : "bg-gradient-to-b from-black/70 via-black/40 "}`}
+      className={`fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-8 py-3.5 to-transparent text-[15px] max-md:grid-cols-[1fr_auto] max-md:px-5 max-md:overflow-visible  ${menuOpen ? "max-md:bg-pop-pink max-md:border-b-2 max-md:border-black/20" : "bg-gradient-to-b from-black/70 via-black/40 "}`}
       id="nav"
     >
       {/* Left: hamburger + logo */}
       <div className={`flex items-center gap-3.5 min-w-0`}>
         <button
-          className="hidden max-md:flex flex-col justify-center gap-[5px] cursor-pointer p-1.5 shrink-0"
+          className="hidden max-md:flex flex-col justify-center items-center gap-[5px] cursor-pointer w-11 h-11 -ml-2.5 shrink-0"
           onClick={() => setMenuOpen((o) => !o)}
-          aria-label="Toggle menu"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
         >
           <span
             className={`${HBAR}${menuOpen ? " translate-y-[6.5px] rotate-45" : ""}`}
@@ -72,7 +90,7 @@ export default function Nav() {
 
       {/* Center: nav links (mobile drawer) */}
       <div
-        className={`flex gap-0.5 items-center justify-center text-[15px] font-medium max-md:absolute max-md:top-full max-md:left-0 max-md:right-0 max-md:h-[calc(100svh-58px)] max-md:bg-pop-pink/80 max-md:flex-col max-md:items-stretch max-md:gap-0 max-md:pb-6 max-md:overflow-y-auto max-md:border-t max-md:border-white/15 ${menuOpen ? "max-md:flex" : "max-md:hidden"}`}
+        className={`flex gap-0.5 items-center justify-center text-[15px] font-medium max-md:absolute max-md:top-full max-md:left-0 max-md:right-0 max-md:h-[calc(100svh-58px)] max-md:bg-pop-pink max-md:flex-col max-md:items-stretch max-md:gap-0 max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-md:overflow-y-auto max-md:overscroll-contain max-md:border-t max-md:border-black/15 ${menuOpen ? "max-md:flex" : "max-md:hidden"}`}
       >
         <a href="/about" className={NAVLINK} onClick={close}>
           About
@@ -90,13 +108,15 @@ export default function Nav() {
           Projects
         </Link>
         <div
-          className={`w-full flex items-center justify-center pt-3 ${menuOpen ? "md:hidden" : "hidden"}`}
+          className={`w-full flex items-center justify-center px-6 pt-5 ${menuOpen ? "md:hidden" : "hidden"}`}
         >
-          <LinkButton link="/submit">Submit a Project</LinkButton>
+          <LinkButton link="/submit" typeOverride="w-full text-center text-lg">
+            Submit a Project
+          </LinkButton>
         </div>
         {/* Mobile-only footer inside the drawer */}
         {showAuth && (
-          <div className="hidden max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-3 max-md:px-6 max-md:py-4 max-md:mt-auto max-md:border-t max-md:border-white/15">
+          <div className="hidden max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-3 max-md:px-6 max-md:py-4 max-md:mt-auto max-md:border-t max-md:border-black/15">
             {!loading &&
               (user ? (
                 <>

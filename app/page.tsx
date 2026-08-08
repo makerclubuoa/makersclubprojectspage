@@ -68,7 +68,9 @@ export default async function Home() {
         <ProjectsPreviewSection projects={previewProjects} />
       </div>
       <VendingMachineSection product={randomProduct} />
-      <div className="h-dvh">
+      {/* min-h rather than h: a short landscape phone would otherwise clip the
+          heading and the Join button out of a fixed-height band. */}
+      <div className="min-h-dvh">
         <JoinSection />
       </div>
       <Footer />

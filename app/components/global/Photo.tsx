@@ -55,7 +55,12 @@ export default function Photo({
     return (
       <Link href={link}>
         <div
-          className={twMerge("w-fit h-72 aspect-square relative", typeOverride)}
+          // max-w-full + a smaller floor on the narrowest phones: a hard 288px
+        // square inside a px-5 container overflowed a 320px screen.
+        className={twMerge(
+          "w-fit h-72 max-[360px]:h-64 max-w-full aspect-square relative",
+          typeOverride,
+        )}
           style={{ transform: `rotate(${rotation}deg)` }}
         >
           <div

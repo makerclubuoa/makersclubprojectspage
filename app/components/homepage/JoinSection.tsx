@@ -18,13 +18,16 @@ export default function JoinSection() {
         />
       </picture>
 
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
-        <div className="text-center lg:w-full w-1/2">
+      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-5 py-10">
+        {/* Was `w-1/2` with `lg:w-full` — the wrong way round, so phones (the
+            narrowest screens) got the narrowest text column. */}
+        <div className="w-full max-w-[46ch] text-center lg:max-w-none">
           <p
             className="
               font-bold text-2xl md:text-4xl font-holt
               text-shadow-lg
-              [-webkit-text-stroke:6px_black]
+              [-webkit-text-stroke:3px_black]
+              md:[-webkit-text-stroke:6px_black]
               [paint-order:stroke_fill]
               text-white
               pb-5

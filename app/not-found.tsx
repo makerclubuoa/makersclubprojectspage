@@ -21,14 +21,16 @@ export default function NotFound() {
         />
       </picture>
 
+      {/* Was `text-white … text-gray-700`, so the later class won and the
+          heading rendered dark grey inside a black stroke. */}
       <h2
-        className="text-white ${typeOverride} text-center z-10 font-holt text-5xl font-semibold mt-4 text-gray-700 [-webkit-text-stroke:6px_black]
+        className="text-white text-center z-10 font-holt text-3xl sm:text-4xl md:text-5xl font-semibold mt-4 [-webkit-text-stroke:3px_black] md:[-webkit-text-stroke:6px_black]
               [paint-order:stroke_fill]
          "
       >
         Page Not Found
       </h2>
-      <p className="z-10 text-2xl mt-2 font-semibold max-w-1/2">
+      <p className="z-10 text-lg sm:text-2xl mt-2 font-semibold w-full max-w-[46ch]">
         This world is vast and full of mysteries... Unfortunately, this page is
         one of them.
       </p>

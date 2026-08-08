@@ -29,15 +29,15 @@ export default async function PinnedPostSnippet({
       ) : (
         ""
       )}
-      <div className="flex flex-col justify-center h-full px-5">
+      <div className="flex flex-col justify-center h-full px-1 sm:px-5">
         <p className="text-md font-medium">{upcomingEvent.date}</p>
         <p
           className="[letter-spacing:0.01em] text-white font-bold text-xl sm:text-2xl md:text-4xl font-holt
-          text-shadow-lg [-webkit-text-stroke:6px_black] [paint-order:stroke_fill]"
+          text-shadow-lg [-webkit-text-stroke:3px_black] md:[-webkit-text-stroke:6px_black] [paint-order:stroke_fill] [overflow-wrap:anywhere]"
         >
           {upcomingEvent.title}
         </p>
-        <p className="text-lg font-semibold">{upcomingEvent.excerpt}</p>
+        <p className="text-base sm:text-lg font-semibold">{upcomingEvent.excerpt}</p>
         {children}
       </div>
     </div>

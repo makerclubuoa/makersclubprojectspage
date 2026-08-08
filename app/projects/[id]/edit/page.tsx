@@ -331,7 +331,16 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!title.trim() || !blurb.trim()) return
+    // `required` catches empty inputs natively, but a field holding only spaces
+    // satisfies it and would then fail here with no explanation at all.
+    const blank = [
+      !title.trim() && 'a project title',
+      !blurb.trim() && 'a one-line description',
+    ].filter(Boolean) as string[]
+    if (blank.length > 0) {
+      setSaveError(`Please add ${blank.join(' and ')} before saving.`)
+      return
+    }
     setSaving(true)
     setSaveError('')
 

@@ -35,8 +35,15 @@ import {
   fieldLabel,
   fieldReq,
   fieldInput,
+  fieldInputError,
+  fieldError,
   fieldTextarea,
   fieldRow,
+  formErrorBox,
+  formErrorTitle,
+  formErrorList,
+  formErrorItem,
+  formErrorLink,
   btnGradient,
   btnArr,
   makersChips,
@@ -216,6 +223,9 @@ export default function SubmitPage() {
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  // Which required fields are currently missing, keyed by input id. Empty until
+  // the first submit attempt, so the form doesn't scold you before you've tried.
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Stats
   const [statsTotal, setStatsTotal] = useState<number | null>(null);
@@ -375,31 +385,59 @@ export default function SubmitPage() {
     );
   }
 
-  // ── Validation flash ─────────────────────────────────
-  function flashField(id: string) {
+  // ── Validation ───────────────────────────────────────
+  // Every required field in one place, so the summary, the inline messages and
+  // the submit check can't drift apart.
+  const REQUIRED: { id: string; label: string; message: string; ok: boolean }[] =
+    [
+      {
+        id: "f-title",
+        label: "Project title",
+        message: "Give your project a title.",
+        ok: !!title.trim(),
+      },
+      {
+        id: "f-blurb",
+        label: "One-line description",
+        message: "Add a one-line description of what you made.",
+        ok: !!blurb.trim(),
+      },
+    ];
+  const missing = REQUIRED.filter((f) => !f.ok);
+  // Only the fields the submitter has actually been told about get highlighted.
+  const shownErrors = REQUIRED.filter((f) => errors[f.id]);
+
+  function focusField(id: string) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.animate(
-      [
-        { borderBottomColor: "var(--rule)" },
-        { borderBottomColor: "#ff25c7" },
-        { borderBottomColor: "var(--rule)" },
-      ],
-      { duration: 600, iterations: 2 },
-    );
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Focus after the smooth scroll starts, or the browser jumps instead.
+    setTimeout(() => (el as HTMLInputElement).focus({ preventScroll: true }), 300);
+  }
+
+  // Clear a field's error as soon as it's filled in — leaving stale red on a
+  // field somebody just fixed is worse than no message at all.
+  function clearError(id: string) {
+    setErrors((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   }
 
   // ── Submit ───────────────────────────────────────────
   async function handleSubmit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
-    if (!title.trim()) {
-      flashField("f-title");
+
+    if (missing.length > 0) {
+      setErrors(Object.fromEntries(missing.map((f) => [f.id, f.message])));
+      setSubmitError("");
+      focusField(missing[0].id);
       return;
     }
-    if (!blurb.trim()) {
-      flashField("f-blurb");
-      return;
-    }
+
+    setErrors({});
     setSubmitting(true);
     setSubmitError("");
 
@@ -631,8 +669,11 @@ export default function SubmitPage() {
       <main className={submitMain}>
         <div className={container}>
           <div className="grid grid-cols-[1fr_1.2fr] gap-16 items-start max-[900px]:grid-cols-1 max-[900px]:gap-10">
-            {/* ── Left: info ───────────────────── */}
-            <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8">
+            {/* ── Left: info ─────────────────────
+                Ordered second on one column: it's context, and stacked above
+                the form it put a screen and a half of reading between the
+                page and the first input. */}
+            <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8 max-[640px]:p-5 max-[900px]:order-2">
               <h3 className={`${secHead} text-pop-pink mb-5`}>What We Archive</h3>
               <p className="font-medium text-sm leading-[1.7] max-w-[46ch]">
                 We log everything our members make — solo or group, finished or
@@ -641,9 +682,9 @@ export default function SubmitPage() {
               </p>
               <div className="mt-6 flex flex-col gap-3">
                 {[
-                  "Made by a member (current or former)",
-                  "Made during or inspired by an open hours / workshop",
-                  "Any category, any finish level",
+                  "Made by a club member (current or former)",
+                  "Tracking progress for Make-a-Thon",
+                  "Any category or finish level",
                   "Solo or group projects both welcome",
                 ].map((item) => (
                   <div
@@ -659,13 +700,13 @@ export default function SubmitPage() {
               </div>
               <h3 className={`${secHead} text-pop-violet mb-5 mt-12`}>The Numbers</h3>
               <div className="grid grid-cols-3 border-2 border-black rounded-[6px] overflow-hidden">
-                <div className="px-4 py-3.5 border-r-2 border-black last:border-r-0">
+                <div className="px-4 py-3.5 max-[640px]:px-2.5 border-r-2 border-black last:border-r-0">
                   <div className="text-[10px] font-bold tracking-[0.12em] uppercase text-ink-2">
                     In the archive
                   </div>
                   <div className="text-[22px] font-bold mt-1.5">{statsTotal ?? "—"}</div>
                 </div>
-                <div className="px-4 py-3.5 border-r-2 border-black last:border-r-0">
+                <div className="px-4 py-3.5 max-[640px]:px-2.5 border-r-2 border-black last:border-r-0">
                   <div className="text-[10px] font-bold tracking-[0.12em] uppercase text-ink-2">
                     Added this year
                   </div>
@@ -673,7 +714,7 @@ export default function SubmitPage() {
                     {statsThisYear ?? "—"}
                   </div>
                 </div>
-                <div className="px-4 py-3.5 border-r-2 border-black last:border-r-0">
+                <div className="px-4 py-3.5 max-[640px]:px-2.5 border-r-2 border-black last:border-r-0">
                   <div className="text-[10px] font-bold tracking-[0.12em] uppercase text-ink-2">
                     Members
                   </div>
@@ -683,7 +724,7 @@ export default function SubmitPage() {
             </div>
 
             {/* ── Right: form ──────────────────── */}
-            <div>
+            <div className="max-[900px]:order-1">
               {!loading && !user ? (
                 <div className={submitGate}>
                   <div className={submitGateIcon}>⚿</div>
@@ -727,13 +768,26 @@ export default function SubmitPage() {
                         Project title <span className={fieldReq}>*</span>
                       </label>
                       <input
-                        className={fieldInput}
+                        className={`${fieldInput} ${errors["f-title"] ? fieldInputError : ""}`}
                         id="f-title"
                         type="text"
-                        placeholder="e.g. Quokka Macropad"
+                        placeholder="e.g. 3d-Printed Benchy"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        aria-invalid={!!errors["f-title"]}
+                        aria-describedby={
+                          errors["f-title"] ? "f-title-error" : undefined
+                        }
+                        onChange={(e) => {
+                          setTitle(e.target.value);
+                          if (e.target.value.trim()) clearError("f-title");
+                        }}
                       />
+                      {errors["f-title"] && (
+                        <p id="f-title-error" className={fieldError}>
+                          <span aria-hidden>⚠</span>
+                          {errors["f-title"]}
+                        </p>
+                      )}
                     </div>
 
                     {/* Category */}
@@ -867,14 +921,27 @@ export default function SubmitPage() {
                         </span>
                       </label>
                       <input
-                        className={fieldInput}
+                        className={`${fieldInput} ${errors["f-blurb"] ? fieldInputError : ""}`}
                         id="f-blurb"
                         type="text"
                         maxLength={140}
                         placeholder="What did you make and what's interesting about it?"
                         value={blurb}
-                        onChange={(e) => setBlurb(e.target.value)}
+                        aria-invalid={!!errors["f-blurb"]}
+                        aria-describedby={
+                          errors["f-blurb"] ? "f-blurb-error" : undefined
+                        }
+                        onChange={(e) => {
+                          setBlurb(e.target.value);
+                          if (e.target.value.trim()) clearError("f-blurb");
+                        }}
                       />
+                      {errors["f-blurb"] && (
+                        <p id="f-blurb-error" className={fieldError}>
+                          <span aria-hidden>⚠</span>
+                          {errors["f-blurb"]}
+                        </p>
+                      )}
                     </div>
 
                     {/* Cover image */}
@@ -896,7 +963,14 @@ export default function SubmitPage() {
                         {!imagePreview && (
                           <span className={imgUploadInner}>
                             <span className={imgUploadIcon}>↑</span>
-                            <span>Drop an image or click to browse</span>
+                            {/* There's no drag-and-drop on a phone, so don't
+                                lead with it there. */}
+                            <span className="max-[640px]:hidden">
+                              Drop an image or click to browse
+                            </span>
+                            <span className="hidden max-[640px]:inline">
+                              Tap to choose a photo
+                            </span>
                             <span className={imgUploadHint}>
                               JPG, PNG, WEBP · max 5 MB
                             </span>
@@ -1443,6 +1517,35 @@ export default function SubmitPage() {
                     </div>
                     </FormSection>
 
+                    {/* What's still missing. The submit button sits several
+                        screens below the fields it depends on, so the summary
+                        both names them and jumps you there. */}
+                    {shownErrors.length > 0 && (
+                      <div className={`${formErrorBox} mt-4`} role="alert">
+                        <p className={formErrorTitle}>
+                          <span aria-hidden>⚠</span>
+                          {shownErrors.length === 1
+                            ? "One thing left before you can submit"
+                            : `${shownErrors.length} things left before you can submit`}
+                        </p>
+                        <ul className={formErrorList}>
+                          {shownErrors.map((f) => (
+                            <li key={f.id} className={formErrorItem}>
+                              <span aria-hidden className="text-pop-red">
+                                ✕
+                              </span>
+                              <button
+                                type="button"
+                                className={formErrorLink}
+                                onClick={() => focusField(f.id)}
+                              >
+                                {f.label} — {f.message}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     {submitError && (
                       <p className="text-pop-red text-xs mt-2 tracking-[0.04em]">
                         {submitError}
@@ -1477,6 +1580,18 @@ export default function SubmitPage() {
                       </label>
                     </div>
                     <div className={formActions}>
+                      <span className="text-[11px] font-semibold text-ink-2 max-[640px]:text-center">
+                        {missing.length > 0 ? (
+                          <>
+                            Still needed:{" "}
+                            <strong className="text-ink">
+                              {missing.map((f) => f.label).join(" · ")}
+                            </strong>
+                          </>
+                        ) : (
+                          <>Everything required is filled in.</>
+                        )}
+                      </span>
                       <button
                         className={btnGradient}
                         onClick={handleSubmit}

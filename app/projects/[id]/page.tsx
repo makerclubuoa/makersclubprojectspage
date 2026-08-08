@@ -28,7 +28,7 @@ import {
 
 // White comic card used for every content section on the gradient.
 const SECTION =
-  "relative bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8 mb-10";
+  "relative bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8 max-[640px]:p-4 mb-10 max-[640px]:mb-6";
 
 // Chip used in the hero meta row.
 const META_CHIP =
@@ -194,7 +194,7 @@ export default async function ProjectPage({
         <header className="border-y-4 bg-white py-10">
           <div className={container}>
             <div className="flex flex-wrap items-center gap-2 mb-8">
-              <span className={`${META_CHIP} bg-black text-black`}>
+              <span className={`${META_CHIP} bg-black text-white`}>
                 {project.category ?? "—"}
               </span>
               <span className={META_CHIP}>Started {startedDate}</span>
@@ -438,9 +438,12 @@ export default async function ProjectPage({
                       {(project.build_log ?? []).map((entry, i) => (
                         <div
                           key={i}
-                          className="group grid grid-cols-[110px_32px_minmax(0,1fr)] gap-[18px] py-[18px] border-t-2 border-black/10 items-start last:border-b-2 last:border-black/10 max-[720px]:grid-cols-[80px_24px_1fr]"
+                          className="group grid grid-cols-[110px_32px_minmax(0,1fr)] gap-[18px] py-[18px] border-t-2 border-black/10 items-start last:border-b-2 last:border-black/10 max-[720px]:grid-cols-[80px_24px_minmax(0,1fr)] max-[720px]:gap-3 max-[480px]:grid-cols-[20px_minmax(0,1fr)]"
                         >
-                          <div className="text-sm font-semibold leading-[1.3] pt-1">
+                          {/* Below 480px the date moves out of its own column
+                              and sits above the entry — a 80px date column plus
+                              the rail left about four words per line. */}
+                          <div className="text-sm font-semibold leading-[1.3] pt-1 max-[480px]:col-start-2 max-[480px]:row-start-1 max-[480px]:pt-0 max-[480px]:text-[12px] max-[480px]:text-ink-2">
                             {entry.date}
                             {entry.week_label && (
                               <small className="block text-ink-2 text-[10px] font-bold tracking-[0.1em] uppercase mt-0.5">
@@ -448,12 +451,12 @@ export default async function ProjectPage({
                               </small>
                             )}
                           </div>
-                          <div className="relative pt-2 flex justify-center before:content-[''] before:absolute before:top-[14px] before:bottom-[-100%] before:left-1/2 before:w-[2px] before:bg-black/20 group-last:before:hidden">
+                          <div className="relative pt-2 flex justify-center before:content-[''] before:absolute before:top-[14px] before:bottom-[-100%] before:left-1/2 before:w-[2px] before:bg-black/20 group-last:before:hidden max-[480px]:col-start-1 max-[480px]:row-start-1 max-[480px]:row-span-2 max-[480px]:pt-0.5">
                             <span
                               className={`relative z-[1] w-3 h-3 rounded-full block border-2 border-black ${entry.milestone ? "bg-pop-magenta shadow-[2px_2px_0px_0px_#000]" : "bg-white"}`}
                             />
                           </div>
-                          <div>
+                          <div className="max-[480px]:col-start-2 max-[480px]:row-start-2 max-[480px]:mt-1">
                             <h4 className="text-[17px] font-bold m-0 mb-1.5">
                               {entry.title}
                             </h4>
@@ -526,8 +529,12 @@ export default async function ProjectPage({
                       </h3>
                       <span className={secHint}>parts &amp; sources</span>
                     </div>
+                    {/* min-w on the table, not just overflow on the wrapper:
+                        a w-full table shrinks to fit its container, so the
+                        five columns squeezed into a phone's width one word per
+                        line instead of scrolling sideways. */}
                     <div className="border-2 border-black rounded-[6px] bg-white overflow-hidden max-[720px]:overflow-x-auto">
-                      <table className="w-full border-collapse text-[13px]">
+                      <table className="w-full min-w-[540px] border-collapse text-[13px]">
                         <thead>
                           <tr>
                             <th className={BOM_TH}>Item</th>
@@ -746,8 +753,11 @@ export default async function ProjectPage({
               {/* ── SIDEBAR ─────────────────────────── */}
               <aside>
                 <div className="sticky top-20 flex flex-col gap-6 max-[980px]:static">
-                  {/* TOC */}
-                  <div className={FRAME}>
+                  {/* TOC — the sidebar follows the article in source order, so
+                      below 980px this lands after everything it links to. A
+                      table of contents you reach by scrolling past the contents
+                      is just noise, so it's desktop-only. */}
+                  <div className={`${FRAME} max-[980px]:hidden`}>
                     <span className={FRAME_FIG}>On this page</span>
                     {tocEntries.map((entry, i) => (
                       <a

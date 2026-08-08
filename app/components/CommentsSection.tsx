@@ -253,7 +253,7 @@ export default function CommentsSection({
         <form className="mt-2" onSubmit={handleSubmit}>
           <textarea
             ref={textareaRef}
-            className="w-full bg-white border-2 border-black rounded-[6px] text-ink text-[14px] leading-[1.5] px-3.5 py-3 resize-y min-h-[80px] outline-none transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000] read-only:cursor-pointer read-only:opacity-70 placeholder:text-muted"
+            className="w-full bg-white border-2 border-black rounded-[6px] text-ink text-[14px] max-[640px]:text-base leading-[1.5] px-3.5 py-3 resize-y min-h-[80px] outline-none transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000] read-only:cursor-pointer read-only:opacity-70 placeholder:text-muted"
             placeholder={
               user ? "Leave a comment…" : "Sign in to leave a comment"
             }
