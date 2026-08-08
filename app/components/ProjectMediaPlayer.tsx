@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   embedUrl,
   formatClock,
-  mediaSrcAt,
   providerLabel,
   type ProjectMedia,
 } from "@/lib/media";
@@ -78,9 +77,8 @@ function FilePreview({
   // deliberately pressed play on keeps going.
   const startedByHover = useRef(false);
 
-  const previewStart = Math.max(0, Math.floor(media.preview_start || 0));
   const [playing, setPlaying] = useState(false);
-  const [current, setCurrent] = useState(previewStart);
+  const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(media.duration ?? 0);
 
   const reset = useCallback(() => {
@@ -89,13 +87,13 @@ function FilePreview({
     el.pause();
     if (el.readyState > 0) {
       try {
-        el.currentTime = previewStart;
+        el.currentTime = 0;
       } catch {
         /* seeking before the browser has a timeline — harmless */
       }
     }
-    setCurrent(previewStart);
-  }, [previewStart]);
+    setCurrent(0);
+  }, []);
 
   const pause = useCallback(() => {
     ref.current?.pause();
@@ -118,7 +116,7 @@ function FilePreview({
       startedByHover.current = viaHover;
       if (el.readyState > 0 && el.ended) {
         try {
-          el.currentTime = previewStart;
+          el.currentTime = 0;
         } catch {
           /* ignore */
         }
@@ -127,7 +125,7 @@ function FilePreview({
       // the play button stays available, so there's nothing to recover from.
       void el.play().catch(() => {});
     },
-    [pause, previewStart],
+    [pause],
   );
 
   useEffect(() => {
@@ -165,11 +163,11 @@ function FilePreview({
 
   return (
     <div className="absolute inset-0 z-[2] pointer-events-none">
-      {/* preload="none" plus the #t= fragment means a grid of cards costs zero
-          media bytes until somebody actually asks to hear something. */}
+      {/* preload="none" means a grid of cards costs zero media bytes until
+          somebody actually asks to hear something. */}
       <audio
         ref={ref}
-        src={mediaSrcAt(media.url, previewStart)}
+        src={media.url}
         preload="none"
         className="hidden"
         onPlay={() => setPlaying(true)}
@@ -190,11 +188,7 @@ function FilePreview({
           type="button"
           className={PLAY_BTN}
           onClick={togglePlay}
-          aria-label={
-            playing
-              ? "Pause preview"
-              : `Play preview from ${formatClock(previewStart)}`
-          }
+          aria-label={playing ? "Pause preview" : "Play preview"}
         >
           {playing ? "❚❚" : "▶"}
         </button>
@@ -203,7 +197,7 @@ function FilePreview({
           type="range"
           className={RANGE}
           min={0}
-          max={duration || Math.max(previewStart + 30, 30)}
+          max={duration || 30}
           step={0.1}
           value={Math.min(current, duration || Infinity)}
           onChange={scrub}
@@ -297,20 +291,13 @@ function EmbedPreview({
           type="button"
           className={PLAY_BTN}
           onClick={togglePlay}
-          aria-label={
-            mode === "playing"
-              ? "Stop video"
-              : `Play video from ${formatClock(media.preview_start || 0)}`
-          }
+          aria-label={mode === "playing" ? "Stop video" : "Play video"}
         >
           {mode === "playing" ? "❚❚" : "▶"}
         </button>
 
         <span className={LABEL}>
           {media.provider ? providerLabel(media.provider) : "Video"}
-          {media.preview_start > 0
-            ? ` · from ${formatClock(media.preview_start)}`
-            : ""}
           {mode === "hover" ? " · muted" : ""}
         </span>
       </div>

@@ -17,8 +17,6 @@ export interface ProjectMedia {
   url: string;
   /** Submitter-supplied label. Falls back to the project title when rendering. */
   title?: string;
-  /** Seconds into the file where previews start. 0 = from the top. */
-  preview_start: number;
   /** Captured at upload so scrubbers can render without fetching the file. */
   duration?: number;
   mime?: string;
@@ -48,9 +46,6 @@ export const AUDIO_MAX_BYTES = 20 * 1024 * 1024;
 /** Keeps one project from monopolising the storage quota. */
 export const MAX_MEDIA_ITEMS = 6;
 
-/** How long the "hear it / watch it" button plays for before resetting. */
-export const AUDITION_SECONDS = 8;
-
 const AUDIO_EXTENSIONS = ["mp3", "wav", "ogg", "oga", "m4a", "aac", "flac"];
 
 export const MEDIA_ACCEPT = "audio/*";
@@ -63,17 +58,6 @@ export function formatClock(seconds: number): string {
   const mins = Math.floor(total / 60);
   const secs = total % 60;
   return `${mins}:${String(secs).padStart(2, "0")}`;
-}
-
-/** Parses `83`, `1:23` or `1:23.5` back into seconds. Null when unparseable. */
-export function parseClock(input: string): number | null {
-  const trimmed = input.trim();
-  if (!trimmed) return null;
-  const parts = trimmed.split(":");
-  if (parts.length > 2) return null;
-  const nums = parts.map((p) => Number(p));
-  if (nums.some((n) => !Number.isFinite(n) || n < 0)) return null;
-  return parts.length === 2 ? nums[0] * 60 + nums[1] : nums[0];
 }
 
 export function formatBytes(bytes: number): string {
@@ -89,16 +73,6 @@ export function pickPreviewMedia(
 ): ProjectMedia | null {
   if (!media || media.length === 0) return null;
   return media.find((m) => m.preview) ?? media[0];
-}
-
-/**
- * Appends a media fragment so the browser issues a ranged request from the
- * preview point rather than pulling the file from byte zero — the difference
- * between streaming a few seconds and streaming the whole track on every play.
- */
-export function mediaSrcAt(url: string, start: number): string {
-  const from = Math.floor(start || 0);
-  return from > 0 ? `${url}#t=${from}` : url;
 }
 
 /* ── Video links ────────────────────────────────────── */
@@ -153,11 +127,9 @@ export function embedUrl(
   { autoplay = false, muted = false }: { autoplay?: boolean; muted?: boolean } = {},
 ): string | null {
   if (!media.provider || !media.videoId) return null;
-  const start = Math.max(0, Math.floor(media.preview_start || 0));
 
   if (media.provider === "youtube") {
     const params = new URLSearchParams({
-      start: String(start),
       rel: "0",
       modestbranding: "1",
       playsinline: "1",
@@ -172,9 +144,7 @@ export function embedUrl(
   if (autoplay) params.set("autoplay", "1");
   if (muted) params.set("muted", "1");
   const query = params.toString();
-  return `https://player.vimeo.com/video/${media.videoId}${query ? `?${query}` : ""}${
-    start > 0 ? `#t=${start}s` : ""
-  }`;
+  return `https://player.vimeo.com/video/${media.videoId}${query ? `?${query}` : ""}`;
 }
 
 /** Free, provider-hosted still for a linked video. Null when there isn't one. */

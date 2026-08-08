@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   AUDIO_MAX_BYTES,
-  AUDITION_SECONDS,
   MAX_MEDIA_ITEMS,
   MEDIA_ACCEPT,
   MEDIA_BUCKET,
@@ -13,7 +12,6 @@ import {
   formatClock,
   mediaExtension,
   mediaFileError,
-  parseClock,
   parseVideoUrl,
   providerLabel,
   readMediaDuration,
@@ -41,7 +39,6 @@ export type DraftMedia = {
   /** Object URL while local, public Supabase URL once uploaded, or a video link. */
   url: string;
   title: string;
-  previewStart: number;
   duration: number;
   mime: string;
   preview: boolean;
@@ -60,7 +57,6 @@ export function draftFromStored(m: ProjectMedia): DraftMedia {
     file: null,
     url: m.url,
     title: m.title ?? "",
-    previewStart: m.preview_start ?? 0,
     duration: m.duration ?? 0,
     mime: m.mime ?? "",
     preview: m.preview ?? false,
@@ -103,7 +99,6 @@ export async function uploadMediaDrafts(
       kind: d.kind,
       url,
       title: d.title.trim() || undefined,
-      preview_start: Math.max(0, Math.round(d.previewStart)),
       duration: d.duration > 0 ? Math.round(d.duration) : undefined,
       mime: d.mime || undefined,
       preview: d.preview || undefined,
@@ -175,7 +170,6 @@ export default function MediaUploader({
         url,
         // Filename minus extension is a decent first guess at a title.
         title: file.name.replace(/\.[^.]+$/, ""),
-        previewStart: 0,
         duration,
         mime: file.type,
         preview: items.length === 0 && accepted.length === 0,
@@ -211,7 +205,6 @@ export default function MediaUploader({
         file: null,
         url: linkInput.trim(),
         title: "",
-        previewStart: 0,
         duration: 0,
         mime: "",
         preview: items.length === 0,
@@ -333,11 +326,6 @@ export default function MediaUploader({
 
 /* ── One row ────────────────────────────────────────── */
 
-const RANGE =
-  "w-full h-1.5 appearance-none bg-black/15 rounded-full cursor-pointer outline-none " +
-  "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-pop-magenta [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:cursor-pointer " +
-  "[&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-pop-magenta [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer";
-
 const CHIP =
   "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-black bg-white text-[10px] font-bold tracking-[0.06em] uppercase";
 
@@ -356,74 +344,8 @@ function MediaDraftRow({
   onRemove: () => void;
   onChoosePreview: () => void;
 }) {
-  const ref = useRef<HTMLAudioElement | null>(null);
-  const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [auditioning, setAuditioning] = useState(false);
   const [duration, setDuration] = useState(item.duration);
-  // Kept as text so the field can hold "1:0" mid-typing without snapping back.
-  const [clockText, setClockText] = useState(formatClock(item.previewStart));
-
-  useEffect(
-    () => () => {
-      if (stopTimer.current) clearTimeout(stopTimer.current);
-    },
-    [],
-  );
-
   const isVideo = item.kind === "video";
-  const max = duration > 0 ? Math.floor(duration) : 0;
-
-  function seek(seconds: number) {
-    const clamped =
-      max > 0 ? Math.min(Math.max(0, seconds), max) : Math.max(0, seconds);
-    onUpdate({ previewStart: clamped });
-    setClockText(formatClock(clamped));
-    const el = ref.current;
-    if (el && el.readyState > 0) {
-      try {
-        el.currentTime = clamped;
-      } catch {
-        /* not seekable yet */
-      }
-    }
-  }
-
-  function stopAudition() {
-    if (stopTimer.current) clearTimeout(stopTimer.current);
-    const el = ref.current;
-    if (el) {
-      el.pause();
-      if (el.readyState > 0) {
-        try {
-          el.currentTime = item.previewStart;
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-    setAuditioning(false);
-  }
-
-  function audition() {
-    const el = ref.current;
-    if (!el) return;
-    if (auditioning) {
-      stopAudition();
-      return;
-    }
-    try {
-      el.currentTime = item.previewStart;
-    } catch {
-      /* seeks once metadata lands */
-    }
-    void el
-      .play()
-      .then(() => {
-        setAuditioning(true);
-        stopTimer.current = setTimeout(stopAudition, AUDITION_SECONDS * 1000);
-      })
-      .catch(() => setAuditioning(false));
-  }
 
   // Video rows preview through the provider's own player, mounted only when asked.
   const [showEmbed, setShowEmbed] = useState(false);
@@ -431,7 +353,6 @@ function MediaDraftRow({
     ? videoThumbnail({
         kind: "video",
         url: item.url,
-        preview_start: item.previewStart,
         provider: item.provider,
         videoId: item.videoId,
       })
@@ -486,7 +407,6 @@ function MediaDraftRow({
                   {
                     kind: "video",
                     url: item.url,
-                    preview_start: item.previewStart,
                     provider: item.provider,
                     videoId: item.videoId,
                   },
@@ -503,7 +423,7 @@ function MediaDraftRow({
               type="button"
               className="absolute inset-0 w-full h-full grid place-items-center group"
               onClick={() => setShowEmbed(true)}
-              aria-label="Preview video from the chosen start point"
+              aria-label="Check this is the right video"
             >
               {thumb && (
                 // Provider-hosted still — free, and never touches Supabase.
@@ -522,7 +442,6 @@ function MediaDraftRow({
         </div>
       ) : (
         <audio
-          ref={ref}
           src={item.url}
           preload="metadata"
           className="hidden"
@@ -533,90 +452,21 @@ function MediaDraftRow({
               if (item.duration !== d) onUpdate({ duration: d });
             }
           }}
-          onEnded={stopAudition}
         />
       )}
 
-      {/* Preview point */}
-      <div className="flex flex-col gap-1.5 mt-1">
-        <label className={fieldLabel}>
-          <span>Preview starts at</span>
-          <span className="font-normal normal-case tracking-normal">
-            where cards start playing
-          </span>
-        </label>
-
-        <div className="flex items-center gap-2.5">
-          {/* Linked video has no duration to scrub against until it loads, so
-              those rows get the time box alone. */}
-          {!isVideo && (
-            <input
-              type="range"
-              className={RANGE}
-              min={0}
-              max={max || 60}
-              step={1}
-              value={Math.min(item.previewStart, max || 60)}
-              onChange={(e) => seek(Number(e.target.value))}
-              disabled={max === 0}
-              aria-label="Preview start point"
-            />
-          )}
+      {showPreviewPicker && (
+        <label className="flex items-center gap-2 mt-1 pt-2 border-t-2 border-black/10 text-[11px] font-bold tracking-[0.06em] uppercase text-ink cursor-pointer">
           <input
-            className={`${fieldInput} w-[70px] shrink-0 text-center tabular-nums`}
-            type="text"
-            inputMode="numeric"
-            value={clockText}
-            onChange={(e) => {
-              setClockText(e.target.value);
-              const parsed = parseClock(e.target.value);
-              if (parsed !== null) seek(parsed);
-            }}
-            onBlur={() => setClockText(formatClock(item.previewStart))}
-            aria-label="Preview start time"
+            type="radio"
+            name={radioName}
+            className="w-auto accent-pop-magenta"
+            checked={item.preview}
+            onChange={onChoosePreview}
           />
-          {isVideo && (
-            <span className="text-[11px] text-muted">
-              minutes:seconds into the video
-            </span>
-          )}
-        </div>
-
-        {!isVideo && (
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <button type="button" className={dynAdd} onClick={audition}>
-              {auditioning ? "❚❚ Stop" : "▶ Hear it"}
-            </button>
-            <span className="text-[11px] text-muted">
-              {item.previewStart > 0
-                ? `Plays ${AUDITION_SECONDS}s from ${formatClock(item.previewStart)}`
-                : "Starts from the beginning"}
-            </span>
-          </div>
-        )}
-        {isVideo && showEmbed && (
-          <button
-            type="button"
-            className={`${dynAdd} self-start mt-1`}
-            onClick={() => setShowEmbed(false)}
-          >
-            ↻ Reload from {formatClock(item.previewStart)}
-          </button>
-        )}
-
-        {showPreviewPicker && (
-          <label className="flex items-center gap-2 mt-2 pt-2 border-t-2 border-black/10 text-[11px] font-bold tracking-[0.06em] uppercase text-ink cursor-pointer">
-            <input
-              type="radio"
-              name={radioName}
-              className="w-auto accent-pop-magenta"
-              checked={item.preview}
-              onChange={onChoosePreview}
-            />
-            Use this one on cards
-          </label>
-        )}
-      </div>
+          Use this one on cards
+        </label>
+      )}
     </div>
   );
 }

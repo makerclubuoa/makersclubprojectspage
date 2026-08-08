@@ -1040,7 +1040,7 @@ export default function SubmitPage() {
                     <FormSection
                       title="Music & Video"
                       colorClass="text-pop-blue"
-                      blurb="Upload a track, or link a YouTube/Vimeo video — then pick the moment previews start from."
+                      blurb="Upload a track, or link a YouTube/Vimeo video. It plays right on your project card."
                       summary={
                         mediaDrafts.length > 0
                           ? `${mediaDrafts.length} file${mediaDrafts.length === 1 ? "" : "s"}`

@@ -389,8 +389,8 @@ export default async function ProjectPage({
                             </h4>
                             <span className="text-[10px] font-bold tracking-[0.08em] uppercase text-ink-2">
                               {m.provider ? providerLabel(m.provider) : "Audio"}
-                              {m.preview_start > 0
-                                ? ` · card preview from ${formatClock(m.preview_start)}`
+                              {m.duration
+                                ? ` · ${formatClock(m.duration)}`
                                 : ""}
                             </span>
                           </div>
