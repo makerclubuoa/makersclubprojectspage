@@ -3,6 +3,7 @@ import Header from "../homepage/Header";
 import Screentone from "../global/Screentone";
 import { MakeathonType } from "@/lib/ghost/makeathon";
 import formatParagraph from "@/app/utils/formatParagraph";
+import LinkButton from "../global/LinkButton";
 
 export default function MakeathonSection({
   makeathon,
@@ -35,6 +36,11 @@ export default function MakeathonSection({
 
         <div className="w-full md:w-2/3 md:pr-10 lg:pr-20 text-lg lg:text-2xl font-semibold flex flex-col justify-center">
           {formatParagraph(makeathon.description)}
+          <div className="flex justify-center pt-4 md:justify-start lg:pt-5">
+            <LinkButton link="/events" bgColour="pop-red" textColour="white">
+              Learn More!
+            </LinkButton>
+          </div>
         </div>
       </div>
     </div>
