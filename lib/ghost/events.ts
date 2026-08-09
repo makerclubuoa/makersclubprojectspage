@@ -26,7 +26,41 @@ function toEvent(post: PostOrPage): Event {
   };
 }
 
-/** All events whose #DATE: tag hasn't passed yet, soonest first. */
+function eventDateTag(event: PostsOrPages[number]): string | null {
+  const raw = event.tags?.find((t) => t.name?.includes("DATE"))?.name;
+  return raw ? raw.replace("#DATE:", "").trim() : null;
+}
+
+/**
+ * Parses a #DATE: tag into its start and end. `chrono.parseDate()` (used
+ * everywhere below) silently collapses a range like "31 Jul - 14 Nov 2026"
+ * down to just its start, so a multi-day event reads as over the moment its
+ * first day passes. Using `chrono.parse()` keeps the end when there is one.
+ */
+function parseEventDateRange(dateTag: string): { start: Date; end: Date } | null {
+  const [result] = chrono.parse(dateTag);
+  if (!result) return null;
+  const start = result.start.date();
+  const end = result.end ? result.end.date() : start;
+  return { start, end };
+}
+
+/** An event isn't past until its last day (its range end, if it has one) has passed. */
+function isPastEvent(event: PostsOrPages[number]) {
+  const dateTag = eventDateTag(event);
+  const range = dateTag ? parseEventDateRange(dateTag) : null;
+  if (!range) return true;
+
+  const endDate = new Date(range.end);
+  endDate.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return endDate < today;
+}
+
+/** All events whose #DATE: tag hasn't passed yet, soonest-starting first. */
 export async function getUpcomingEvents(limit: number = 12): Promise<Event[]> {
   const events: PostsOrPages = await api().posts.browse({
     filter: "tag:Events",
@@ -38,17 +72,16 @@ export async function getUpcomingEvents(limit: number = 12): Promise<Event[]> {
 
   // Ghost posts are ordered by publish date, not event date, so this has to
   // scan and re-sort rather than trust the API's ordering.
-  const upcoming: { post: PostOrPage; date: Date }[] = [];
+  const upcoming: { post: PostOrPage; start: Date }[] = [];
   for (const post of events) {
     if (isPastEvent(post)) continue;
-    const dateTag = post.tags?.find((t) => t.name?.includes("DATE"))?.name;
-    const dateStr = dateTag?.replace("#DATE:", "").trim();
-    const parsedDate = dateStr ? chrono.parseDate(dateStr) : null;
-    if (!parsedDate) continue;
-    upcoming.push({ post, date: parsedDate });
+    const dateTag = eventDateTag(post);
+    const range = dateTag ? parseEventDateRange(dateTag) : null;
+    if (!range) continue;
+    upcoming.push({ post, start: range.start });
   }
 
-  upcoming.sort((a, b) => a.date.getTime() - b.date.getTime());
+  upcoming.sort((a, b) => a.start.getTime() - b.start.getTime());
 
   return upcoming.slice(0, limit).map(({ post }) => toEvent(post));
 }
@@ -56,29 +89,6 @@ export async function getUpcomingEvents(limit: number = 12): Promise<Event[]> {
 export default async function getLatestUpcomingEvent(): Promise<Event | null> {
   const [next] = await getUpcomingEvents(1);
   return next ?? null;
-}
-function isPastEvent(event: PostsOrPages[number]) {
-  let dateTag: string | null = null;
-
-  for (const tag of event.tags ?? []) {
-    if (tag.name?.includes("DATE")) {
-      dateTag = tag.name.replace("#DATE:", "").trim();
-
-      const parsedDate = chrono.parseDate(dateTag);
-
-      if (!parsedDate) return true;
-
-      const eventDate = new Date(parsedDate);
-      eventDate.setHours(0, 0, 0, 0);
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return eventDate < today;
-    }
-  }
-
-  return true;
 }
 //TODO: the last event is skipped occasionally due to the number in getPastEvents
 export async function getPastEvents(
