@@ -11,7 +11,7 @@ export default function RootLayout({
     <div>
       <Nav></Nav>
       {children}
-      <div className="min-h-[50dvh]">
+      <div className="h-[50dvh] min-h-[340px]">
         <JoinSection />
       </div>
       <Footer />

@@ -68,9 +68,10 @@ export default async function Home() {
         <ProjectsPreviewSection projects={previewProjects} />
       </div>
       <VendingMachineSection product={randomProduct} />
-      {/* min-h rather than h: a short landscape phone would otherwise clip the
-          heading and the Join button out of a fixed-height band. */}
-      <div className="min-h-dvh">
+      {/* Must stay a definite height — JoinSection sizes itself with `h-full`,
+          and a percentage height has nothing to resolve against on a min-height
+          parent. min-h is a floor for very short landscape viewports. */}
+      <div className="h-dvh min-h-[340px]">
         <JoinSection />
       </div>
       <Footer />

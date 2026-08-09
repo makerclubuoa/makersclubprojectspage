@@ -7,7 +7,8 @@ import Photo from "../components/global/Photo";
 import PastEventsSection from "../components/events/PastEventsSection";
 import TimelineSection from "../components/homepage/TimelineSection";
 import Screentone from "../components/global/Screentone";
-import { getYearTimeline, TimelineType } from "@/lib/ghost/timeline";
+import { type TimelineType } from "@/lib/ghost/timeline";
+import { getTimelineItems } from "@/lib/timeline";
 import LinkButton from "../components/global/LinkButton";
 import JoinSection from "../components/homepage/JoinSection";
 import Footer from "../components/Footer";
@@ -26,7 +27,10 @@ export const dynamic = "force-dynamic";
 
 export default async function Events() {
   const upcomingEvent = await getLatestUpcomingEvent();
-  const timelines: TimelineType[] = await getYearTimeline();
+  // Same source as the homepage: the Supabase Timeline table, which is what
+  // the admin panel edits. Previously this scraped a Ghost roadmap post, so
+  // the two timelines could drift apart.
+  const timelines: TimelineType[] = await getTimelineItems();
 
   return (
     <div className="bg-purple-grad min-h-dvh">
@@ -100,7 +104,7 @@ export default async function Events() {
         </div>
         <TimelineSection timelines={timelines} />
 
-        <div className="bg-white min-h-[50dvh]">
+        <div className="bg-white h-[50dvh] min-h-[340px]">
           <JoinSection />
         </div>
         <Footer />

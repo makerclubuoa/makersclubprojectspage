@@ -57,7 +57,10 @@ export default function LoginPage() {
     <div className={pageWrap}>
       <Nav />
       <main className="min-h-dvh flex items-center justify-center px-5 py-[100px]">
-        <div className={`${form} max-w-[440px] w-full overflow-hidden`}>
+        {/* No overflow-hidden here: the "Members area" sticker hangs over the
+            top edge by design and was being cut in half. Screentone clips
+            itself now. */}
+        <div className={`${form} max-w-[440px] w-full`}>
           <Screentone />
           <div className={`${formInner} relative z-[1]`}>
             <span className={formFig}>Members area</span>

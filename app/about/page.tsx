@@ -63,7 +63,7 @@ export default async function About() {
             </div>
           </div>
         </div>
-        <div className="min-h-dvh">
+        <div className="h-dvh min-h-[340px]">
           <JoinSection />
         </div>
         <Footer />

@@ -125,6 +125,13 @@
   body {
     margin: 0;
     padding: 0;
+    /* The rotated banner bands (MovingText, the Header strips, `md:w-[110%]`)
+       deliberately stick out past the viewport. `overflow-x: hidden` on body
+       alone doesn't stop iOS Safari panning to them — the page could be
+       "wiggled" sideways — and it turns body into a scroll container, which
+       breaks `position: sticky` descendants like the project-page sidebar.
+       `clip` on both elements suppresses the pan without either problem. */
+    overflow-x: clip;
   }
   html {
     scroll-behavior: smooth;
@@ -147,7 +154,6 @@
       arial,
       sans-serif;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
   }
   a {
     color: inherit;
@@ -203,17 +209,6 @@ input[type="date"] {
   color-scheme: light;
 }
 
-/* Horizontal chip strips (mobile filter rows) scroll by swipe, so the bar
-   itself is noise — hide it without losing the scrolling. */
-.scroll-strip {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-.scroll-strip::-webkit-scrollbar {
-  display: none;
-}
 
 /* ── Keyframes (referenced from JSX via animate-[…]) ── */
 

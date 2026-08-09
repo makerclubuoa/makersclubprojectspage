@@ -1,7 +1,7 @@
 import TimelineSection from "@/app/components/homepage/TimelineSection";
 import placeholder from "@/public/placeholder.png";
 import { getEvent } from "@/lib/ghost/event";
-import { getYearTimeline } from "@/lib/ghost/timeline";
+import { getTimelineItems } from "@/lib/timeline";
 import Image from "next/image";
 import Link from "next/link";
 import JoinSection from "@/app/components/homepage/JoinSection";
@@ -56,7 +56,8 @@ export default async function Event({
 }) {
   const { slug } = await params;
   const event = await getEvent(slug);
-  const timelines = await getYearTimeline();
+  // DB-backed, matching the homepage and the events index.
+  const timelines = await getTimelineItems();
 
   const date = tidy(event.date, "no date");
   const location = tidy(event.location, "location tba");
@@ -117,7 +118,7 @@ export default async function Event({
       </div>
       <TimelineSection timelines={timelines} />
 
-      <div className="bg-white min-h-[50dvh]">
+      <div className="bg-white h-[50dvh] min-h-[340px]">
         <JoinSection />
       </div>
       <Footer />

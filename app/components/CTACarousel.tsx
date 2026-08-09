@@ -24,23 +24,34 @@ export default function CTACarousel({ images }: { images: { id: string; src: str
   const trackB = [...colB, ...colB]
 
   return (
-    <div className="w-full flex-1 flex gap-3 h-[360px] max-[900px]:h-[260px] max-[640px]:h-[200px] max-[640px]:gap-2 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,black_15%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_15%,black_85%,transparent_100%)]">
-      <div className="flex-1 overflow-hidden">
-        <div className="flex flex-col animate-[scroll-up_12s_linear_infinite]">
-          {trackA.map((img, i) => (
-            <div key={`a-${i}`} className={TILE}>
-              <Image src={img.src} alt={img.alt} fill sizes={SIZES} className="object-cover" />
-            </div>
-          ))}
+    // Two nested elements on purpose. The outer one only participates in the
+    // parent's flex layout; the inner one owns the height.
+    //
+    // Height cannot live on the outer element: the parent switches to flex-col
+    // below 900px, which makes height the *main* axis, and on the main axis
+    // `flex-basis` (from `flex-1`) takes precedence over `height`. The h-[260px]
+    // clamp was silently ignored and the strip grew toward its content instead
+    // — a very tall, mask-faded stack rather than a compact carousel. A plain
+    // block child is immune to all of that, so the height simply applies.
+    <div className="w-full flex-1 min-w-0 max-[900px]:flex-none">
+      <div className="flex gap-3 max-[640px]:gap-2 h-[360px] max-[900px]:h-[260px] max-[640px]:h-[200px] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0%,black_15%,black_85%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_15%,black_85%,transparent_100%)]">
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex flex-col animate-[scroll-up_12s_linear_infinite]">
+            {trackA.map((img, i) => (
+              <div key={`a-${i}`} className={TILE}>
+                <Image src={img.src} alt={img.alt} fill sizes={SIZES} className="object-cover" />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="flex-1 overflow-hidden">
-        <div className="flex flex-col animate-[scroll-down_12s_linear_infinite]">
-          {trackB.map((img, i) => (
-            <div key={`b-${i}`} className={TILE}>
-              <Image src={img.src} alt={img.alt} fill sizes={SIZES} className="object-cover" />
-            </div>
-          ))}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex flex-col animate-[scroll-down_12s_linear_infinite]">
+            {trackB.map((img, i) => (
+              <div key={`b-${i}`} className={TILE}>
+                <Image src={img.src} alt={img.alt} fill sizes={SIZES} className="object-cover" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

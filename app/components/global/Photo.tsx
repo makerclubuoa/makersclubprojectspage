@@ -43,6 +43,14 @@ export interface PhotoProps {
   link?: string;
   typeOverride?: string;
 }
+
+// Width-driven square, not height-driven. The frame's only child is absolutely
+// positioned, so it has no in-flow content — which made the old `w-fit` collapse
+// to the width of its padding while `h-72` held the height at 288px, rendering
+// the photo as a tall sliver. Sizing from the width also means the frame simply
+// shrinks on a narrow phone instead of overflowing it.
+const FRAME = "relative mx-auto w-full max-w-72 aspect-square";
+
 export default function Photo({
   src,
   alt,
@@ -51,42 +59,10 @@ export default function Photo({
   link,
   typeOverride,
 }: PhotoProps) {
-  if (link) {
-    return (
-      <Link href={link}>
-        <div
-          // max-w-full + a smaller floor on the narrowest phones: a hard 288px
-        // square inside a px-5 container overflowed a 320px screen.
-        className={twMerge(
-          "w-fit h-72 max-[360px]:h-64 max-w-full aspect-square relative",
-          typeOverride,
-        )}
-          style={{ transform: `rotate(${rotation}deg)` }}
-        >
-          <div
-            className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `border-2 bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
-            style={{
-              transform: `${tape !== undefined ? `rotate(${tapeMappings[tape].rotation})` : ``}`,
-            }}
-          ></div>
-          <div className="absolute inset-0 p-5 outline-3">
-            {/* TODO: make this more accessible */}
-            <Image
-              src={src !== "" ? src : placeholder}
-              fill
-              className="object-cover"
-              alt={alt ?? "Image of an event."}
-            />
-          </div>
-        </div>
-      </Link>
-    );
-  }
-
-  return (
+  const frame = (
     <div
-      className={twMerge("w-fit h-72 aspect-square relative", typeOverride)}
-      style={{ transform: `rotate(${rotation}deg)` }}
+      className={twMerge(FRAME, typeOverride)}
+      style={rotation ? { transform: `rotate(${rotation}deg)` } : undefined}
     >
       <div
         className={`absolute -top-1 -left-4 z-10 w-16 h-5 ${tape ? `border-2 bg-${tapeMappings[tape].colour} ${tapeMappings[tape].position}` : ""} `}
@@ -97,12 +73,25 @@ export default function Photo({
       <div className="absolute inset-0 p-5 outline-3">
         {/* TODO: make this more accessible */}
         <Image
-          src={src}
+          src={src !== "" ? src : placeholder}
           fill
+          sizes="(max-width: 640px) 90vw, 288px"
           className="object-cover"
           alt={alt ?? "Image of a recent event."}
         />
       </div>
     </div>
   );
+
+  // The link wrapper needs its own width, or as a shrink-to-fit flex item it
+  // gives the frame's `w-full` nothing to resolve against.
+  if (link) {
+    return (
+      <Link href={link} className="block w-full">
+        {frame}
+      </Link>
+    );
+  }
+
+  return frame;
 }

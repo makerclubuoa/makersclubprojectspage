@@ -19,7 +19,7 @@ export default function VendingMachineSection({
           desktop load rendered the mobile arrangement first and then jumped. */}
       <div className="flex flex-col items-center gap-8 px-5 md:flex-row md:items-start md:justify-center md:gap-6">
         {/* Photo leads on mobile, sits to the right on desktop. */}
-        <div className="order-first md:order-last md:shrink-0">
+        <div className="order-first w-full max-w-80 md:order-last md:shrink-0">
           <Polaroid
             src={product.src ?? placeholder}
             onClick={undefined}

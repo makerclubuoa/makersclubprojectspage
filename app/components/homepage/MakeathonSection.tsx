@@ -23,7 +23,7 @@ export default function MakeathonSection({
           useScreenSize() hook that reads 0 until after mount, so desktop
           rendered the mobile arrangement on first paint. */}
       <div className="flex flex-col items-center gap-10 px-5 pt-10 md:flex-row md:items-start md:justify-center md:gap-6 lg:top-12 lg:relative">
-        <div className="order-first md:order-last md:shrink-0">
+        <div className="order-first w-full max-w-80 md:order-last md:shrink-0">
           <Polaroid
             src={makeathon.image}
             onClick={undefined}

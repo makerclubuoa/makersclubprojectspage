@@ -36,7 +36,8 @@ export default function ProjectPreviewCard({
             <Photo
               src={project.image}
               alt={`Photo of ${project.title}.`}
-              typeOverride="w-full h-full"
+              // max-w-none: this one fills the card, it isn't a 288px frame.
+              typeOverride="w-full h-full max-w-none"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100 px-2 text-sm font-semibold text-center text-gray-500">

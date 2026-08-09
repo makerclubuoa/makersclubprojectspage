@@ -7,7 +7,11 @@ export default function JoinSection() {
   const year = new Date().getFullYear();
 
   return (
-    <div className="relative h-full w-full border-t-4 border-b-4">
+    // h-full needs an ancestor with a definite height. min-h is a backstop so
+    // that if one ever doesn't have one, this collapses to a usable band with
+    // its background art still covering it, rather than to bare content height
+    // inside a taller white parent.
+    <div className="relative h-full min-h-[340px] w-full border-t-4 border-b-4">
       <picture className="absolute inset-0 z-0 block">
         <source media="(max-width: 2000px)" srcSet={artVert.src} />
         <Image

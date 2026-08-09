@@ -52,13 +52,14 @@ export default function PhotoCarousel({ props }: PhotoCarouselProps) {
       >
         {props.map((photo, index) => (
           <SwiperSlide key={index}>
-            <div className="flex h-64 items-center justify-center sm:h-80 lg:h-96">
+            {/* No fixed height — Photo is a width-driven square, so the slide
+                width sets the size and nothing can end up stretched. */}
+            <div className="flex items-center justify-center px-1 py-2">
               {/* TODO: make accessible */}
               <Photo
                 src={photo.src}
                 alt={photo.alt ? photo.alt : "Photo of a recent event."}
                 tape={photo.tape}
-                typeOverride="h-full w-auto max-w-full"
               />
             </div>
           </SwiperSlide>
