@@ -173,14 +173,14 @@ export function isAudioFile(file: File): boolean {
 
 /** Human-readable reason the file can't be uploaded, or null when it's fine. */
 export function mediaFileError(file: File): string | null {
-  if (file.type.startsWith(“video/”)) {
-    return `”${file.name}” is a video, paste a YouTube or Vimeo link instead so it doesn't eat the club's storage.`;
+  if (file.type.startsWith("video/")) {
+    return `"${file.name}" is a video, paste a YouTube or Vimeo link instead so it doesn't eat the club's storage.`;
   }
   if (!isAudioFile(file)) {
-    return `”${file.name}” isn't an audio file.`;
+    return `"${file.name}" isn't an audio file.`;
   }
   if (file.size > AUDIO_MAX_BYTES) {
-    return `”${file.name}” is ${formatBytes(file.size)}, the limit is ${formatBytes(AUDIO_MAX_BYTES)}. Try exporting it as an MP3.`;
+    return `"${file.name}" is ${formatBytes(file.size)}, the limit is ${formatBytes(AUDIO_MAX_BYTES)}. Try exporting it as an MP3.`;
   }
   return null;
 }
