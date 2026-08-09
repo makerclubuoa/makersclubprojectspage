@@ -676,7 +676,7 @@ export default function SubmitPage() {
             <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8 max-[640px]:p-5 max-[900px]:order-2">
               <h3 className={`${secHead} text-pop-pink mb-5`}>What We Archive</h3>
               <p className="font-medium text-sm leading-[1.7] max-w-[46ch]">
-                We log everything our members make — solo or group, finished or
+                We log everything our members make, solo or group, finished or
                 still in progress. Hardware, software, food, textiles, art. If
                 you made it, it belongs here.
               </p>
@@ -743,7 +743,7 @@ export default function SubmitPage() {
                   <h2 className={submitSuccessH2}>Filed!</h2>
                   <p className={submitSuccessP}>
                     Your project is in the queue. We review submissions every
-                    Tuesday — if anything&rsquo;s unclear we&rsquo;ll reach out
+                    Tuesday, if anything&rsquo;s unclear we&rsquo;ll reach out
                     on the contact you provided.
                   </p>
                   <Link href="/projects" className={`${btnGradient} mt-6`}>
@@ -1008,7 +1008,7 @@ export default function SubmitPage() {
                     </div>
                     <p className="text-[12.5px] font-medium text-ink-2 leading-[1.55] mt-1.5 mb-1">
                       That&rsquo;s the required part done. Everything below is
-                      extra — add what you&rsquo;ve got and skip the rest.
+                      extra, add what you&rsquo;ve got and skip the rest.
                     </p>
 
                     <FormSection
@@ -1435,7 +1435,7 @@ export default function SubmitPage() {
                     <FormSection
                       title="What We Learned"
                       colorClass="text-pop-red"
-                      blurb="Honest notes — what worked, what you'd do differently. One per line."
+                      blurb="Honest notes, what worked, what you'd do differently. One per line."
                       summary={
                         retroCount > 0
                           ? `${retroCount} note${retroCount === 1 ? "" : "s"}`
@@ -1510,7 +1510,7 @@ export default function SubmitPage() {
                       <input
                         className={fieldInput}
                         type="text"
-                        placeholder="@discord, email, or Instagram — optional"
+                        placeholder="@discord, email, or Instagram, optional"
                         value={contact}
                         onChange={(e) => setContact(e.target.value)}
                       />
@@ -1539,7 +1539,7 @@ export default function SubmitPage() {
                                 className={formErrorLink}
                                 onClick={() => focusField(f.id)}
                               >
-                                {f.label} — {f.message}
+                                {f.label}, {f.message}
                               </button>
                             </li>
                           ))}

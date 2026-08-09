@@ -51,6 +51,16 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  experimental: {
+    // The legacy App Router scroll handler locates the new page by walking to
+    // the segment's first DOM node. Every page here has `generateMetadata`, and
+    // React hoists that <title>/<meta> into <head> — so the walk lands on a
+    // zero-sized head element, skips through the rest of <head>, runs out of
+    // siblings and bails without scrolling. The result: following a link left
+    // you at the previous page's scroll offset, i.e. halfway down a project.
+    // The new handler uses a fragment ref instead and never sees <head>.
+    appNewScrollHandler: true,
+  },
 };
 
 export default nextConfig;

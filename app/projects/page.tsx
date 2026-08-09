@@ -46,8 +46,7 @@ export default async function ProjectsPage() {
         <div className={pageBand}>
           <p className={`${pageBandTitle} text-indigo-300`}>Projects</p>
           <p className={pageBandSub}>
-            {`Things we've made. Hardware, software, textiles, art, food — if a
-            member built it, it belongs in the archive.`}
+            {`Things we've made. Hardware, software, textiles, art, food, it all belongs in the archive.`}
           </p>
         </div>
 
@@ -72,7 +71,7 @@ export default async function ProjectsPage() {
               </h4>
               <p className="font-semibold max-w-[44ch] text-base leading-[1.6] text-ink mt-0 mb-7">
                 Submissions are open all the time. Half-finished, broken, or
-                weird is welcome — that&rsquo;s usually where the good stuff is.
+                weird is welcome, that&rsquo;s usually where the good stuff is.
               </p>
               <LinkButton link="/submit" bgColour="pop-pink" textColour="white">
                 Submit a Project

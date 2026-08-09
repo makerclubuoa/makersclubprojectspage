@@ -30,9 +30,13 @@ import {
 const SECTION =
   "relative bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8 max-[640px]:p-4 mb-10 max-[640px]:mb-6";
 
-// Chip used in the hero meta row.
+// Chip used in the hero meta row. Colours are supplied per use site: these are
+// plain strings, so a `bg-*` added at the call site doesn't override one baked
+// in here — Tailwind emits `bg-white` after `bg-black`, so a chip written as
+// `${META_CHIP} bg-black text-white` came out white-on-white and unreadable.
 const META_CHIP =
-  "inline-flex items-center px-3 py-0.5 rounded-full border-2 border-black bg-white text-[10.5px] font-bold tracking-[0.08em] uppercase";
+  "inline-flex items-center px-3 py-0.5 rounded-full border-2 border-black text-[10.5px] font-bold tracking-[0.08em] uppercase";
+const META_CHIP_LIGHT = `${META_CHIP} bg-white text-ink`;
 
 // BOM table cells
 const BOM_TH =
@@ -147,11 +151,6 @@ export default async function ProjectPage({
 
   // Dates
   const loggedDate = project.date ? fmtDate(project.date) : "—";
-  const startedDate = project.start_date
-    ? fmtDate(project.start_date)
-    : project.date
-      ? fmtDate(project.date)
-      : "—";
 
   // BOM totals
   const bomItems = project.bom ?? [];
@@ -197,31 +196,32 @@ export default async function ProjectPage({
               <span className={`${META_CHIP} bg-black text-white`}>
                 {project.category ?? "—"}
               </span>
-              <span className={META_CHIP}>Started {startedDate}</span>
-              <span className={META_CHIP}>Logged {loggedDate}</span>
-              {project.build_time && (
-                <span className={META_CHIP}>
-                  Build {project.build_time.toUpperCase()}
-                </span>
-              )}
+              {/* Start date and build time live in the sidebar's spec list —
+                  the hero carries only what identifies the project at a glance. */}
+              <span className={META_CHIP_LIGHT}>Logged {loggedDate}</span>
             </div>
 
-            <div className="grid grid-cols-[1.05fr_1fr] gap-12 items-center max-[980px]:grid-cols-1 max-[980px]:gap-10">
+            {/* Below 980px the left column collapses to `display: contents` so
+                its children become grid items in their own right and can be
+                reordered around the cover: title and blurb, then the cover,
+                then the stat bar, the makers and the actions. Spacing there is
+                carried by each child's own margins, hence gap-0. */}
+            <div className="grid grid-cols-[1.05fr_1fr] gap-12 items-center max-[980px]:grid-cols-1 max-[980px]:gap-0">
               {/* Left */}
-              <div>
+              <div className="max-[980px]:[display:contents]">
                 <h1
-                  className={`${holt} text-white text-[clamp(26px,4vw,48px)] leading-[1.2] mt-0 mb-[18px] [text-wrap:balance]`}
+                  className={`${holt} text-white text-[clamp(26px,4vw,48px)] leading-[1.2] mt-0 mb-[18px] [text-wrap:balance] max-[980px]:order-1`}
                 >
                   {project.title}
                 </h1>
                 {project.blurb && (
-                  <p className="text-lg font-semibold max-w-[52ch] mt-0 mb-6 leading-[1.5]">
+                  <p className="text-lg font-semibold max-w-[52ch] mt-0 mb-6 leading-[1.5] max-[980px]:order-2">
                     {project.blurb}
                   </p>
                 )}
 
                 {totalMakers > 0 && (
-                  <div className="flex items-center gap-3 mb-5">
+                  <div className="flex items-center gap-3 mb-5 max-[980px]:order-5 max-[980px]:mt-8">
                     <span className="flex">
                       {Array.from({ length: totalMakers }).map((_, i) => (
                         <span
@@ -241,7 +241,7 @@ export default async function ProjectPage({
                   </div>
                 )}
 
-                <div className="flex flex-wrap border-2 border-black rounded-[6px] overflow-hidden shadow-[4px_4px_0px_0px_#000]">
+                <div className="flex flex-wrap border-2 border-black rounded-[6px] overflow-hidden shadow-[4px_4px_0px_0px_#000] max-[980px]:order-4 max-[980px]:mt-8">
                   <div className="px-4 py-3.5 border-r-2 border-black flex-1 min-w-[90px] last:border-r-0 max-[480px]:flex-[1_1_calc(50%-1px)] max-[480px]:min-w-0">
                     <b className="block font-bold text-[22px] leading-none mb-[5px]">
                       {project.likes ?? 0}
@@ -280,7 +280,7 @@ export default async function ProjectPage({
                   )}
                 </div>
 
-                <div className="flex gap-2.5 items-center mt-6 flex-wrap">
+                <div className="flex gap-2.5 items-center mt-6 flex-wrap max-[980px]:order-6">
                   <LikeButton
                     projectId={project.id}
                     initialLikes={project.likes ?? 0}
@@ -302,7 +302,7 @@ export default async function ProjectPage({
               </div>
 
               {/* Right: cover, polaroid style */}
-              <div className="relative rotate-2 max-[980px]:rotate-0 justify-self-center w-full max-w-[440px]">
+              <div className="relative rotate-2 max-[980px]:rotate-0 justify-self-center w-full max-w-[440px] max-[980px]:order-3 max-[980px]:mt-2">
                 <div className="absolute -top-3 left-10 z-20 w-20 h-6 outline-2 outline-black bg-pop-pink -rotate-6" />
                 <div className="aspect-[4/5] relative bg-white outline-solid outline-3 outline-black p-4 pb-12 max-[980px]:aspect-[4/3]">
                   <div className="relative w-full h-full overflow-hidden outline-2 outline-black">

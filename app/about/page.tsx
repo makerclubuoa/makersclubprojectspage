@@ -48,6 +48,9 @@ export default async function About() {
                 who are interested in making, designing, or creating anything!
                 <br />
                 <br />
+                We especially welcome people who are on the fence about making, those who want to create something but don&apos;t know where to start. No experience necessary. We expect none, and we&apos;re here to help you discover what you can make.
+                <br />
+                <br />
                 With regular events and more, this is the University of
                 Auckland&apos;s home for all who make.
               </p>

@@ -426,7 +426,7 @@ export default function ProjectsSection({
             <div className={emptyState}>
               <div>Nothing here yet</div>
               <p className="mt-2">
-                Try a different filter —{' '}
+                Try a different filter,{' '}
                 <a href="#" onClick={resetFilters} className="underline">
                   show everything
                 </a>

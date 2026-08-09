@@ -140,11 +140,12 @@ export function embedUrl(
     return `https://www.youtube-nocookie.com/embed/${media.videoId}?${params}`;
   }
 
-  const params = new URLSearchParams();
+  // playsinline matters on phones: without it iOS hijacks playback into its own
+  // fullscreen player, which throws the visitor out of the page.
+  const params = new URLSearchParams({ playsinline: "1" });
   if (autoplay) params.set("autoplay", "1");
   if (muted) params.set("muted", "1");
-  const query = params.toString();
-  return `https://player.vimeo.com/video/${media.videoId}${query ? `?${query}` : ""}`;
+  return `https://player.vimeo.com/video/${media.videoId}?${params}`;
 }
 
 /** Free, provider-hosted still for a linked video. Null when there isn't one. */
@@ -172,14 +173,14 @@ export function isAudioFile(file: File): boolean {
 
 /** Human-readable reason the file can't be uploaded, or null when it's fine. */
 export function mediaFileError(file: File): string | null {
-  if (file.type.startsWith("video/")) {
-    return `“${file.name}” is a video — paste a YouTube or Vimeo link instead so it doesn't eat the club's storage.`;
+  if (file.type.startsWith(“video/”)) {
+    return `”${file.name}” is a video, paste a YouTube or Vimeo link instead so it doesn't eat the club's storage.`;
   }
   if (!isAudioFile(file)) {
-    return `“${file.name}” isn't an audio file.`;
+    return `”${file.name}” isn't an audio file.`;
   }
   if (file.size > AUDIO_MAX_BYTES) {
-    return `“${file.name}” is ${formatBytes(file.size)} — the limit is ${formatBytes(AUDIO_MAX_BYTES)}. Try exporting it as an MP3.`;
+    return `”${file.name}” is ${formatBytes(file.size)}, the limit is ${formatBytes(AUDIO_MAX_BYTES)}. Try exporting it as an MP3.`;
   }
   return null;
 }

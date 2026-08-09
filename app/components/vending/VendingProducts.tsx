@@ -60,7 +60,7 @@ export default function VendingProducts({
         <div className={emptyState}>
           <p className={emptyStateMono}>The machine is being restocked</p>
           <p className="text-sm font-semibold text-ink-2 mt-2 mb-0">
-            No items are available right now — check back soon!
+            No items are available right now, check back soon!
           </p>
         </div>
       </div>

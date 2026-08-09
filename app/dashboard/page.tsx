@@ -310,7 +310,7 @@ export default function DashboardPage() {
                 <label className={fieldLabel}>
                   Public username
                   <span className="font-normal normal-case tracking-normal">
-                    optional — alias shown instead of your name
+                    optional, alias shown instead of your name
                   </span>
                 </label>
                 <input

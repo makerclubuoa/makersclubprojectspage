@@ -20,8 +20,15 @@ const HOVER_DELAY_MS = 350;
 const STRIP =
   "absolute inset-x-0 bottom-0 z-[3] flex items-center gap-2 px-2.5 py-2 bg-gradient-to-t from-black/85 via-black/60 to-transparent pt-6 pointer-events-auto";
 
+// Bigger on phones — 28px is a comfortable mouse target and a miserable thumb
+// one, and this button is the only way into a preview on a touch screen.
 const PLAY_BTN =
-  "shrink-0 grid place-items-center w-7 h-7 rounded-full border-2 border-black bg-white text-black text-[10px] leading-none shadow-[2px_2px_0px_0px_#000] transition-[transform,background-color] duration-150 hover:bg-accent hover:text-white active:translate-x-[1px] active:translate-y-[1px] active:shadow-none";
+  "shrink-0 grid place-items-center w-7 h-7 max-[640px]:w-10 max-[640px]:h-10 rounded-full border-2 border-black bg-white text-black text-[10px] max-[640px]:text-[13px] leading-none shadow-[2px_2px_0px_0px_#000] transition-[transform,background-color] duration-150 hover:bg-accent hover:text-white active:translate-x-[1px] active:translate-y-[1px] active:shadow-none";
+
+// Closes a deliberately-started video. It sits top-right rather than in the
+// bottom strip so it doesn't cover the provider's own playback controls.
+const CLOSE_BTN =
+  "absolute top-2.5 right-2.5 z-[4] pointer-events-auto grid place-items-center w-7 h-7 max-[640px]:w-9 max-[640px]:h-9 rounded-full border-2 border-black bg-white text-black text-[11px] leading-none shadow-[2px_2px_0px_0px_#000] transition-colors duration-150 hover:bg-accent hover:text-white";
 
 const RANGE =
   "flex-1 min-w-0 h-1 appearance-none bg-white/35 rounded-full cursor-pointer outline-none " +
@@ -38,6 +45,27 @@ const LABEL =
 function swallow(e: React.SyntheticEvent) {
   e.preventDefault();
   e.stopPropagation();
+}
+
+/**
+ * Whether hover-to-preview is a real gesture here.
+ *
+ * Phones fire `mouseenter` on tap, so without this a tap would arm a hover
+ * preview it can never dismiss. Starts false so the server render and the first
+ * client paint agree, and so a touch device never auto-starts anything.
+ */
+function useCanHover() {
+  const [canHover, setCanHover] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    setCanHover(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setCanHover(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return canHover;
 }
 
 /**
@@ -73,6 +101,7 @@ function FilePreview({
 }) {
   const ref = useRef<HTMLAudioElement | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const canHover = useCanHover();
   // Hover-started previews stop when the pointer leaves; a preview the visitor
   // deliberately pressed play on keeps going.
   const startedByHover = useRef(false);
@@ -129,6 +158,7 @@ function FilePreview({
   );
 
   useEffect(() => {
+    if (!canHover) return undefined;
     if (hovered) {
       hoverTimer.current = setTimeout(() => start(true), HOVER_DELAY_MS);
       return () => {
@@ -138,7 +168,7 @@ function FilePreview({
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
     if (startedByHover.current) reset();
     return undefined;
-  }, [hovered, start, reset]);
+  }, [hovered, canHover, start, reset]);
 
   function togglePlay(e: React.MouseEvent) {
     swallow(e);
@@ -230,9 +260,17 @@ function EmbedPreview({
   hovered?: boolean;
 }) {
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // `muted` on hover because that's the only autoplay browsers permit; a
-  // deliberate press of play counts as a gesture, so it can have sound.
+  const canHover = useCanHover();
   const [mode, setMode] = useState<"idle" | "hover" | "playing">("idle");
+
+  // Muted on hover, because that's the only autoplay browsers permit unasked.
+  // Muted on touch too: a press of play is a gesture the *parent* page owns and
+  // it doesn't carry into a cross-origin iframe, so a phone refuses the unmuted
+  // autoplay that follows and leaves a still frame sitting there — which is
+  // exactly the "tap play, nothing happens" this fixes. Muted autoplay it does
+  // allow, so the video starts and unmuting is one tap on the provider's own
+  // controls. A mouse-driven press keeps its sound.
+  const mutedPlayback = mode === "hover" || !canHover;
 
   const stop = useCallback(() => setMode("idle"), []);
 
@@ -244,6 +282,7 @@ function EmbedPreview({
   }, [stop]);
 
   useEffect(() => {
+    if (!canHover) return undefined;
     if (hovered) {
       hoverTimer.current = setTimeout(() => {
         setMode((m) => (m === "playing" ? m : "hover"));
@@ -256,7 +295,7 @@ function EmbedPreview({
     // Only a hover-started preview is torn down on mouse-out.
     setMode((m) => (m === "hover" ? "idle" : m));
     return undefined;
-  }, [hovered]);
+  }, [hovered, canHover]);
 
   function togglePlay(e: React.MouseEvent) {
     swallow(e);
@@ -270,37 +309,55 @@ function EmbedPreview({
     setMode("playing");
   }
 
+  const playing = mode === "playing";
   const src =
     mode === "idle"
       ? null
-      : embedUrl(media, { autoplay: true, muted: mode === "hover" });
+      : embedUrl(media, { autoplay: true, muted: mutedPlayback });
 
   return (
     <div className="absolute inset-0 z-[2] pointer-events-none">
       {src && (
         <iframe
           src={src}
-          className="absolute inset-0 w-full h-full"
+          // A hover preview is decorative, so it stays click-through and the
+          // card underneath still navigates. A video somebody pressed play on
+          // is the thing they came for — it takes its own taps, which is what
+          // stops "tap the video, get thrown onto the project page" and leaves
+          // the provider's unmute and fullscreen controls reachable.
+          className={`absolute inset-0 w-full h-full ${playing ? "pointer-events-auto" : ""}`}
           allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
           title={media.title || "Video preview"}
         />
       )}
 
-      <div className={STRIP} onClick={swallow}>
+      {playing ? (
         <button
           type="button"
-          className={PLAY_BTN}
+          className={CLOSE_BTN}
           onClick={togglePlay}
-          aria-label={mode === "playing" ? "Stop video" : "Play video"}
+          aria-label="Close video"
         >
-          {mode === "playing" ? "❚❚" : "▶"}
+          ✕
         </button>
+      ) : (
+        <div className={STRIP} onClick={swallow}>
+          <button
+            type="button"
+            className={PLAY_BTN}
+            onClick={togglePlay}
+            aria-label="Play video"
+          >
+            ▶
+          </button>
 
-        <span className={LABEL}>
-          {media.provider ? providerLabel(media.provider) : "Video"}
-          {mode === "hover" ? " · muted" : ""}
-        </span>
-      </div>
+          <span className={LABEL}>
+            {media.provider ? providerLabel(media.provider) : "Video"}
+            {mode === "hover" ? " · muted" : ""}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

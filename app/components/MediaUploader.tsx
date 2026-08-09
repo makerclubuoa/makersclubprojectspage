@@ -149,7 +149,7 @@ export default function MediaUploader({
       problems.push(`You've already attached the maximum of ${MAX_MEDIA_ITEMS} items.`);
     } else if (picked.length > room) {
       problems.push(
-        `You can attach up to ${MAX_MEDIA_ITEMS} items — only the first ${room} were added.`,
+        `You can attach up to ${MAX_MEDIA_ITEMS} items, only the first ${room} were added.`,
       );
     }
 
@@ -315,7 +315,7 @@ export default function MediaUploader({
             )}
             <p className="text-[11px] text-muted leading-[1.5] m-0">
               YouTube and Vimeo carry the bandwidth, so linked video costs the
-              club nothing — upload it there, paste the link here.
+              club nothing, upload it there, paste the link here.
             </p>
           </div>
         </>

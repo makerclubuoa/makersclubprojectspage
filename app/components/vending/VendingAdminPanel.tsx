@@ -298,7 +298,7 @@ export default function VendingAdminPanel() {
                             act({ action: "complete", id: item.id });
                         }}
                       >
-                        {item.free ? "Done" : "Done — charge card"}
+                        {item.free ? "Done" : "Done, charge card"}
                       </button>
                       {!item.free && (
                         <button
@@ -826,7 +826,7 @@ function EditModal({
               </button>
             )}
             <p className="text-[10.5px] italic text-ink-2 m-0">
-              PNG or JPG under 2MB — ideally under 500kb and 1024×1024.
+              PNG or JPG under 2MB, ideally under 500kb and 1024×1024.
             </p>
           </div>
 
@@ -918,7 +918,7 @@ function EditModal({
             disabled={busy || product.price !== 0}
             title={
               product.price !== 0
-                ? "Only free-priced products can be dispensed from here — use the legacy admin for paid manual vends."
+                ? "Only free-priced products can be dispensed from here, use the legacy admin for paid manual vends."
                 : undefined
             }
             className={btnDanger}
@@ -961,7 +961,7 @@ function ReplaceModal({
   const inSlot = products.filter((p) => p.shelf_loc === slot);
   const others = products.filter((p) => p.shelf_loc !== slot);
   const label = (p: VendableProduct) =>
-    `${p.name} ($${p.price?.toFixed(2) || "0.00"})${p.active ? "" : " — archived"}`;
+    `${p.name} ($${p.price?.toFixed(2) || "0.00"})${p.active ? "" : ", archived"}`;
 
   return (
     <div className={modalBackdrop} onClick={onClose}>
@@ -984,13 +984,13 @@ function ReplaceModal({
             Activate…
           </option>
           <option value="newProd">Create New Product</option>
-          <option disabled>— Previously in this slot —</option>
+          <option disabled>, Previously in this slot,</option>
           {inSlot.map((p) => (
             <option key={p.id} value={p.id}>
               {label(p)}
             </option>
           ))}
-          <option disabled>— All products —</option>
+          <option disabled>, All products,</option>
           {others.map((p) => (
             <option key={p.id} value={p.id}>
               {label(p)}

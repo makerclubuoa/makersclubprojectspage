@@ -494,7 +494,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
           {backLabel}
         </Link>
         <p className={`${pageBandTitle} text-pop-violet`}>
-          Edit — {project?.title}
+          Edit, {project?.title}
         </p>
       </header>
 

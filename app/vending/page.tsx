@@ -14,9 +14,8 @@ export default async function VendingPage() {
           <p className={`${pageBandSub} max-w-[75ch]`}>
             Welcome to the Maker Club&apos;s vending machine, located at the
             University of Auckland Makerspace. We&apos;re providing a space for
-            makers to sell things they&apos;ve created — items here are sold
-            with 100% of proceeds after transaction fees going to the creator,
-            charity, or a university club.
+            makers to sell things they&apos;ve created, items here are sold
+            with 100% of proceeds after transaction fees going directly to the creator.
           </p>
         </div>
       </div>
