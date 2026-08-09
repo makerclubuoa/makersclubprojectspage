@@ -31,6 +31,20 @@ function eventDateTag(event: PostsOrPages[number]): string | null {
   return raw ? raw.replace("#DATE:", "").trim() : null;
 }
 
+const SLASH_DATE = /\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/g;
+
+/**
+ * Chrono's slash-date parsing assumes US month/day order, but this club is
+ * in NZ, where "6/7/26" means 6 July, not 7 June. Swapping the two numeric
+ * groups before parsing makes the US-order reading come out right. `en.GB`
+ * was tried instead of this, but its date-range parser mis-parses a plain
+ * "Jul 24 - Nov 21 2026" (misreads the start as "Jul 21 2024"), so slash
+ * dates are corrected by hand instead of switching locales wholesale.
+ */
+function toUsSlashOrder(dateTag: string): string {
+  return dateTag.replace(SLASH_DATE, (_, day, month, year) => `${month}/${day}/${year}`);
+}
+
 /**
  * Parses a #DATE: tag into its start and end. `chrono.parseDate()` (used
  * everywhere below) silently collapses a range like "31 Jul - 14 Nov 2026"
@@ -38,7 +52,7 @@ function eventDateTag(event: PostsOrPages[number]): string | null {
  * first day passes. Using `chrono.parse()` keeps the end when there is one.
  */
 function parseEventDateRange(dateTag: string): { start: Date; end: Date } | null {
-  const [result] = chrono.parse(dateTag);
+  const [result] = chrono.parse(toUsSlashOrder(dateTag));
   if (!result) return null;
   const start = result.start.date();
   const end = result.end ? result.end.date() : start;
