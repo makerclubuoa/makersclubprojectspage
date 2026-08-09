@@ -49,9 +49,12 @@ function applyFilters(
   if (cat !== 'All') out = out.filter(p => p.category === cat)
   if (tool !== 'All tools') out = out.filter(p => (p.tools ?? []).includes(tool))
   if (featured) out = out.filter(p => p.Featured === true)
-  if (sort === 'newest') out.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
-  if (sort === 'popular') out.sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))
-  if (sort === 'az') out.sort((a, b) => a.title.localeCompare(b.title))
+  const cmp =
+    sort === 'popular' ? (a: Project, b: Project) => (b.likes ?? 0) - (a.likes ?? 0) :
+    sort === 'az' ? (a: Project, b: Project) => a.title.localeCompare(b.title) :
+    (a: Project, b: Project) => (b.date ?? '').localeCompare(a.date ?? '')
+  // Featured projects float to the top within whichever sort is active.
+  out.sort((a, b) => Number(b.Featured) - Number(a.Featured) || cmp(a, b))
   return out
 }
 
