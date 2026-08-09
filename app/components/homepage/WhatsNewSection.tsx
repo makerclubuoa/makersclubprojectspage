@@ -11,7 +11,7 @@ export default function WhatsNewSection({
   upcomingEvent,
 }: {
   photos: PhotosType[];
-  upcomingEvent: Event;
+  upcomingEvent: Event | null;
 }) {
   return (
     <div className="pb-10">
@@ -28,8 +28,8 @@ export default function WhatsNewSection({
         <div className="w-full items-center lg:items-stretch lg:w-3/4 px-5 md:px-10 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-8 lg:gap-10">
           {/* TODO: change this to a placeholder photo */}
           <Photo
-            link={`events/${upcomingEvent.slug}`}
-            src={upcomingEvent.src ?? art}
+            link={upcomingEvent ? `events/${upcomingEvent.slug}` : undefined}
+            src={upcomingEvent?.src ?? art}
             alt=""
             rotation={2.3}
             tape="popViolet"

@@ -11,77 +11,51 @@ export interface Event {
   excerpt?: string;
 }
 
-export default async function getLatestUpcomingEvent(): Promise<Event> {
-  //TODO: change to pick the next upcoming, not just the latest published
-  const upcomingEvent: PostOrPage = (
-    await api().posts.browse({
-      filter: "tag:Events",
-      formats: "html",
-      limit: 1,
-      order: "published_at DESC",
-      include: "tags",
-    })
-  )[0];
-  let date = null;
-  if (upcomingEvent.tags) {
-    for (const tag of upcomingEvent.tags) {
-      if (tag.name) {
-        if (tag.name.includes("DATE")) {
-          date = tag.name.replace("#DATE:", "").trim();
-        }
-      }
-    }
-  }
+function toEvent(post: PostOrPage): Event {
+  const date = post.tags?.find((t) => t.name?.includes("DATE"))?.name
+    ?.replace("#DATE:", "")
+    .trim();
 
   return {
-    title: upcomingEvent.title ?? "No title provided.",
-    slug: upcomingEvent.slug,
-    src: upcomingEvent.feature_image ?? undefined,
+    title: post.title ?? "No title provided.",
+    slug: post.slug,
+    src: post.feature_image ?? undefined,
     date: date ?? "TBA | No date provided.",
-    html: upcomingEvent.html
-      ? sanitizeGhostHtml(upcomingEvent.html)
-      : "No body provided.",
-    excerpt: upcomingEvent.excerpt ?? "No except provided.",
+    html: post.html ? sanitizeGhostHtml(post.html) : "No body provided.",
+    excerpt: post.excerpt ?? "No excerpt provided.",
   };
 }
 
-// TODO: check if this is working
-export async function getUpcomingEvents(): Promise<Event[]> {
-  const upcomingEvents: PostsOrPages = await api().posts.browse({
+/** All events whose #DATE: tag hasn't passed yet, soonest first. */
+export async function getUpcomingEvents(limit: number = 12): Promise<Event[]> {
+  const events: PostsOrPages = await api().posts.browse({
     filter: "tag:Events",
     formats: "html",
-    limit: 4,
+    limit: 50,
+    order: "published_at DESC",
     include: "tags",
   });
 
-  //check the date of the events - if they are after today, then put them here
-  let res: Event[] = [];
-
-  for (const upcomingEvent of upcomingEvents) {
-    let date = null;
-    if (upcomingEvent.tags) {
-      for (const tag of upcomingEvent.tags) {
-        if (tag.name) {
-          if (tag.name.includes("DATE")) {
-            date = tag.name.replace("#DATE:", "").trim();
-            const parsedDate = chrono.parseDate(date);
-            if (parsedDate && parsedDate?.getDate() > Date.now()) {
-              res.push({
-                title: upcomingEvent.title ?? "No title provided.",
-                slug: upcomingEvent.slug,
-                src: upcomingEvent.feature_image ?? undefined,
-                date: date ?? "TBA | No date provided.",
-                html: upcomingEvent.html ?? "No body provided.",
-                excerpt: upcomingEvent.excerpt ?? "No except provided.",
-              });
-            }
-          }
-        }
-      }
-    }
+  // Ghost posts are ordered by publish date, not event date, so this has to
+  // scan and re-sort rather than trust the API's ordering.
+  const upcoming: { post: PostOrPage; date: Date }[] = [];
+  for (const post of events) {
+    if (isPastEvent(post)) continue;
+    const dateTag = post.tags?.find((t) => t.name?.includes("DATE"))?.name;
+    const dateStr = dateTag?.replace("#DATE:", "").trim();
+    const parsedDate = dateStr ? chrono.parseDate(dateStr) : null;
+    if (!parsedDate) continue;
+    upcoming.push({ post, date: parsedDate });
   }
 
-  return res;
+  upcoming.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  return upcoming.slice(0, limit).map(({ post }) => toEvent(post));
+}
+
+export default async function getLatestUpcomingEvent(): Promise<Event | null> {
+  const [next] = await getUpcomingEvents(1);
+  return next ?? null;
 }
 function isPastEvent(event: PostsOrPages[number]) {
   let dateTag: string | null = null;

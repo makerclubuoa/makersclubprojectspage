@@ -1,15 +1,13 @@
-import getLatestUpcomingEvent from "@/lib/ghost/events";
+import { getUpcomingEvents } from "@/lib/ghost/events";
 import Image from "next/image";
 import placeholder from "@/public/placeholder.png";
 import solderingIron from "@/public/doodle-soldering-iron.png";
-import PinnedPostSnippet from "../components/global/PinnedPostSnippet";
-import Photo from "../components/global/Photo";
+import EventSlide from "../components/events/EventSlide";
 import PastEventsSection from "../components/events/PastEventsSection";
 import TimelineSection from "../components/homepage/TimelineSection";
 import Screentone from "../components/global/Screentone";
 import { type TimelineType } from "@/lib/ghost/timeline";
 import { getTimelineItems } from "@/lib/timeline";
-import LinkButton from "../components/global/LinkButton";
 import JoinSection from "../components/homepage/JoinSection";
 import Footer from "../components/Footer";
 import {
@@ -21,12 +19,13 @@ import {
   secHeadRow,
   secHead,
   secHint,
+  emptyState,
 } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function Events() {
-  const upcomingEvent = await getLatestUpcomingEvent();
+  const upcomingEvents = await getUpcomingEvents();
   // Same source as the homepage: the Supabase Timeline table, which is what
   // the admin panel edits. Previously this scraped a Ghost roadmap post, so
   // the two timelines could drift apart.
@@ -55,30 +54,25 @@ export default async function Events() {
               Register before the spots go
             </span>
           </div>
-          <div className="mt-6 flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:gap-10">
-            <Photo
-              src={upcomingEvent.src ?? placeholder}
-              alt=""
-              rotation={2.3}
-              link={`/events/${upcomingEvent.slug}`}
-            />
-            <PinnedPostSnippet
-              upcomingEvent={upcomingEvent}
-              pinned={true}
-              typeOverride="shadow-[6px_6px_0px_0px_#000]"
-            >
-              <div className="mt-4 flex w-full justify-center md:justify-end-safe">
-                <LinkButton
-                  link={`/events/${upcomingEvent.slug}`}
-                  bgColour="pop-violet"
-                  textColour="white"
-                  typeOverride="text-md md:text-md lg:text-md"
-                >
-                  Learn More!
-                </LinkButton>
-              </div>
-            </PinnedPostSnippet>
-          </div>
+          {upcomingEvents.length > 0 ? (
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {upcomingEvents.map((event, index) => (
+                <EventSlide
+                  key={event.slug}
+                  src={event.src ?? placeholder}
+                  title={event.title}
+                  excerpt={event.excerpt}
+                  slug={event.slug}
+                  date={event.date}
+                  index={index}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={`mt-6 ${emptyState}`}>
+              Nothing scheduled right now, check back soon!
+            </div>
+          )}
         </section>
 
         <section className={`${container} pb-14 max-[640px]:pb-10`}>
