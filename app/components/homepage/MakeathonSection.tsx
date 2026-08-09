@@ -37,7 +37,11 @@ export default function MakeathonSection({
         <div className="w-full md:w-2/3 md:pr-10 lg:pr-20 text-lg lg:text-2xl font-semibold flex flex-col justify-center">
           {formatParagraph(makeathon.description)}
           <div className="flex justify-center pt-4 md:justify-start lg:pt-5">
-            <LinkButton link="/events" bgColour="pop-red" textColour="white">
+            <LinkButton
+              link="/events/make-a-thon-info-pack"
+              bgColour="pop-red"
+              textColour="white"
+            >
               Learn More!
             </LinkButton>
           </div>

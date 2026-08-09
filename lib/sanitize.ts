@@ -13,6 +13,7 @@ export function sanitizeGhostHtml(html: string): string {
       "audio",
       "video",
       "source",
+      "iframe",
     ]),
     allowedAttributes: {
       ...sanitizeHtml.defaults.allowedAttributes,
@@ -21,6 +22,18 @@ export function sanitizeGhostHtml(html: string): string {
       audio: ["src", "controls", "preload"],
       video: ["src", "controls", "preload", "poster", "width", "height"],
       source: ["src", "srcset", "sizes", "type", "media"],
+      iframe: ["src", "width", "height", "allow", "allowfullscreen", "loading"],
     },
+    // Ghost embed cards (Google Drive previews, YouTube, etc.) render as
+    // iframes. Only trusted embed hosts are allowed through — this is admin-
+    // authored CMS content, not user input, but the allowlist still bounds
+    // what an iframe src can point at.
+    allowedIframeHostnames: [
+      "drive.google.com",
+      "docs.google.com",
+      "www.youtube.com",
+      "player.vimeo.com",
+    ],
+    allowIframeRelativeUrls: false,
   });
 }
