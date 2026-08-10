@@ -31,19 +31,20 @@ export default function PastEventsSection() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {pastEvents.map((event, index) => {
-          return (
-            <EventSlide
-              src={event.src ?? placeholder}
-              title={event.title}
-              slug={event.slug}
-              date={event.date}
-              index={index}
-              key={index}
-            />
-          );
-        })}
+      <div className="flex justify-center items-center pt-5 w-full">
+        <div className="w-full xl:w-3/4 xl:max-w-[100rem] grid md:grid-cols-2 2xl:grid-cols-3 gap-5">
+          {pastEvents.map((event, index) => {
+            return (
+              <EventSlide
+                src={event.src ?? placeholder}
+                title={event.title}
+                slug={event.slug}
+                key={index}
+                excerpt=""
+              />
+            );
+          })}
+        </div>
       </div>
       {/* TODO: fix this, hasMore doesnt appear to be working as intended */}
       {hasMore ? (

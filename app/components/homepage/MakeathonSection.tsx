@@ -3,7 +3,6 @@ import Header from "../homepage/Header";
 import Screentone from "../global/Screentone";
 import { MakeathonType } from "@/lib/ghost/makeathon";
 import formatParagraph from "@/app/utils/formatParagraph";
-import LinkButton from "../global/LinkButton";
 
 export default function MakeathonSection({
   makeathon,
@@ -15,36 +14,24 @@ export default function MakeathonSection({
       <Header
         text={makeathon.title}
         rotation={1.54}
-        typeOverride="relative top-5 lg:top-12 pl-5 md:pl-10"
+        typeOverride="relative top-5 lg:top-12 h-20 pl-5 md:pl-10"
         bgColour="pop-red"
         colour="white"
       />
-
-      {/* Single CSS-responsive layout — the previous version branched on a
-          useScreenSize() hook that reads 0 until after mount, so desktop
-          rendered the mobile arrangement on first paint. */}
-      <div className="flex flex-col items-center gap-10 px-5 pt-10 md:flex-row md:items-start md:justify-center md:gap-6 lg:top-12 lg:relative">
-        <div className="order-first w-full max-w-80 md:order-last md:shrink-0">
+      <div className="pt-10 flex flex-col items-center gap-1 px-5 md:flex-row md:justify-center lg:top-12 md:relative">
+        <div className="order-1 md:order-2">
           <Polaroid
             src={makeathon.image}
             onClick={undefined}
             description={makeathon.date}
           >
-            <Screentone />
+            <div className="hidden md:block">
+              <Screentone />
+            </div>
           </Polaroid>
         </div>
-
-        <div className="w-full md:w-2/3 md:pr-10 lg:pr-20 text-lg lg:text-2xl font-semibold flex flex-col justify-center">
+        <div className="order-2 md:order-1 pt-24 md:pt-0 w-2/3 pr-5 md:pr-20 lg:pr-20 text-lg lg:text-2xl font-bold md:font-semibold flex justify-center flex-col">
           {formatParagraph(makeathon.description)}
-          <div className="flex justify-center pt-4 md:justify-start lg:pt-5">
-            <LinkButton
-              link="/events/make-a-thon-info-pack"
-              bgColour="pop-red"
-              textColour="white"
-            >
-              Learn More!
-            </LinkButton>
-          </div>
         </div>
       </div>
     </div>

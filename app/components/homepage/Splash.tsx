@@ -7,8 +7,8 @@ import Socials from "../global/Socials";
 
 export default function Splash() {
   return (
-    <div className="min-h-dvh w-full bg-grad flex flex-col justify-center items-center gap-0 px-5 py-24">
-      <div className="flex flex-col items-center w-full">
+    <div className="h-dvh w-full bg-grad flex flex-col justify-center items-center gap-0 p-0">
+      <div className="flex flex-col items-center">
         <picture>
           <source media="(max-width: 2000px)" srcSet={artVert.src} />
           <Image
@@ -29,14 +29,12 @@ export default function Splash() {
           Maker Club
         </p>
         <Socials />
-        {/* Was w-3/4 nested inside w-3/4 — about 56% of the viewport, which on
-            a phone left a very tall, very narrow ribbon of text. */}
-        <div className="w-full flex items-center justify-center">
-          <p className="text-white text-base sm:text-lg md:text-xl font-bold text-center w-full max-w-[62ch] pb-8 text-shadow-lg">
+        <div className="w-3/4 lg:w-2/3 flex items-center justify-center">
+          <p className="text-white text-lg md:text-xl font-bold text-center w-3/4 pb-8 text-shadow-lg">
             {`We're gathering makers to create ideas together. If you design, crochet, cook, code, or like creating new things, then we're here for you. With regular events and more, this is the University of Auckland's home for all who make.`}
           </p>
         </div>
-        <div className="w-full z-50 flex items-center justify-center">
+        <div className="w-full h-full z-50 flex items-center justify-center">
           <LinkButton link={process.env.NEXT_PUBLIC_SIGN_UP!}>
             Join Now!
           </LinkButton>
