@@ -11,6 +11,10 @@ interface PolaroidPropsType {
   onClick?: () => void;
   typeOverride?: string;
   children?: React.ReactNode;
+  // "cover" (default) fills the frame and crops to it — fine for roughly
+  // square photos. Tall poster/flyer images lose their edges that way, so
+  // "contain" lets those show in full, letterboxed within the frame instead.
+  imageFit?: "cover" | "contain";
 }
 
 export default function Polaroid({
@@ -20,6 +24,7 @@ export default function Polaroid({
   onClick,
   typeOverride,
   children,
+  imageFit = "cover",
 }: PolaroidPropsType) {
   // Sized with `w-full max-w-80` only. It used to also carry `md:w-1/2`, but a
   // percentage width needs a definite base to resolve against — as a
@@ -37,7 +42,7 @@ export default function Polaroid({
             <Image
               src={src === null ? placeholder : src}
               layout="fill"
-              objectFit="cover"
+              objectFit={imageFit}
               alt=""
             />
           </div>

@@ -24,7 +24,7 @@ export default function VendingMachineSection({
             {`We provide a space for Makers to sell things they’ve created via our Vending Machine (located at the University of Auckland Makerspace).`}
             <br />
             <br />
-            {`Items here are sold with 100% of proceeds after transaction fees going to the creator, charity, or a university club.`}
+            {`Items here are sold with 100% of proceeds after transaction fees going back to the creator.`}
             <br />
             <br />
             {`Check out what we have in store below!`}
@@ -43,7 +43,7 @@ export default function VendingMachineSection({
             {`We provide a space for Makers to sell things they’ve created via our Vending Machine (located at the University of Auckland Makerspace).`}
             <br />
             <br />
-            {`Items here are sold with 100% of proceeds after transaction fees going to the creator, charity, or a university club.`}
+            {`Items here are sold with 100% of proceeds after transaction fees going back to the creator.`}
             <br />
             <br />
             {`Check out what we have in store below!`}

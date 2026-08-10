@@ -19,11 +19,12 @@ export default function MakeathonSection({
         colour="white"
       />
       <div className="pt-10 flex flex-col items-center gap-1 px-5 md:flex-row md:justify-center lg:top-12 md:relative">
-        <div className="order-1 md:order-2">
+        <div className="order-1 w-full max-w-80 md:order-2 md:shrink-0">
           <Polaroid
             src={makeathon.image}
             onClick={undefined}
             description={makeathon.date}
+            imageFit="contain"
           >
             <div className="hidden md:block">
               <Screentone />
