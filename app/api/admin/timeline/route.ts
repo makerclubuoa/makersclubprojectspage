@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { name, date, description } = await req.json()
-  if (!name || !date || !description)
+  if (!name || !date)
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
   const { data: maxRow } = await supabaseAdmin
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('Timeline')
-    .insert({ name, date, description, sort_order })
+    .insert({ name, date, description: description ?? '', sort_order })
     .select()
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

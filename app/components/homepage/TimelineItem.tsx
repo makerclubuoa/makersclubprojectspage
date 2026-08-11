@@ -24,7 +24,9 @@ export default function TimelineItem({
         <div className="font-sans">
           <p className="text-sm ">{date}</p>
           <p className="font-holt text-wrap text-xl">{name}</p>
-          <p className="text-md font-semibold text-wrap">{description}</p>
+          {description && (
+            <p className="text-md font-semibold text-wrap">{description}</p>
+          )}
         </div>
       </div>
     </div>

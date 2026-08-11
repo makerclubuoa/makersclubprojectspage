@@ -182,13 +182,12 @@ export default function TimelineAdminPanel() {
               />
             </div>
             <div className={field}>
-              <label className={fieldLabel}>Description</label>
+              <label className={fieldLabel}>Description (optional)</label>
               <textarea
                 className={fieldTextarea}
                 placeholder="Short description of the event…"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                required
               />
             </div>
             <div className="flex justify-end mt-2">
