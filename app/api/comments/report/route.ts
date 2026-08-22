@@ -1,41 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
+import { userFromRequest } from "@/lib/server-auth";
+import { supabaseAdmin } from "@/lib/supabase-server";
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-const ADMIN_EMAIL = 'makerclubuoa@gmail.com'
-const FROM = process.env.RESEND_FROM ?? 'MAKE_UOA <noreply@makeuoa.nz>'
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://projects.makeuoa.nz'
+const resend = new Resend(process.env.RESEND_API_KEY);
+const ADMIN_EMAIL = "makerclubuoa@gmail.com";
+const FROM = process.env.RESEND_FROM ?? "MAKE_UOA <noreply@makeuoa.nz>";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://projects.makeuoa.nz";
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>'"]/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
+  })[char]!);
+}
 
 export async function POST(req: NextRequest) {
-  const { comment_id, project_id, project_title, comment_body, author_name } = await req.json()
-  if (!comment_id || !project_id) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+  const user = await userFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json({ error: "Reporting is not configured" }, { status: 503 });
   }
 
-  if (process.env.RESEND_API_KEY) {
-    try {
-      await resend.emails.send({
-        from: FROM,
-        to: ADMIN_EMAIL,
-        subject: `Comment reported on "${project_title ?? project_id}"`,
-        html: `<div style="font-family:monospace;max-width:580px;margin:0 auto;padding:32px 24px;background:#0d0d0d;color:#e0e0e0;border-radius:8px">
-  <p style="margin:0 0 4px;font-size:11px;letter-spacing:.1em;color:#ff3c6d">MAKE_UOA · COMMENT REPORTED</p>
-  <h2 style="margin:0 0 20px;font-size:18px;color:#fff">A comment has been flagged for review</h2>
-  <table style="border-collapse:collapse;width:100%;margin-bottom:20px">
-    <tr><td style="padding:6px 12px 6px 0;color:#888;font-size:12px">Project</td><td style="padding:6px 0;color:#e0e0e0;font-size:12px">${project_title ?? project_id}</td></tr>
-    <tr><td style="padding:6px 12px 6px 0;color:#888;font-size:12px">Comment ID</td><td style="padding:6px 0;color:#e0e0e0;font-size:12px">${comment_id}</td></tr>
-    <tr><td style="padding:6px 12px 6px 0;color:#888;font-size:12px">Author</td><td style="padding:6px 0;color:#e0e0e0;font-size:12px">${author_name ?? '—'}</td></tr>
-  </table>
-  <p style="margin:0 0 8px;font-size:11px;letter-spacing:.08em;color:#888">COMMENT</p>
-  <p style="margin:0 0 24px;color:#bbb;line-height:1.6;font-size:13px;border-left:2px solid #333;padding-left:12px">${comment_body ?? '—'}</p>
-  <a href="${BASE_URL}/projects/${project_id}" style="display:inline-block;padding:10px 22px;background:#ff3c6d;color:#fff;text-decoration:none;border-radius:4px;font-size:13px;letter-spacing:.05em">View project →</a>
+  const body = await req.json().catch(() => null) as { comment_id?: unknown } | null;
+  if (!body || typeof body.comment_id !== "string") {
+    return NextResponse.json({ error: "Missing comment ID" }, { status: 400 });
+  }
+
+  const { data: comment } = await supabaseAdmin
+    .from("comments")
+    .select("id, project_id, author_name, body")
+    .eq("id", body.comment_id)
+    .single();
+  if (!comment) return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+
+  const { data: project } = await supabaseAdmin
+    .from("Projects")
+    .select("title")
+    .eq("id", comment.project_id)
+    .single();
+
+  const { error: reserveError } = await supabaseAdmin.from("comment_reports").insert({
+    comment_id: comment.id,
+    reporter_id: user.id,
+  });
+  if (reserveError?.code === "23505") {
+    return NextResponse.json({ ok: true, alreadyReported: true });
+  }
+  if (reserveError) return NextResponse.json({ error: "Could not record report" }, { status: 500 });
+
+  const result = await resend.emails.send({
+      from: FROM,
+      to: ADMIN_EMAIL,
+      subject: `Comment reported on "${project?.title ?? comment.project_id}"`,
+      html: `<div style="font-family:monospace;max-width:580px;margin:0 auto;padding:32px 24px;background:#0d0d0d;color:#e0e0e0">
+  <h2 style="color:#fff">A comment has been flagged for review</h2>
+  <p>Project: ${escapeHtml(project?.title ?? comment.project_id)}</p>
+  <p>Comment ID: ${escapeHtml(comment.id)}</p>
+  <p>Author: ${escapeHtml(comment.author_name)}</p>
+  <p style="border-left:2px solid #555;padding-left:12px">${escapeHtml(comment.body)}</p>
+  <a href="${BASE_URL}/projects/${encodeURIComponent(comment.project_id)}" style="color:#ff7a9f">View project →</a>
 </div>`,
-      })
-    } catch (err) {
-      console.error('[comment-report]', err)
-      return NextResponse.json({ error: 'Failed to send report' }, { status: 500 })
-    }
+  });
+  if (result.error) {
+    await supabaseAdmin.from("comment_reports").delete()
+      .eq("comment_id", comment.id).eq("reporter_id", user.id);
+    return NextResponse.json({ error: "Failed to send report" }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true });
 }

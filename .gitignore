@@ -3,6 +3,11 @@ node_modules/
 .env*.local
 out/
 scripts/*
+!scripts/project-tests/
+!scripts/project-tests/**
+scripts/project-tests/.state.json
+scripts/project-tests/test-results/
+scripts/project-tests/playwright-report/
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
@@ -16,3 +21,4 @@ tsconfig.tsbuildinfo
 !.dev.vars.example
 !.env.example
 .claude/settings.local.json
+scripts/**

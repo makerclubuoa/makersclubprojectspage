@@ -15,16 +15,31 @@ export interface PhotosType {
 }
 
 export async function getPhotos(): Promise<PhotosType[]> {
-  const photos: AdminPost = (
-    await adminBrowsePosts("filter=title:'Photos'&formats=lexical&limit=1")
-  )[0];
-  //@ts-ignore
-  const imagesArr = JSON.parse(photos.lexical).root.children;
-  let res: PhotosType[] = [];
-  for (const image of imagesArr) {
-    if (image.src) {
-      res.push({ src: image.src, tape: getRandomTape() });
+  try {
+    const photos: AdminPost | undefined = (
+      await adminBrowsePosts("filter=title:'Photos'&formats=lexical&limit=1")
+    )[0];
+    if (!photos?.lexical) return [];
+
+    const parsed = JSON.parse(photos.lexical) as {
+      root?: { children?: Array<{ src?: unknown; alt?: unknown }> };
+    };
+    const images = parsed.root?.children;
+    if (!Array.isArray(images)) return [];
+
+    const res: PhotosType[] = [];
+    for (const image of images) {
+      if (typeof image.src === "string" && image.src) {
+        res.push({
+          src: image.src,
+          alt: typeof image.alt === "string" ? image.alt : undefined,
+          tape: getRandomTape(),
+        });
+      }
     }
+    return res;
+  } catch {
+    // Photo decoration should never take an otherwise useful page offline.
+    return [];
   }
-  return res;
 }

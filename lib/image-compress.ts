@@ -11,6 +11,15 @@
 
 export type ImageRole = "cover" | "inline";
 
+export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+export function imageFileError(file: File): string | null {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) return "Use a JPG, PNG, or WEBP image.";
+  if (file.size > IMAGE_MAX_BYTES) return `“${file.name}” is larger than 5 MB.`;
+  return null;
+}
+
 const TARGETS: Record<ImageRole, { maxEdge: number; quality: number }> = {
   // Covers render largest: the detail-page polaroid and the wide bento cards.
   // 1600px still covers a 2x display at those sizes with room to spare.
@@ -19,9 +28,6 @@ const TARGETS: Record<ImageRole, { maxEdge: number; quality: number }> = {
   // so they can be cut down harder.
   inline: { maxEdge: 1200, quality: 0.75 },
 };
-
-/** Formats that must pass through untouched: vector, or animation we'd flatten. */
-const PASS_THROUGH = ["image/svg+xml", "image/gif"];
 
 export type CompressedImage = {
   /** Upload this — the re-encoded blob, or the original when it was already smaller. */
@@ -78,7 +84,7 @@ export async function compressForUpload(
   file: File,
   role: ImageRole,
 ): Promise<CompressedImage> {
-  if (!file.type.startsWith("image/") || PASS_THROUGH.includes(file.type)) {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     return originalOf(file);
   }
 

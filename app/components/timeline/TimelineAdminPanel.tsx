@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import AccessibleModal from "@/app/components/AccessibleModal";
 import {
   fieldInput,
   fieldTextarea,
@@ -17,8 +18,6 @@ import {
   emptyStateMono,
   btnGradient,
   btnGhost,
-  modalBackdrop,
-  modal,
   modalLabel,
   modalTitle,
   modalWarn,
@@ -162,8 +161,9 @@ export default function TimelineAdminPanel() {
           </div>
           <form onSubmit={handleAdd}>
             <div className={field}>
-              <label className={fieldLabel}>Event Name</label>
+              <label className={fieldLabel} htmlFor="timeline-event-name">Event Name</label>
               <input
+                id="timeline-event-name"
                 className={fieldInput}
                 placeholder="e.g. Makeathon"
                 value={name}
@@ -172,8 +172,9 @@ export default function TimelineAdminPanel() {
               />
             </div>
             <div className={field}>
-              <label className={fieldLabel}>Date</label>
+              <label className={fieldLabel} htmlFor="timeline-event-date">Date</label>
               <input
+                id="timeline-event-date"
                 className={fieldInput}
                 placeholder="e.g. March 2026"
                 value={date}
@@ -182,8 +183,9 @@ export default function TimelineAdminPanel() {
               />
             </div>
             <div className={field}>
-              <label className={fieldLabel}>Description (optional)</label>
+              <label className={fieldLabel} htmlFor="timeline-event-description">Description (optional)</label>
               <textarea
+                id="timeline-event-description"
                 className={fieldTextarea}
                 placeholder="Short description of the event…"
                 value={description}
@@ -258,12 +260,11 @@ export default function TimelineAdminPanel() {
       </div>
 
       {pending && (
-        <div className={modalBackdrop} onClick={() => setPending(null)}>
-          <div className={modal} onClick={(e) => e.stopPropagation()}>
+        <AccessibleModal onClose={() => setPending(null)} labelledBy="timeline-delete-title">
             <p className={modalLabel}>Confirm action</p>
-            <p className={modalTitle}>
+            <p className={modalTitle} id="timeline-delete-title">
               Delete{" "}
-              <em className="not-italic text-pop-violet">"{pending.name}"</em>?
+              <em className="not-italic text-pop-violet">&ldquo;{pending.name}&rdquo;</em>?
             </p>
             <p className={modalWarn}>This cannot be undone.</p>
             <div className={modalActions}>
@@ -274,8 +275,7 @@ export default function TimelineAdminPanel() {
                 Delete
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </div>
   );

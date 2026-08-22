@@ -6,7 +6,7 @@ import Image from "next/image";
 import Screentone from "@/app/components/global/Screentone";
 import solderingIron from "@/public/doodle-soldering-iron.png";
 import { resolvePublicName } from "@/lib/projects";
-import { compressForUpload } from "@/lib/image-compress";
+import { compressForUpload, imageFileError } from "@/lib/image-compress";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import CustomSelect from "@/app/components/CustomSelect";
@@ -263,9 +263,9 @@ export default function SubmitPage() {
   }, []);
 
   useEffect(() => {
-    if (profile?.email && !contact) setContact(profile.email);
+    if (user?.email && !contact) setContact(user.email);
     if (profile) setHideName(!(profile.credit_consented ?? true));
-  }, [profile]);
+  }, [profile, user, contact]);
 
   useEffect(() => {
     if (!coMakerSearch.trim()) {
@@ -273,13 +273,14 @@ export default function SubmitPage() {
       return;
     }
     const timer = setTimeout(async () => {
+      const search = coMakerSearch.replace(/[,()%]/g, " ").trim();
       const { data } = await supabase
         .from("profiles")
         .select(
           "id, display_name, email, public_name, name_preference, credit_consented",
         )
         .or(
-          `display_name.ilike.%${coMakerSearch}%,public_name.ilike.%${coMakerSearch}%`,
+          `display_name.ilike.%${search}%,public_name.ilike.%${search}%,email.ilike.%${search}%`,
         )
         .neq("id", user?.id ?? "")
         .limit(6);
@@ -317,6 +318,9 @@ export default function SubmitPage() {
       setImagePreview(null);
       return;
     }
+    const fileError = imageFileError(file);
+    if (fileError) { setSubmitError(fileError); return; }
+    setSubmitError("");
     setImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target?.result as string);
@@ -324,16 +328,21 @@ export default function SubmitPage() {
   }
 
   // ── Gallery images ───────────────────────────────────
-  function addGalleryFiles(files: FileList | null) {
+  async function addGalleryFiles(files: FileList | null) {
     if (!files) return;
-    const arr = Array.from(files);
+    const picked = Array.from(files);
+    const invalid = picked.map(imageFileError).find(Boolean);
+    if (invalid) { setSubmitError(invalid); return; }
+    const arr = picked.slice(0, Math.max(0, 40 - galleryFiles.length));
+    setSubmitError("");
     setGalleryFiles((prev) => [...prev, ...arr]);
-    arr.forEach((file) => {
+    const previews = await Promise.all(arr.map((file) => new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) =>
-        setGalleryPreviews((prev) => [...prev, e.target?.result as string]);
+      reader.onload = (event) => resolve(event.target?.result as string);
+      reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
       reader.readAsDataURL(file);
-    });
+    })));
+    setGalleryPreviews((prev) => [...prev, ...previews]);
   }
   function removeGalleryFile(i: number) {
     setGalleryFiles((prev) => prev.filter((_, idx) => idx !== i));
@@ -364,6 +373,9 @@ export default function SubmitPage() {
   }
   function handleLogImageChange(i: number, file: File | null) {
     if (!file) return;
+    const fileError = imageFileError(file);
+    if (fileError) { setSubmitError(fileError); return; }
+    setSubmitError("");
     setLogEntryFiles((prev) => prev.map((f, idx) => (idx === i ? file : f)));
     const reader = new FileReader();
     reader.onload = (e) =>
@@ -430,11 +442,35 @@ export default function SubmitPage() {
   async function handleSubmit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
 
+    if (!user) {
+      setSubmitError("Sign in before submitting a project.");
+      return;
+    }
+
     if (missing.length > 0) {
       setErrors(Object.fromEntries(missing.map((f) => [f.id, f.message])));
       setSubmitError("");
       focusField(missing[0].id);
       return;
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      setSubmitError("Your session expired. Sign in and try again.");
+      return;
+    }
+
+    if (profile && !hideName !== (profile.credit_consented ?? true)) {
+      const { error: consentError } = await supabase
+        .from("profiles")
+        .update({ credit_consented: !hideName })
+        .eq("id", user.id);
+      if (consentError) {
+        setSubmitError(`Your name preference could not be saved: ${consentError.message}`);
+        return;
+      }
     }
 
     setErrors({});
@@ -448,6 +484,17 @@ export default function SubmitPage() {
       .replace(/^-|-$/g, "")
       .slice(0, 60);
     const id = `${slug}-${Date.now().toString(36)}`;
+    const uploadedImagePaths: string[] = [];
+    const cleanupUploads = async (mediaPaths: string[] = []) => {
+      await Promise.all([
+        uploadedImagePaths.length
+          ? supabase.storage.from("Project Images").remove(uploadedImagePaths)
+          : Promise.resolve(),
+        mediaPaths.length
+          ? supabase.storage.from("Project Media").remove(mediaPaths)
+          : Promise.resolve(),
+      ]);
+    };
 
     // Cover image
     let imageUrl: string | null = null;
@@ -465,6 +512,7 @@ export default function SubmitPage() {
         setSubmitting(false);
         return;
       }
+      uploadedImagePaths.push(path);
       const {
         data: { publicUrl },
       } = supabase.storage.from("Project Images").getPublicUrl(path);
@@ -484,25 +532,16 @@ export default function SubmitPage() {
           contentType: shrunk.contentType,
         });
       if (gErr) {
+        await cleanupUploads();
         setSubmitError(`Gallery image ${i + 1} failed: ${gErr.message}`);
         setSubmitting(false);
         return;
       }
+      uploadedImagePaths.push(path);
       const {
         data: { publicUrl },
       } = supabase.storage.from("Project Images").getPublicUrl(path);
       galleryUrls.push(publicUrl);
-    }
-
-    // Music & video
-    const { media, error: mediaError } = await uploadMediaDrafts(
-      id,
-      mediaDrafts,
-    );
-    if (mediaError) {
-      setSubmitError(mediaError);
-      setSubmitting(false);
-      return;
     }
 
     // Parse retro
@@ -529,10 +568,12 @@ export default function SubmitPage() {
             contentType: shrunk.contentType,
           });
         if (lErr) {
+          await cleanupUploads();
           setSubmitError(`Log image ${i + 1} failed: ${lErr.message}`);
           setSubmitting(false);
           return;
         }
+        uploadedImagePaths.push(path);
         const {
           data: { publicUrl },
         } = supabase.storage.from("Project Images").getPublicUrl(path);
@@ -542,14 +583,15 @@ export default function SubmitPage() {
       }
     }
     const build_log = logEntries
-      .filter((e) => e.title.trim())
-      .map((e, i) => ({
+      .map((entry, originalIndex) => ({ entry, originalIndex }))
+      .filter(({ entry }) => entry.title.trim())
+      .map(({ entry: e, originalIndex }) => ({
         date: e.date || new Date().toISOString().split("T")[0],
         title: e.title.trim(),
         body: e.body.trim(),
         milestone: e.milestone,
         tag: e.tag.trim() || undefined,
-        image: logImageUrls[i] || undefined,
+        image: logImageUrls[originalIndex] || undefined,
       }));
 
     // Parse BOM
@@ -562,6 +604,16 @@ export default function SubmitPage() {
         unit_cost: parseFloat(r.unit_cost) || 0,
         src: r.src.trim() || undefined,
       }));
+
+    // Upload media last so a later image failure cannot strand audio files.
+    const { media, error: mediaError, uploadedPaths: uploadedMediaPaths } =
+      await uploadMediaDrafts(id, mediaDrafts);
+    if (mediaError) {
+      await cleanupUploads();
+      setSubmitError(mediaError);
+      setSubmitting(false);
+      return;
+    }
 
     const consentedCoMakers = coMakers.filter((m) => m.credit_consented);
     const anonCount = coMakers.filter((m) => !m.credit_consented).length;
@@ -598,34 +650,40 @@ export default function SubmitPage() {
     // (scripts/add-project-media.sql) applied yet.
     if (media) payload.media = media;
 
-    const { error } = await supabase.from("Projects").insert(payload);
-    setSubmitting(false);
-    if (error) {
-      setSubmitError(error.message);
+    let createResponse: Response;
+    let createResult: { error?: string };
+    try {
+      createResponse = await fetch("/api/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ id, project: payload, contact: contact.trim() }),
+      });
+      createResult = await createResponse.json();
+    } catch {
+      await cleanupUploads(uploadedMediaPaths);
+      setSubmitting(false);
+      setSubmitError("Project submission could not reach the server. Try again.");
       return;
     }
-
-    // Persist consent preference change
-    if (profile && !hideName !== (profile.credit_consented ?? true)) {
-      supabase
-        .from("profiles")
-        .update({ credit_consented: !hideName })
-        .eq("id", user!.id);
+    setSubmitting(false);
+    if (!createResponse.ok) {
+      await cleanupUploads(uploadedMediaPaths);
+      setSubmitError(createResult.error ?? "Project submission failed");
+      return;
     }
 
     fetch("/api/notify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({
         type: "new-post",
         projectId: id,
-        projectTitle: title.trim(),
-        projectBlurb: blurb.trim(),
-        projectCategory: category,
-        makers: [
-          profile?.display_name ?? user!.email!.split("@")[0],
-          ...coMakers.map((m) => m.display_name),
-        ],
       }),
     });
 
@@ -657,9 +715,9 @@ export default function SubmitPage() {
           <Link href="/projects" className={`${projectBack} relative z-[1] mb-2`}>
             ← Back to projects
           </Link>
-          <p className={`${pageBandTitle} text-pop-pink`}>
+          <h1 className={`${pageBandTitle} text-pop-pink`}>
             Submit a Project
-          </p>
+          </h1>
           <p className={pageBandSub}>
             Half-finished counts. Weird is good. Fill in what you know and
             we&rsquo;ll sort the rest.
@@ -733,7 +791,7 @@ export default function SubmitPage() {
                     You need an account to add a project to the archive. It only
                     takes a second.
                   </p>
-                  <Link href="/login" className={`${btnGradient} mt-5`}>
+                  <Link href="/login?next=/submit" className={`${btnGradient} mt-5`}>
                     Sign in <span className={btnArr}>→</span>
                   </Link>
                 </div>
@@ -764,7 +822,7 @@ export default function SubmitPage() {
 
                     {/* Title */}
                     <div className={field}>
-                      <label className={fieldLabel}>
+                      <label className={fieldLabel} htmlFor="f-title">
                         Project title <span className={fieldReq}>*</span>
                       </label>
                       <input
@@ -792,8 +850,9 @@ export default function SubmitPage() {
 
                     {/* Category */}
                     <div className={field}>
-                      <label className={fieldLabel}>Category</label>
+                      <label className={fieldLabel} htmlFor="f-category">Category</label>
                       <CustomSelect
+                        id="f-category"
                         value={category}
                         onChange={(v) => {
                           setCategory(v);
@@ -806,6 +865,8 @@ export default function SubmitPage() {
                       />
                       {category === "Other" && (
                         <input
+                          id="f-category-other"
+                          aria-label="Other project category"
                           className={`${fieldInput} mt-2`}
                           type="text"
                           placeholder="Describe the category"
@@ -818,7 +879,7 @@ export default function SubmitPage() {
 
                     {/* Makers */}
                     <div className={field}>
-                      <label className={fieldLabel}>
+                      <label className={fieldLabel} htmlFor="f-co-makers">
                         Makers / contributors
                       </label>
                       <div className={makersChips}>
@@ -838,6 +899,7 @@ export default function SubmitPage() {
                               type="button"
                               className={makersChipRemove}
                               onClick={() => removeCoMaker(m.id)}
+                              aria-label={`Remove ${resolvePublicName(m)} as a co-maker`}
                             >
                               ✕
                             </button>
@@ -859,11 +921,20 @@ export default function SubmitPage() {
                           Change your name or privacy settings →
                         </a>
                       </p>
-                      <div className={makersSearch}>
+                      <div
+                        className={makersSearch}
+                        data-comaker-picker
+                        onBlur={(event) => {
+                          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                            setShowCoMakerDropdown(false);
+                          }
+                        }}
+                      >
                         <input
+                          id="f-co-makers"
                           className={fieldInput}
                           type="text"
-                          placeholder="Search for a co-maker by name or username… They must have an account to be added"
+                          placeholder="Search for a co-maker by name, username, or email… They must have an account to be added"
                           autoComplete="off"
                           value={coMakerSearch}
                           onChange={(e) => {
@@ -871,19 +942,31 @@ export default function SubmitPage() {
                             setShowCoMakerDropdown(true);
                           }}
                           onFocus={() => setShowCoMakerDropdown(true)}
-                          onBlur={() =>
-                            setTimeout(() => setShowCoMakerDropdown(false), 150)
-                          }
+                          role="combobox"
+                          aria-autocomplete="list"
+                          aria-expanded={showCoMakerDropdown && !!coMakerSearch.trim()}
+                          aria-controls="f-co-maker-results"
+                          onKeyDown={(event) => {
+                            if (event.key === "ArrowDown" && coMakerResults.length > 0) {
+                              event.preventDefault();
+                              document.getElementById("f-co-maker-option-0")?.focus();
+                            } else if (event.key === "Escape") {
+                              setShowCoMakerDropdown(false);
+                            }
+                          }}
                         />
                         {showCoMakerDropdown && coMakerSearch.trim() && (
-                          <div className={makersDropdown}>
+                          <div className={makersDropdown} id="f-co-maker-results" role="listbox" aria-label="Matching co-makers">
                             {coMakerResults.length > 0 ? (
-                              coMakerResults.map((r) => (
+                              coMakerResults.map((r, resultIndex) => (
                                 <button
+                                  id={`f-co-maker-option-${resultIndex}`}
                                   key={r.id}
                                   type="button"
                                   className={makersDropdownItem}
-                                  onMouseDown={() => addCoMaker(r)}
+                                  onClick={() => addCoMaker(r)}
+                                  role="option"
+                                  aria-selected="false"
                                 >
                                   <span className={makersDropdownName}>
                                     {resolvePublicName(r)}
@@ -896,9 +979,9 @@ export default function SubmitPage() {
                                         : "var(--pop-orange)",
                                     }}
                                   >
-                                    {r.credit_consented
-                                      ? r.email
-                                      : "will appear anonymous"}
+                                    {r.email ?? (r.credit_consented
+                                      ? "can be credited"
+                                      : "will appear anonymous")}
                                   </span>
                                 </button>
                               ))
@@ -914,7 +997,7 @@ export default function SubmitPage() {
 
                     {/* One-liner */}
                     <div className={field}>
-                      <label className={fieldLabel}>
+                      <label className={fieldLabel} htmlFor="f-blurb">
                         One-line description <span className={fieldReq}>*</span>
                         <span className="font-normal normal-case tracking-normal">
                           max 140 chars
@@ -946,7 +1029,7 @@ export default function SubmitPage() {
 
                     {/* Cover image */}
                     <div className={field}>
-                      <label className={fieldLabel}>Cover photo</label>
+                      <span className={fieldLabel} id="f-cover-label">Cover photo</span>
                       <label
                         className={`${imgUploadBase} ${imagePreview ? imgUploadPreview : imgUploadIdle}`}
                         style={
@@ -959,6 +1042,7 @@ export default function SubmitPage() {
                           e.preventDefault();
                           handleImageChange(e.dataTransfer.files[0] ?? null);
                         }}
+                        aria-labelledby="f-cover-label"
                       >
                         {!imagePreview && (
                           <span className={imgUploadInner}>
@@ -977,6 +1061,7 @@ export default function SubmitPage() {
                           </span>
                         )}
                         <input
+                          aria-labelledby="f-cover-label"
                           type="file"
                           accept="image/*"
                           className="hidden"
@@ -1018,8 +1103,9 @@ export default function SubmitPage() {
                       summary={storySummary}
                     >
                       <div className={field}>
-                        <label className={fieldLabel}>Tell the full story</label>
+                        <label className={fieldLabel} htmlFor="f-description">Tell the full story</label>
                         <textarea
+                          id="f-description"
                           className={`${fieldTextarea} min-h-[120px]`}
                           placeholder="How did it start? What was hard? What are you proud of? Anything goes."
                           value={description}
@@ -1028,10 +1114,11 @@ export default function SubmitPage() {
                       </div>
                       <div className={fieldRow}>
                         <div className={field}>
-                          <label className={fieldLabel}>
+                          <label className={fieldLabel} htmlFor="f-start-date">
                             When did it start?
                           </label>
                           <input
+                            id="f-start-date"
                             className={fieldInput}
                             type="date"
                             value={startDate}
@@ -1039,10 +1126,11 @@ export default function SubmitPage() {
                           />
                         </div>
                         <div className={field}>
-                          <label className={fieldLabel}>
+                          <label className={fieldLabel} htmlFor="f-build-time">
                             How long did it take?
                           </label>
                           <input
+                            id="f-build-time"
                             className={fieldInput}
                             type="text"
                             placeholder="e.g. ~3 weeks"
@@ -1067,6 +1155,7 @@ export default function SubmitPage() {
                             type="button"
                             className={tools.includes(t) ? toolTagOn : toolTag}
                             onClick={() => toggleTool(t)}
+                            aria-pressed={tools.includes(t)}
                           >
                             {t}
                           </button>
@@ -1079,6 +1168,7 @@ export default function SubmitPage() {
                               type="button"
                               className={toolTagOn}
                               onClick={() => toggleTool(t)}
+                              aria-pressed="true"
                             >
                               {t}
                             </button>
@@ -1089,6 +1179,7 @@ export default function SubmitPage() {
                             type="text"
                             placeholder="Other…"
                             value={otherTool}
+                            aria-label="Add another tool or material"
                             onChange={(e) => setOtherTool(e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
@@ -1102,6 +1193,7 @@ export default function SubmitPage() {
                               type="button"
                               className={toolTagOtherBtn}
                               onClick={commitOtherTool}
+                              aria-label="Add tool or material"
                             >
                               +
                             </button>
@@ -1146,6 +1238,7 @@ export default function SubmitPage() {
                             <button
                               type="button"
                               className={dynRowRemove}
+                              aria-label={`Remove build log entry ${i + 1}`}
                               onClick={() => {
                                 setLogEntries((prev) =>
                                   prev.filter((_, idx) => idx !== i),
@@ -1162,8 +1255,9 @@ export default function SubmitPage() {
                             </button>
                             <div className={dynRowCols3}>
                               <div className={fieldTight}>
-                                <label className={fieldLabel}>Date</label>
+                                <label className={fieldLabel} htmlFor={`f-log-${i}-date`}>Date</label>
                                 <input
+                                  id={`f-log-${i}-date`}
                                   className={fieldInput}
                                   type="date"
                                   value={entry.date}
@@ -1173,8 +1267,9 @@ export default function SubmitPage() {
                                 />
                               </div>
                               <div className={fieldTight}>
-                                <label className={fieldLabel}>Title</label>
+                                <label className={fieldLabel} htmlFor={`f-log-${i}-title`}>Title</label>
                                 <input
+                                  id={`f-log-${i}-title`}
                                   className={fieldInput}
                                   type="text"
                                   placeholder="e.g. First prototype"
@@ -1185,8 +1280,9 @@ export default function SubmitPage() {
                                 />
                               </div>
                               <div className={fieldTight}>
-                                <label className={fieldLabel}>Tag</label>
+                                <label className={fieldLabel} htmlFor={`f-log-${i}-tag`}>Tag</label>
                                 <input
+                                  id={`f-log-${i}-tag`}
                                   className={fieldInput}
                                   type="text"
                                   placeholder="e.g. Prototype"
@@ -1198,8 +1294,9 @@ export default function SubmitPage() {
                               </div>
                             </div>
                             <div className={fieldTight}>
-                              <label className={fieldLabel}>Notes</label>
+                              <label className={fieldLabel} htmlFor={`f-log-${i}-notes`}>Notes</label>
                               <textarea
+                                id={`f-log-${i}-notes`}
                                 className={`${fieldTextarea} min-h-[64px]`}
                                 placeholder="What happened at this stage?"
                                 value={entry.body}
@@ -1220,12 +1317,12 @@ export default function SubmitPage() {
                               Mark as milestone
                             </label>
                             <div className={`${fieldTight} mt-2`}>
-                              <label className={fieldLabel}>
+                              <span className={fieldLabel}>
                                 Photo{" "}
                                 <span className="font-normal normal-case tracking-normal">
                                   optional
                                 </span>
-                              </label>
+                              </span>
                               {logEntryPreviews[i] ? (
                                 <div className="relative inline-block">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1238,6 +1335,7 @@ export default function SubmitPage() {
                                     type="button"
                                     className={`${imgUploadRemove} top-1.5 right-1.5`}
                                     onClick={() => removeLogImage(i)}
+                                    aria-label={`Remove photo from build log entry ${i + 1}`}
                                   >
                                     ✕ Remove
                                   </button>
@@ -1304,6 +1402,7 @@ export default function SubmitPage() {
                               type="button"
                               className={galleryThumbRemove}
                               onClick={() => removeGalleryFile(i)}
+                              aria-label={`Remove gallery photo ${i + 1}`}
                             >
                               ✕
                             </button>
@@ -1342,6 +1441,7 @@ export default function SubmitPage() {
                             <button
                               type="button"
                               className={dynRowRemove}
+                              aria-label={`Remove bill of materials row ${i + 1}`}
                               onClick={() =>
                                 setBomRows((prev) =>
                                   prev.filter((_, idx) => idx !== i),
@@ -1352,8 +1452,9 @@ export default function SubmitPage() {
                             </button>
                             <div className={dynRowCols4}>
                               <div className={fieldTight}>
-                                <label className={fieldLabel}>Item</label>
+                                <label className={fieldLabel} htmlFor={`f-bom-${i}-item`}>Item</label>
                                 <input
+                                  id={`f-bom-${i}-item`}
                                   className={fieldInput}
                                   type="text"
                                   placeholder="e.g. Arduino Pro Mini"
@@ -1364,8 +1465,9 @@ export default function SubmitPage() {
                                 />
                               </div>
                               <div className={fieldTight}>
-                                <label className={fieldLabel}>Qty</label>
+                                <label className={fieldLabel} htmlFor={`f-bom-${i}-qty`}>Qty</label>
                                 <input
+                                  id={`f-bom-${i}-qty`}
                                   className={fieldInput}
                                   type="number"
                                   min="1"
@@ -1376,10 +1478,11 @@ export default function SubmitPage() {
                                 />
                               </div>
                               <div className={fieldTight}>
-                                <label className={fieldLabel}>
+                                <label className={fieldLabel} htmlFor={`f-bom-${i}-cost`}>
                                   Unit cost $
                                 </label>
                                 <input
+                                  id={`f-bom-${i}-cost`}
                                   className={fieldInput}
                                   type="number"
                                   min="0"
@@ -1392,8 +1495,9 @@ export default function SubmitPage() {
                                 />
                               </div>
                               <div className={fieldTight}>
-                                <label className={fieldLabel}>Source</label>
+                                <label className={fieldLabel} htmlFor={`f-bom-${i}-source`}>Source</label>
                                 <input
+                                  id={`f-bom-${i}-source`}
                                   className={fieldInput}
                                   type="text"
                                   placeholder="e.g. Jaycar"
@@ -1405,8 +1509,9 @@ export default function SubmitPage() {
                               </div>
                             </div>
                             <div className={fieldTight}>
-                              <label className={fieldLabel}>Description</label>
+                              <label className={fieldLabel} htmlFor={`f-bom-${i}-description`}>Description</label>
                               <input
+                                id={`f-bom-${i}-description`}
                                 className={fieldInput}
                                 type="text"
                                 placeholder="e.g. With pin headers"
@@ -1444,11 +1549,12 @@ export default function SubmitPage() {
                     >
                     <div className={fieldRow}>
                       <div className={field}>
-                        <label className={fieldLabel}>
+                        <label className={fieldLabel} htmlFor="f-retro-wins">
                           What worked{" "}
                           <span className="text-[#22c55e]">[ + ]</span>
                         </label>
                         <textarea
+                          id="f-retro-wins"
                           className={`${fieldTextarea} min-h-[100px]`}
                           placeholder={
                             "Pin headers saved hours of debugging.\nPair-building at open hours was faster."
@@ -1458,11 +1564,12 @@ export default function SubmitPage() {
                         />
                       </div>
                       <div className={field}>
-                        <label className={fieldLabel}>
+                        <label className={fieldLabel} htmlFor="f-retro-fixes">
                           What we&rsquo;d change{" "}
                           <span className="text-pop-red">[ - ]</span>
                         </label>
                         <textarea
+                          id="f-retro-fixes"
                           className={`${fieldTextarea} min-h-[100px]`}
                           placeholder={
                             "Should have ordered the PCB earlier.\nNeeds a service hatch."
@@ -1485,8 +1592,9 @@ export default function SubmitPage() {
                     >
                     <div className={fieldRow}>
                       <div className={field}>
-                        <label className={fieldLabel}>GitHub / source</label>
+                        <label className={fieldLabel} htmlFor="f-github">GitHub / source</label>
                         <input
+                          id="f-github"
                           className={fieldInput}
                           type="url"
                           placeholder="https://github.com/…"
@@ -1495,8 +1603,9 @@ export default function SubmitPage() {
                         />
                       </div>
                       <div className={field}>
-                        <label className={fieldLabel}>Demo / site</label>
+                        <label className={fieldLabel} htmlFor="f-website">Demo / site</label>
                         <input
+                          id="f-website"
                           className={fieldInput}
                           type="url"
                           placeholder="https://…"
@@ -1506,8 +1615,9 @@ export default function SubmitPage() {
                       </div>
                     </div>
                     <div className={field}>
-                      <label className={fieldLabel}>Reach you at</label>
+                      <label className={fieldLabel} htmlFor="f-contact">Reach you at</label>
                       <input
+                        id="f-contact"
                         className={fieldInput}
                         type="text"
                         placeholder="@discord, email, or Instagram, optional"

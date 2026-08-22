@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/components/AuthProvider";
 import LinkButton from "./global/LinkButton";
@@ -14,6 +14,8 @@ const HBAR =
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { user, profile, loading, signOut } = useAuth();
 
   useEffect(() => {
@@ -31,7 +33,29 @@ export default function Nav() {
     if (!menuOpen) return;
     const mq = window.matchMedia("(min-width: 768px)");
     const onWide = (e: MediaQueryListEvent) => e.matches && setMenuOpen(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        requestAnimationFrame(() => menuButtonRef.current?.focus());
+        return;
+      }
+      if (e.key !== "Tab" || !navRef.current) return;
+      const focusable = Array.from(
+        navRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.offsetParent !== null);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     if (mq.matches) setMenuOpen(false);
     mq.addEventListener("change", onWide);
     document.addEventListener("keydown", onKey);
@@ -59,16 +83,20 @@ export default function Nav() {
 
   return (
     <nav
+      ref={navRef}
       className={`fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-8 py-3.5 to-transparent text-[15px] max-md:grid-cols-[1fr_auto] max-md:px-5 max-md:overflow-visible  ${menuOpen ? "max-md:bg-pop-pink max-md:border-b-2 max-md:border-black/20" : "bg-gradient-to-b from-black/70 via-black/40 "}`}
       id="nav"
+      aria-label="Primary navigation"
     >
       {/* Left: hamburger + logo */}
       <div className={`flex items-center gap-3.5 min-w-0`}>
         <button
+          ref={menuButtonRef}
           className="hidden max-md:flex flex-col justify-center items-center gap-[5px] cursor-pointer w-11 h-11 -ml-2.5 shrink-0"
           onClick={() => setMenuOpen((o) => !o)}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
+          aria-controls="primary-navigation-links"
         >
           <span
             className={`${HBAR}${menuOpen ? " translate-y-[6.5px] rotate-45" : ""}`}
@@ -78,29 +106,30 @@ export default function Nav() {
             className={`${HBAR}${menuOpen ? " -translate-y-[6.5px] -rotate-45" : ""}`}
           />
         </button>
-        <a className="flex items-center gap-3" href="/">
+        <Link className="flex items-center gap-3" href="/">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo_h_w.svg"
             alt="UoA Maker Club"
             className="h-8 w-auto"
           />
-        </a>
+        </Link>
       </div>
 
       {/* Center: nav links (mobile drawer) */}
       <div
+        id="primary-navigation-links"
         className={`flex gap-0.5 items-center justify-center text-[15px] font-medium max-md:absolute max-md:top-full max-md:left-0 max-md:right-0 max-md:h-[calc(100svh-58px)] max-md:bg-pop-pink max-md:flex-col max-md:items-stretch max-md:gap-0 max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))] max-md:overflow-y-auto max-md:overscroll-contain max-md:border-t max-md:border-black/15 ${menuOpen ? "max-md:flex" : "max-md:hidden"}`}
       >
-        <a href="/about" className={NAVLINK} onClick={close}>
+        <Link href="/about" className={NAVLINK} onClick={close}>
           About
-        </a>
-        <a href="/faq" className={NAVLINK} onClick={close}>
+        </Link>
+        <Link href="/faq" className={NAVLINK} onClick={close}>
           FAQ
-        </a>
-        <a href="/events" className={NAVLINK} onClick={close}>
+        </Link>
+        <Link href="/events" className={NAVLINK} onClick={close}>
           Events
-        </a>
+        </Link>
         <Link href="/vending" className={NAVLINK} onClick={close}>
           Vending Machine
         </Link>

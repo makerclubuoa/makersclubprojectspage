@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { type Project } from '@/lib/projects'
 import Pagination from '@/app/components/Pagination'
 import CustomSelect from '@/app/components/CustomSelect'
+import AccessibleModal from '@/app/components/AccessibleModal'
 import ProjectCard from '@/app/components/ProjectCard'
 import { container, emptyState } from '@/lib/ui'
 
@@ -78,7 +79,10 @@ export default function ProjectsSection({
   const [sort, setSort] = useState(() => searchParams.get('sort') ?? 'newest')
   const [featured, setFeatured] = useState(() => searchParams.get('featured') === '1')
   const [bouncingPill, setBouncingPill] = useState<string | null>(null)
-  const [page, setPage] = useState(() => parseInt(searchParams.get('page') ?? '1', 10))
+  const [page, setPage] = useState(() => {
+    const parsed = Number.parseInt(searchParams.get('page') ?? '1', 10)
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+  })
   const [pageSize, setPageSize] = useState(12)
   const [sheetOpen, setSheetOpen] = useState(false)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -92,7 +96,7 @@ export default function ProjectsSection({
     if (page > 1) params.set('page', String(page))
     const qs = params.toString()
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-  }, [cat, tool, sort, featured, page])
+  }, [cat, tool, sort, featured, page, pathname, router])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -104,7 +108,12 @@ export default function ProjectsSection({
 
   const filtered = applyFilters(projects, cat, tool, sort, featured)
   const totalPages = Math.ceil(filtered.length / pageSize)
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+  const activePage = Math.min(Math.max(page, 1), Math.max(totalPages, 1))
+  const paginated = filtered.slice((activePage - 1) * pageSize, activePage * pageSize)
+
+  useEffect(() => {
+    if (page !== activePage) setPage(activePage)
+  }, [page, activePage])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -182,14 +191,11 @@ export default function ProjectsSection({
     document.body.style.overflow = 'hidden'
     const mq = window.matchMedia('(min-width: 1024px)')
     const onWide = (e: MediaQueryListEvent) => e.matches && setSheetOpen(false)
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheetOpen(false)
     if (mq.matches) setSheetOpen(false)
     mq.addEventListener('change', onWide)
-    document.addEventListener('keydown', onKey)
     return () => {
       document.body.style.overflow = prev
       mq.removeEventListener('change', onWide)
-      document.removeEventListener('keydown', onKey)
     }
   }, [sheetOpen])
 
@@ -218,6 +224,7 @@ export default function ProjectsSection({
                   key={c}
                   className={`${PILL_BASE} ${c === cat ? 'bg-accent text-white shadow-[2px_2px_0px_0px_#000]' : 'bg-white text-ink hover:bg-paper-2'}${bouncingPill === c ? ' animate-[pillBounce_0.45s_cubic-bezier(0.34,1.56,0.64,1)]' : ''}`}
                   onClick={() => handleCatClick(c)}
+                  aria-pressed={c === cat}
                 >
                   <span>{c}</span>
                   <span className="text-[10.5px] opacity-70 tracking-normal">{categoryCount(c)}</span>
@@ -228,8 +235,9 @@ export default function ProjectsSection({
             <div className="w-[3px] h-[22px] bg-black" />
 
             <div className={SELECT_WRAP}>
-              <label className={SELECT_LABEL}>Made with</label>
+              <label className={SELECT_LABEL} htmlFor="project-tool-filter">Made with</label>
               <CustomSelect
+                id="project-tool-filter"
                 variant="filter"
                 value={tool}
                 onChange={v => { setTool(v); setPage(1) }}
@@ -238,8 +246,9 @@ export default function ProjectsSection({
             </div>
 
             <div className={SELECT_WRAP}>
-              <label className={SELECT_LABEL}>Sort</label>
+              <label className={SELECT_LABEL} htmlFor="project-sort-filter">Sort</label>
               <CustomSelect
+                id="project-sort-filter"
                 variant="filter"
                 value={sort}
                 onChange={v => { setSort(v); setPage(1) }}
@@ -250,6 +259,7 @@ export default function ProjectsSection({
             <button
               className={`inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full border-2 border-black text-[11.5px] font-semibold tracking-[0.04em] uppercase bg-white text-ink ${featured ? 'shadow-[2px_2px_0px_0px_#000]' : ''}`}
               onClick={() => { setFeatured(f => !f); setPage(1) }}
+              aria-pressed={featured}
             >
               <span className={`shrink-0 relative w-7 h-4 rounded-full border-2 border-black transition-[background-color] duration-200 after:content-[''] after:absolute after:left-px after:top-px after:w-2.5 after:h-2.5 after:rounded-full after:transition-[transform,background-color] after:duration-200 ${featured ? 'bg-pop-magenta after:translate-x-3 after:bg-white' : 'bg-paper-2 after:bg-black/30'}`} />
               Featured only
@@ -315,15 +325,14 @@ export default function ProjectsSection({
           and a pinned footer, so the apply button is always reachable no
           matter how many categories or tools there are. */}
       {sheetOpen && (
-        <div className="fixed inset-0 z-[900] lg:hidden" role="dialog" aria-modal="true" aria-label="Filter and sort projects">
-          <button
-            className="absolute inset-0 w-full h-full bg-black/55 backdrop-blur-[2px]"
-            onClick={() => setSheetOpen(false)}
-            aria-label="Close filters"
-          />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl border-t-4 border-black bg-white">
+        <AccessibleModal
+          onClose={() => setSheetOpen(false)}
+          labelledBy="project-filter-title"
+          backdropClassName="fixed inset-0 z-[900] bg-black/55 backdrop-blur-[2px] lg:hidden"
+          panelClassName="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl border-t-4 border-black bg-white outline-none"
+        >
             <header className="flex items-center justify-between gap-3 border-b-2 border-black/10 px-4 py-3">
-              <h2 className="m-0 text-[15px] font-bold tracking-[0.02em] text-ink">
+              <h2 id="project-filter-title" className="m-0 text-[15px] font-bold tracking-[0.02em] text-ink">
                 Filter &amp; sort
               </h2>
               <button
@@ -417,8 +426,7 @@ export default function ProjectsSection({
                 Show {filtered.length} {filtered.length === 1 ? 'project' : 'projects'}
               </button>
             </footer>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
 
       {/* Cards */}
@@ -443,7 +451,7 @@ export default function ProjectsSection({
                   <ProjectCard key={p.id} project={p} index={i} onCatClick={handleCatClick} onToolClick={handleToolClick} makerDisplay={makerDisplays[p.id]} />
                 ))}
               </div>
-              <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
+              <Pagination page={activePage} totalPages={totalPages} onChange={handlePageChange} />
             </>
           )}
         </div>

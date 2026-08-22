@@ -73,8 +73,9 @@ export function draftFromStored(m: ProjectMedia): DraftMedia {
 export async function uploadMediaDrafts(
   projectId: string,
   drafts: DraftMedia[],
-): Promise<{ media: ProjectMedia[] | null; error: string | null }> {
+): Promise<{ media: ProjectMedia[] | null; error: string | null; uploadedPaths: string[] }> {
   const out: ProjectMedia[] = [];
+  const uploadedPaths: string[] = [];
 
   for (let i = 0; i < drafts.length; i++) {
     const d = drafts[i];
@@ -89,9 +90,13 @@ export async function uploadMediaDrafts(
           contentType: d.file.type || undefined,
         });
       if (error) {
+        if (uploadedPaths.length > 0) {
+          await supabase.storage.from(MEDIA_BUCKET).remove(uploadedPaths);
+        }
         const label = d.title.trim() || d.file.name;
-        return { media: null, error: `“${label}” failed to upload: ${error.message}` };
+        return { media: null, error: `“${label}” failed to upload: ${error.message}`, uploadedPaths: [] };
       }
+      uploadedPaths.push(path);
       url = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl;
     }
 
@@ -110,7 +115,7 @@ export async function uploadMediaDrafts(
   // Guarantee exactly one flagged item so cards never have to guess.
   if (out.length > 0 && !out.some((m) => m.preview)) out[0].preview = true;
 
-  return { media: out.length > 0 ? out : null, error: null };
+  return { media: out.length > 0 ? out : null, error: null, uploadedPaths };
 }
 
 /* ── The widget ─────────────────────────────────────── */
@@ -279,11 +284,12 @@ export default function MediaUploader({
           </p>
 
           <div className="flex flex-col gap-1.5 mt-1">
-            <label className={fieldLabel}>
+            <label className={fieldLabel} htmlFor={`media-link-${radioName}`}>
               <span>▶ Or paste a video link</span>
             </label>
             <div className="flex gap-2">
               <input
+                id={`media-link-${radioName}`}
                 className={fieldInput}
                 type="url"
                 placeholder="https://youtube.com/watch?v=… or vimeo.com/…"
@@ -370,10 +376,11 @@ function MediaDraftRow({
       </button>
 
       <div className="flex flex-col gap-1.5 pr-6">
-        <label className={fieldLabel}>
+        <label className={fieldLabel} htmlFor={`media-title-${item.key}`}>
           {isVideo ? "Video title" : "Track title"}
         </label>
         <input
+          id={`media-title-${item.key}`}
           className={fieldInput}
           type="text"
           placeholder={isVideo ? "e.g. Demo run" : "e.g. Quokka Theme"}

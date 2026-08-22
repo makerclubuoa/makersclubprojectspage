@@ -57,12 +57,19 @@ export async function PATCH(req: NextRequest) {
 
   const { order } = await req.json() as { order: { id: string; sort_order: number }[] }
   if (!Array.isArray(order)) return NextResponse.json({ error: 'Missing order' }, { status: 400 })
+  if (order.some(item => typeof item?.id !== 'string' || !item.id || !Number.isFinite(item.sort_order))) {
+    return NextResponse.json({ error: 'Invalid order' }, { status: 400 })
+  }
 
-  await Promise.all(
+  const results = await Promise.all(
     order.map(({ id, sort_order }) =>
       supabaseAdmin.from('Timeline').update({ sort_order }).eq('id', id)
     )
   )
+  const failure = results.find(result => result.error)
+  if (failure?.error) {
+    return NextResponse.json({ error: failure.error.message }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
 

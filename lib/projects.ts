@@ -77,6 +77,7 @@ export async function fetchMakerDisplay(
 
   const names: string[] = [];
   let anonCount = 0;
+  let resolvedConsentedCoMakers = 0;
 
   const { data: submitter } = await supabase
     .from("profiles")
@@ -99,7 +100,10 @@ export async function fetchMakerDisplay(
         .select("display_name, public_name, name_preference, credit_consented")
         .in("id", coMakerIds);
       for (const p of coMakers ?? []) {
-        if (p.credit_consented) names.push(resolvePublicName(p));
+        if (p.credit_consented) {
+          names.push(resolvePublicName(p));
+          resolvedConsentedCoMakers++;
+        }
         else anonCount++;
       }
     }
@@ -110,17 +114,56 @@ export async function fetchMakerDisplay(
     return { names: project.makers ?? [], anonCount: project.anon_count ?? 0 };
   }
 
-  // Append legacy co-maker strings from makers[] that aren't covered by profile
-  // resolution. Use set-based filtering so position in the array doesn't matter.
-  if (!project.maker_ids || project.maker_ids.length === 0) {
-    const resolvedSet = new Set(names.map((n) => n.toLowerCase()));
-    const extras = (project.makers ?? []).filter(
-      (n) => !resolvedSet.has(n.toLowerCase()),
-    );
-    names.push(...extras);
-  }
+  const resolvedSet = new Set(names.map((n) => n.toLowerCase()));
+  const extras = (project.makers ?? []).filter((n) => !resolvedSet.has(n.toLowerCase()));
+  const legacySlots = Math.max(0, (project.makers ?? []).length - resolvedConsentedCoMakers);
+  names.push(...extras.slice(0, legacySlots));
 
   return { names, anonCount };
+}
+type PublicProfile = {
+  id: string;
+  display_name: string | null;
+  public_name: string | null;
+  name_preference: string | null;
+  credit_consented: boolean;
+};
+
+/** Resolves every card's makers with one profile query instead of two per project. */
+export async function fetchMakerDisplays(
+  projects: Project[],
+): Promise<Record<string, { names: string[]; anonCount: number }>> {
+  const ids = [...new Set(projects.flatMap((project) => [
+    ...(project.submitted_by ? [project.submitted_by] : []),
+    ...(project.maker_ids ?? []),
+  ]))];
+  const { data } = ids.length
+    ? await supabase
+        .from("profiles")
+        .select("id, display_name, public_name, name_preference, credit_consented")
+        .in("id", ids)
+    : { data: [] as PublicProfile[] };
+  const profiles = new Map((data ?? []).map((profile: PublicProfile) => [profile.id, profile]));
+
+  return Object.fromEntries(projects.map((project) => {
+    if (!project.submitted_by) {
+      return [project.id, { names: project.makers ?? [], anonCount: project.anon_count ?? 0 }];
+    }
+    const projectIds = [...new Set([project.submitted_by, ...(project.maker_ids ?? [])])];
+    const found = projectIds.map((id) => profiles.get(id)).filter(Boolean) as PublicProfile[];
+    if (found.length === 0) {
+      return [project.id, { names: project.makers ?? [], anonCount: project.anon_count ?? 0 }];
+    }
+    const names = found.filter((profile) => profile.credit_consented).map(resolvePublicName);
+    const anonCount = found.filter((profile) => !profile.credit_consented).length;
+    const resolved = new Set(names.map((name) => name.toLowerCase()));
+    const resolvedConsentedCoMakers = found.filter(
+      (profile) => profile.id !== project.submitted_by && profile.credit_consented,
+    ).length;
+    const legacySlots = Math.max(0, (project.makers ?? []).length - resolvedConsentedCoMakers);
+    names.push(...(project.makers ?? []).filter((name) => !resolved.has(name.toLowerCase())).slice(0, legacySlots));
+    return [project.id, { names, anonCount }];
+  }));
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -199,12 +242,8 @@ export async function fetchProject(id: string): Promise<Project | null> {
     .from("Projects")
     .select("*")
     .eq("id", id)
+    .eq("status", "APPROVED")
     .single();
   if (error) return null;
   return data;
-}
-
-export async function fetchAllIds(): Promise<string[]> {
-  const { data } = await supabase.from("Projects").select("id");
-  return (data ?? []).map((r: { id: string }) => r.id);
 }

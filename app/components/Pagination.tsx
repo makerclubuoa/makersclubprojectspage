@@ -28,7 +28,7 @@ export default function Pagination({ page, totalPages, onChange }: {
   if (totalPages <= 1) return null
   return (
     <div className="flex flex-wrap items-center justify-center gap-1 mt-10 mb-2">
-      <button className={`${BTN} ${BTN_IDLE}`} onClick={() => onChange(page - 1)} disabled={page === 1}>←</button>
+      <button aria-label="Previous page" className={`${BTN} ${BTN_IDLE}`} onClick={() => onChange(Math.max(1, page - 1))} disabled={page <= 1}>←</button>
       {pages(page, totalPages).map((p, i) =>
         p === '…'
           ? <span key={`e${i}`} className="px-1 text-white text-xs font-bold leading-[34px] [text-shadow:1px_1px_0_#000]">…</span>
@@ -36,9 +36,11 @@ export default function Pagination({ page, totalPages, onChange }: {
               key={p}
               className={`${BTN} ${p === page ? BTN_ACTIVE : BTN_IDLE}`}
               onClick={() => onChange(p as number)}
+              aria-current={p === page ? 'page' : undefined}
+              aria-label={`Page ${p}`}
             >{p}</button>
       )}
-      <button className={`${BTN} ${BTN_IDLE}`} onClick={() => onChange(page + 1)} disabled={page === totalPages}>→</button>
+      <button aria-label="Next page" className={`${BTN} ${BTN_IDLE}`} onClick={() => onChange(Math.min(totalPages, page + 1))} disabled={page >= totalPages}>→</button>
     </div>
   )
 }

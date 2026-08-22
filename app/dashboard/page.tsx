@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Screentone from "@/app/components/global/Screentone";
+import AccessibleModal from "@/app/components/AccessibleModal";
 import penNib from "@/public/doodle-pen-nib.png";
 import Pagination from "@/app/components/Pagination";
 import { useAuth } from "@/app/components/AuthProvider";
@@ -19,8 +20,6 @@ import {
   pageBandSub,
   pageBandDoodle,
   submitMain,
-  modalBackdrop,
-  modal,
   modalLabel,
   modalTitle,
   modalWarn,
@@ -88,6 +87,7 @@ export default function DashboardPage() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [showNameModal, setShowNameModal] = useState(false);
   const [pendingPreference, setPendingPreference] = useState<
     "name" | "public_name" | null
@@ -102,6 +102,11 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    setMyPage(1);
+    setLikedPage(1);
+  }, [pageSize]);
+
+  useEffect(() => {
     if (!profile) return;
     setPublicName(profile.public_name ?? "");
     setNamePreference(
@@ -111,15 +116,15 @@ export default function DashboardPage() {
   }, [profile]);
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/login");
+    if (!loading && !user) router.replace("/login?next=/dashboard");
   }, [user, loading, router]);
 
   useEffect(() => {
     if (!user) return;
     async function load() {
       setDataLoading(true);
-      const [{ data: mine }, { data: coMakerOf }, { data: likeRows }] =
-        await Promise.all([
+      setDashboardError(null);
+      const [mineResult, coMakerResult, likesResult] = await Promise.all([
           supabase
             .from("Projects")
             .select("*")
@@ -135,7 +140,16 @@ export default function DashboardPage() {
             .from("user_likes")
             .select("project_id")
             .eq("user_id", user!.id),
-        ]);
+      ]);
+      const loadError = mineResult.error ?? coMakerResult.error ?? likesResult.error;
+      if (loadError) {
+        setDashboardError(`Dashboard could not be loaded: ${loadError.message}`);
+        setDataLoading(false);
+        return;
+      }
+      const mine = mineResult.data;
+      const coMakerOf = coMakerResult.data;
+      const likeRows = likesResult.data;
 
       const owned = (mine ?? []).map((p: Project) => ({
         ...p,
@@ -149,11 +163,12 @@ export default function DashboardPage() {
 
       if (likeRows && likeRows.length > 0) {
         const ids = likeRows.map((r: { project_id: string }) => r.project_id);
-        const { data: liked } = await supabase
+        const { data: liked, error: likedError } = await supabase
           .from("Projects")
           .select("*")
           .in("id", ids);
-        setLikedProjects((liked ?? []) as Project[]);
+        if (likedError) setDashboardError(`Liked projects could not be loaded: ${likedError.message}`);
+        else setLikedProjects((liked ?? []) as Project[]);
       } else {
         setLikedProjects([]);
       }
@@ -178,6 +193,7 @@ export default function DashboardPage() {
   async function saveProfile() {
     if (!user) return;
     setUsernameError(null);
+    setDashboardError(null);
     const trimmed = publicName.trim();
     if (trimmed) {
       const { data: existing } = await supabase
@@ -193,7 +209,7 @@ export default function DashboardPage() {
     }
     setProfileSaving(true);
     setProfileSaved(false);
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({
         public_name: trimmed || null,
@@ -202,6 +218,10 @@ export default function DashboardPage() {
       })
       .eq("id", user.id);
     setProfileSaving(false);
+    if (error) {
+      setDashboardError(`Profile was not saved: ${error.message}`);
+      return;
+    }
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
   }
@@ -211,19 +231,28 @@ export default function DashboardPage() {
     if (p?._role !== "owner") return;
     if (!confirm("Remove this project? This cannot be undone.")) return;
     setDeletingId(id);
-    await supabase
-      .from("Projects")
-      .delete()
-      .eq("id", id)
-      .eq("submitted_by", user!.id);
-    setMyProjects((prev) => prev.filter((p) => p.id !== id));
+    setDashboardError(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    const response = session
+      ? await fetch(`/api/projects/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${session.access_token}` } })
+      : null;
+    if (response?.ok) {
+      setMyProjects((prev) => prev.filter((p) => p.id !== id));
+      setMyPage(1);
+    }
+    else setDashboardError("The project could not be removed. Please try again.");
     setDeletingId(null);
   }
 
   async function handleUnlike(projectId: string) {
     setUnlikingId(projectId);
-    await supabase.rpc("toggle_like", { p_project_id: projectId });
-    setLikedProjects((prev) => prev.filter((p) => p.id !== projectId));
+    setDashboardError(null);
+    const { error } = await supabase.rpc("toggle_like", { p_project_id: projectId });
+    if (error) setDashboardError(`Could not unlike project: ${error.message}`);
+    else {
+      setLikedProjects((prev) => prev.filter((p) => p.id !== projectId));
+      setLikedPage(1);
+    }
     setUnlikingId(null);
   }
 
@@ -238,18 +267,17 @@ export default function DashboardPage() {
       <header className={pageBand}>
         <Screentone />
         <Image src={penNib} alt="" className={`${pageBandDoodle} -rotate-6 -bottom-4`} />
-        <p className={`${pageBandTitle} text-pop-violet`}>
+        <h1 className={`${pageBandTitle} text-pop-violet`}>
           Hey, {displayName}!
-        </p>
+        </h1>
         <p className={pageBandSub}>Your submissions and liked projects.</p>
       </header>
 
       {/* Name preference modal */}
       {showNameModal && (
-        <div className={modalBackdrop} onClick={() => setShowNameModal(false)}>
-          <div className={modal} onClick={(e) => e.stopPropagation()}>
+        <AccessibleModal onClose={() => setShowNameModal(false)} labelledBy="name-preference-title">
             <p className={modalLabel}>Confirm change</p>
-            <p className={modalTitle}>
+            <p className={modalTitle} id="name-preference-title">
               Switch to showing your{" "}
               <em className="not-italic text-ink-2">
                 {pendingPreference === "public_name" ? "username" : "real name"}
@@ -276,12 +304,16 @@ export default function DashboardPage() {
                 Confirm
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
 
       <main className={submitMain}>
         <div className={container}>
+          {dashboardError && (
+            <div className="mb-5 border-2 border-black bg-white px-4 py-3 text-xs font-bold text-pop-red shadow-[2px_2px_0px_0px_#000]" role="alert">
+              {dashboardError}
+            </div>
+          )}
           {/* Profile settings */}
           <h2 className={`${holt} text-3xl md:text-4xl text-white mt-0 mb-6`}>
             Profile
@@ -292,13 +324,14 @@ export default function DashboardPage() {
               <span className={formFig}>Profile settings</span>
 
               <div className={field}>
-                <label className={fieldLabel}>
+                <label className={fieldLabel} htmlFor="profile-legal-name">
                   Legal name
                   <span className="font-normal normal-case tracking-normal text-muted">
                     read-only
                   </span>
                 </label>
                 <input
+                  id="profile-legal-name"
                   className={`${fieldInput} opacity-50`}
                   type="text"
                   value={profile?.display_name ?? ""}
@@ -307,17 +340,20 @@ export default function DashboardPage() {
               </div>
 
               <div className={field}>
-                <label className={fieldLabel}>
+                <label className={fieldLabel} htmlFor="profile-public-name">
                   Public username
                   <span className="font-normal normal-case tracking-normal">
                     optional, alias shown instead of your name
                   </span>
                 </label>
                 <input
+                  id="profile-public-name"
                   className={fieldInput}
                   type="text"
                   placeholder="e.g. maker_ib, tinkerer42, or leave blank"
                   value={publicName}
+                  aria-invalid={!!usernameError}
+                  aria-describedby={usernameError ? "profile-public-name-error" : undefined}
                   onChange={(e) => {
                     setPublicName(e.target.value);
                     setUsernameError(null);
@@ -329,19 +365,20 @@ export default function DashboardPage() {
                   }}
                 />
                 {usernameError && (
-                  <span className="text-[11px] font-semibold text-pop-red mt-1">
+                  <span id="profile-public-name-error" className="text-[11px] font-semibold text-pop-red mt-1" role="alert">
                     {usernameError}
                   </span>
                 )}
               </div>
 
-              <div className={field}>
-                <label className={fieldLabel}>Show me as</label>
+              <fieldset className={`${field} border-0 p-0 m-0 mb-4`}>
+                <legend className={fieldLabel}>Show me as</legend>
                 <div className="flex gap-2 mt-1 flex-wrap">
                   <button
                     type="button"
                     className={`px-3.5 py-1 rounded-full border-2 border-black text-xs font-semibold tracking-[0.06em] cursor-pointer ${namePreference === "name" ? "bg-black text-white shadow-[2px_2px_0px_0px_#000]" : "bg-white text-ink hover:bg-paper-2"}`}
                     onClick={() => requestNamePreference("name")}
+                    aria-pressed={namePreference === "name"}
                   >
                     My name ·{" "}
                     <em className="not-italic opacity-70">
@@ -354,6 +391,8 @@ export default function DashboardPage() {
                     onClick={() =>
                       publicName.trim() && requestNamePreference("public_name")
                     }
+                    aria-pressed={namePreference === "public_name"}
+                    disabled={!publicName.trim()}
                   >
                     My username ·{" "}
                     <em className="not-italic opacity-70">
@@ -366,7 +405,7 @@ export default function DashboardPage() {
                     Set a username above to enable this option.
                   </span>
                 )}
-              </div>
+              </fieldset>
 
               <div className={`${field} mb-0`}>
                 <label className="flex flex-col gap-1.5 normal-case tracking-normal text-[13px] text-ink">
@@ -461,7 +500,7 @@ export default function DashboardPage() {
                         <div key={p.id} className={dashRow}>
                           <div className={dashRowMain}>
                             <Link
-                              href={`/projects/${p.id}`}
+                              href={p.status === "APPROVED" ? `/projects/${p.id}` : `/projects/${p.id}/edit`}
                               className={dashRowTitle}
                             >
                               {p.title}

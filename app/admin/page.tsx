@@ -10,6 +10,7 @@ import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import type { Project } from "@/lib/projects";
 import Pagination from "@/app/components/Pagination";
+import AccessibleModal from "@/app/components/AccessibleModal";
 import VendingAdminPanel from "@/app/components/vending/VendingAdminPanel";
 import TimelineAdminPanel from "@/app/components/timeline/TimelineAdminPanel";
 import {
@@ -34,8 +35,6 @@ import {
   dashStatusLive,
   dashRowEdit,
   dashRowDelete,
-  modalBackdrop,
-  modal,
   modalLabel,
   modalTitle,
   modalWarn,
@@ -103,6 +102,8 @@ export default function AdminPage() {
     else if (t === "timeline") setTab("timeline");
   }, []);
 
+  useEffect(() => setPage(1), [pageSize]);
+
   function switchTab(next: Tab) {
     setTab(next);
     const url = new URL(window.location.href);
@@ -122,7 +123,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace("/login");
+      router.replace("/login?next=/admin");
       return;
     }
     if (user.email !== ADMIN_EMAIL) {
@@ -135,25 +136,33 @@ export default function AdminPage() {
     if (!user || user.email !== ADMIN_EMAIL) return;
     async function load() {
       setDataLoading(true);
-      const { data } = await supabase
+      setActionError(null);
+      const { data, error } = await supabase
         .from("Projects")
         .select("*")
         .order("date", { ascending: false });
-      setProjects((data ?? []) as Project[]);
+      if (error) setActionError(`Projects could not be loaded: ${error.message}`);
+      else setProjects((data ?? []) as Project[]);
       setDataLoading(false);
     }
     load();
   }, [user]);
 
-  function sendNotify(
+  async function sendNotify(
     projectId: string,
     change: "approved" | "rejected" | "featured",
   ) {
-    fetch("/api/notify", {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Admin session expired");
+    const response = await fetch("/api/notify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({ type: "status-change", projectId, change }),
     });
+    if (!response.ok) throw new Error("Project changed, but its notification email failed");
   }
 
   async function adminUpdate(id: string, payload: Record<string, unknown>) {
@@ -182,7 +191,8 @@ export default function AdminPage() {
       setProjects((prev) =>
         prev.map((p) => (p.id === id ? { ...p, Featured: featured } : p)),
       );
-      if (featured) sendNotify(id, "featured");
+      setPage(1);
+      if (featured) await sendNotify(id, "featured");
     } catch (e) {
       setActionError((e as Error).message);
     }
@@ -199,9 +209,10 @@ export default function AdminPage() {
     try {
       await adminUpdate(id, { status });
       setProjects((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, status } : p)),
+        prev.map((p) => (p.id === id ? { ...p, status, ...(status !== "APPROVED" ? { Featured: false } : {}) } : p)),
       );
-      if (change) sendNotify(id, change);
+      setPage(1);
+      if (change) await sendNotify(id, change);
     } catch (e) {
       setActionError((e as Error).message);
     }
@@ -214,6 +225,7 @@ export default function AdminPage() {
     try {
       await adminUpdate(id, { _delete: true });
       setProjects((prev) => prev.filter((p) => p.id !== id));
+      setPage(1);
     } catch (e) {
       setActionError((e as Error).message);
     }
@@ -268,7 +280,7 @@ export default function AdminPage() {
       <header className={pageBand}>
         <Screentone />
         <Image src={pliers} alt="" className={pageBandDoodle} />
-        <p className={`${pageBandTitle} text-pop-red`}>Admin</p>
+        <h1 className={`${pageBandTitle} text-pop-red`}>Admin</h1>
         <p className={pageBandSub}>
           {tab === "projects"
             ? "Approve, feature, reject, or delete any project."
@@ -366,7 +378,7 @@ export default function AdminPage() {
                     >
                       <div className={dashRowMain}>
                         <Link
-                          href={`/projects/${p.id}`}
+                          href={p.status === "APPROVED" ? `/projects/${p.id}` : `/projects/${p.id}/edit?from=admin`}
                           className={dashRowTitle}
                         >
                           {p.title}
@@ -500,12 +512,11 @@ export default function AdminPage() {
       </main>
 
       {pending && (
-        <div className={modalBackdrop} onClick={() => setPending(null)}>
-          <div className={modal} onClick={(e) => e.stopPropagation()}>
+        <AccessibleModal onClose={() => setPending(null)} labelledBy="admin-confirm-title">
             <p className={modalLabel}>Confirm action</p>
-            <p className={modalTitle}>
+            <p className={modalTitle} id="admin-confirm-title">
               {pending.label}{" "}
-              <em className="not-italic text-pop-violet">"{pending.title}"</em>?
+              <em className="not-italic text-pop-violet">&ldquo;{pending.title}&rdquo;</em>?
             </p>
             {pending.label === "Delete" && (
               <p className={modalWarn}>This cannot be undone.</p>
@@ -525,8 +536,7 @@ export default function AdminPage() {
                 {pending.label}
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
       </div>
     </div>

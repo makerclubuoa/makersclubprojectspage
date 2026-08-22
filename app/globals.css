@@ -1,10 +1,6 @@
-/* ── Tailwind v4 (utilities only; the project keeps its own reset, so Preflight
-   is intentionally omitted to avoid restyling not-yet-migrated components) ── */
-@import url("https://googleapis.com");
+/* Tailwind v4, including its base reset. Components and page shells rely on
+   that consistent baseline before applying their own utilities. */
 @import "tailwindcss";
-@layer theme, base, components, utilities;
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
 
 /* Expose the existing design tokens as Tailwind theme values. `inline` means
    utilities reference the live CSS vars, so bg-paper / text-ink / border-rule
@@ -21,7 +17,7 @@
   }
   --font-sans: var(--font-dm-sans);
   --font-holt: var(--font-holtwood);
-  --color-paper: var (--paper);
+  --color-paper: var(--paper);
   --background-image-purple-grad: linear-gradient(
     180deg,
     #9f42d1 0%,

@@ -1,11 +1,8 @@
 import { Suspense } from "react";
-import Image from "next/image";
 import ProjectsSection from "../components/ProjectsSection";
 import CTACarousel from "../components/CTACarousel";
 import LinkButton from "../components/global/LinkButton";
-import Screentone from "../components/global/Screentone";
-import pliers from "@/public/doodle-pliers.png";
-import { fetchProjects, fetchMakerDisplay } from "@/lib/projects";
+import { fetchProjects, fetchMakerDisplays } from "@/lib/projects";
 import {
   container,
   pageWrap,
@@ -21,11 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function ProjectsPage() {
   const projects = await fetchProjects();
 
-  const makerDisplays = Object.fromEntries(
-    await Promise.all(
-      projects.map(async (p) => [p.id, await fetchMakerDisplay(p)]),
-    ),
-  );
+  const makerDisplays = await fetchMakerDisplays(projects);
 
   const allTools = (() => {
     const s = new Set<string>();
@@ -42,9 +35,9 @@ export default async function ProjectsPage() {
 
   return (
     <div className={pageWrap}>
-      <div className="pt-20">
+      <main className="pt-20">
         <div className={pageBand}>
-          <p className={`${pageBandTitle} text-indigo-300`}>Projects</p>
+          <h1 className={`${pageBandTitle} text-indigo-300`}>Projects</h1>
           <p className={pageBandSub}>
             {`Things we've made. Hardware, software, textiles, art, food, it all belongs in the archive.`}
           </p>
@@ -64,11 +57,11 @@ export default async function ProjectsPage() {
             className={`${container} flex items-center gap-16 max-[900px]:flex-col max-[900px]:gap-10`}
           >
             <div className="flex-[0_0_380px] max-[900px]:flex-none">
-              <h4
+              <h2
                 className={`${holt} text-2xl md:text-3xl text-pop-pink mt-0 mb-3.5`}
               >
                 Got a thing you made?
-              </h4>
+              </h2>
               <p className="font-semibold max-w-[44ch] text-base leading-[1.6] text-ink mt-0 mb-7">
                 Submissions are open all the time. Half-finished, broken, or
                 weird is welcome, that&rsquo;s usually where the good stuff is.
@@ -89,7 +82,7 @@ export default async function ProjectsPage() {
             />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

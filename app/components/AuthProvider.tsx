@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase'
 
 interface Profile {
   display_name: string | null
-  email: string | null
   public_name: string | null
   name_preference: string | null
   credit_consented: boolean
@@ -41,7 +40,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string) {
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, email, public_name, name_preference, credit_consented')
+      .select('display_name, public_name, name_preference, credit_consented')
       .eq('id', userId)
       .single()
     if (data) setProfile(data as Profile)
@@ -53,11 +52,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     const key = `ghost-synced-${session.user.id}`
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key)) return
     try {
-      await fetch('/api/auth/ensure-ghost', {
+      const response = await fetch('/api/auth/ensure-ghost', {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, '1')
+      if (response.ok && typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(key, '1')
+      }
     } catch {
       // best-effort; will retry on next login
     }

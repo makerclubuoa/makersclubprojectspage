@@ -22,6 +22,14 @@ import {
 
 export const dynamic = "force-dynamic";
 
+function destination() {
+  if (typeof window === "undefined") return "/";
+  const requested = new URLSearchParams(window.location.search).get("next");
+  return requested?.startsWith("/") && !requested.startsWith("//")
+    ? requested
+    : "/";
+}
+
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -31,7 +39,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!loading && user) router.replace("/");
+    if (!loading && user) router.replace(destination());
   }, [user, loading, router]);
 
   async function handleMagicLink(e: React.FormEvent) {
@@ -44,7 +52,7 @@ export default function LoginPage() {
     // defaults true); the post-login ensure-ghost sync mirrors them into Ghost.
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: { emailRedirectTo: `${window.location.origin}${destination()}` },
     });
     setSending(false);
     if (error) setError(error.message);
@@ -83,15 +91,15 @@ export default function LoginPage() {
               <>
                 <p className="font-semibold mb-7 text-sm leading-[1.65]">
                   Sign in to like projects and submit your own to the archive.
-                  Maker Club members only.
                 </p>
 
                 <form onSubmit={handleMagicLink}>
                   <div className={field}>
-                    <label className={fieldLabel}>
+                    <label className={fieldLabel} htmlFor="login-email">
                       Email <span className={fieldReq}>*</span>
                     </label>
                     <input
+                      id="login-email"
                       className={fieldInput}
                       type="email"
                       placeholder="you@example.com"

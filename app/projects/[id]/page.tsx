@@ -6,10 +6,8 @@ import CommentsSection from "@/app/components/CommentsSection";
 import {
   fetchProject,
   fetchProjects,
-  fetchAllIds,
   fetchMakerDisplay,
   categoryColor,
-  categoryPopText,
 } from "@/lib/projects";
 import { embedUrl, formatClock, providerLabel } from "@/lib/media";
 import {
@@ -83,11 +81,6 @@ function fmtDate(iso: string, opts?: Intl.DateTimeFormatOptions) {
 
 export const dynamic = "force-dynamic";
 
-export async function generateStaticParams() {
-  const ids = await fetchAllIds();
-  return ids.map((id) => ({ id }));
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -113,7 +106,6 @@ export default async function ProjectPage({
   if (!project) notFound();
 
   const color = categoryColor(project.category);
-  const titleColor = categoryPopText(project.category);
 
   // Related projects: same category first, then shared tools, then random
   const others = allProjects.filter((p) => p.id !== id);
@@ -684,7 +676,6 @@ export default async function ProjectPage({
 
                 <CommentsSection
                   projectId={project.id}
-                  projectTitle={project.title}
                   projectOwnerId={project.submitted_by ?? null}
                 />
 
@@ -834,21 +825,26 @@ export default async function ProjectPage({
                     )}
 
                     {project.github && (
-                      <>
-                        {project.github && (
-                          <a
-                            href={project.github}
-                            className="flex justify-between py-[9px] border-b border-black/10 last:border-b-0 text-xs font-bold text-pop-blue no-underline tracking-[0.04em] transition-colors duration-200 hover:text-pop-violet"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <span>Link ↗</span>
-                            <small className="text-ink-2 text-[10px] font-semibold tracking-[0.08em] uppercase">
-                              source
-                            </small>
-                          </a>
-                        )}
-                      </>
+                      <a
+                        href={project.github}
+                        className="flex justify-between py-[9px] border-b border-black/10 last:border-b-0 text-xs font-bold text-pop-blue no-underline tracking-[0.04em] transition-colors duration-200 hover:text-pop-violet"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span>Source ↗</span>
+                        <small className="text-ink-2 text-[10px] font-semibold tracking-[0.08em] uppercase">GitHub</small>
+                      </a>
+                    )}
+                    {project.website && (
+                      <a
+                        href={project.website}
+                        className="flex justify-between py-[9px] border-b border-black/10 last:border-b-0 text-xs font-bold text-pop-blue no-underline tracking-[0.04em] transition-colors duration-200 hover:text-pop-violet"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span>Demo / site ↗</span>
+                        <small className="text-ink-2 text-[10px] font-semibold tracking-[0.08em] uppercase">website</small>
+                      </a>
                     )}
                   </div>
 

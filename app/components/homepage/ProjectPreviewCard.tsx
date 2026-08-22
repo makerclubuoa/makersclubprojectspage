@@ -23,14 +23,18 @@ export default function ProjectPreviewCard({
   const [hovered, setHovered] = useState(false);
 
   return (
-    <Link
-      href={`/projects/${project.id}`}
-      className="w-full md:w-72 md:h-fit flex flex-col justify-start items-start"
+    <article
+      className="relative w-full md:w-72 md:h-fit flex flex-col justify-start items-start"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      <Link
+        href={`/projects/${project.id}`}
+        className="absolute inset-0 z-[1]"
+        aria-label={`View ${project.title}`}
+      />
       <div className="relative w-full aspect-square">
-        <div className={`absolute z-20 w-16 h-5 outline-2 outline-black ${tape}`} />
+        <div className={`absolute z-20 pointer-events-none w-16 h-5 outline-2 outline-black ${tape}`} />
         <div className="absolute inset-0 outline-3 outline-black overflow-hidden">
           {project.image ? (
             <Photo
@@ -53,10 +57,10 @@ export default function ProjectPreviewCard({
           )}
         </div>
       </div>
-      <p className="pt-3 text-lg font-bold text-black">{project.title}</p>
+      <h3 className="pt-3 text-lg font-bold text-black">{project.title}</h3>
       {project.blurb && (
         <p className="text-sm font-semibold text-black">{project.blurb}</p>
       )}
-    </Link>
+    </article>
   );
 }

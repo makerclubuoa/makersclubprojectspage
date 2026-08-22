@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, use, Suspense } from 'react'
 import Link from 'next/link'
+import AccessibleModal from '@/app/components/AccessibleModal'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Screentone from '@/app/components/global/Screentone'
@@ -9,7 +10,7 @@ import penNib from '@/public/doodle-pen-nib.png'
 import { useAuth } from '@/app/components/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES, resolvePublicName, type Project } from '@/lib/projects'
-import { compressForUpload } from '@/lib/image-compress'
+import { compressForUpload, imageFileError } from '@/lib/image-compress'
 import CustomSelect from '@/app/components/CustomSelect'
 import MediaUploader, { draftFromStored, uploadMediaDrafts, type DraftMedia } from '@/app/components/MediaUploader'
 import {
@@ -18,7 +19,7 @@ import {
   form, formInner, formFig, formActions,
   field, fieldTight, fieldLabel, fieldReq, fieldInput, fieldTextarea, fieldRow,
   btnGhost, btnGradient, btnDanger, btnArr,
-  modalBackdrop, modal, modalLabel, modalTitle, modalActions,
+  modalLabel, modalTitle, modalActions,
   makersChips, makersChip, makersChipAdd, makersChipRemove,
   makersSearch, makersDropdown, makersDropdownItem, makersDropdownName, makersDropdownEmail, makersDropdownEmpty,
   imgUploadBase, imgUploadIdle, imgUploadPreview, imgUploadInner, imgUploadIcon, imgUploadHint, imgUploadRemove,
@@ -76,6 +77,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const [startDate, setStartDate]       = useState('')
   const [buildTime, setBuildTime]       = useState('')
   const [github, setGithub]             = useState('')
+  const [website, setWebsite]           = useState('')
 
   // Makers
   type CoMakerProfile = { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }
@@ -121,8 +123,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const hasFetched = useRef(false)
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/login')
-  }, [user, loading, router])
+    if (!loading && !user) router.replace(`/login?next=${encodeURIComponent(`/projects/${id}/edit`)}`)
+  }, [user, loading, router, id])
 
   useEffect(() => {
     if (!user || hasFetched.current) return
@@ -154,6 +156,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       setStartDate(data.start_date ?? '')
       setBuildTime(data.build_time ?? '')
       setGithub(data.github ?? '')
+      setWebsite(data.website ?? '')
       // Load real profiles for submitted_by + maker_ids
       const submittedBy = data.submitted_by as string | null
       const makerIds = (data.maker_ids ?? []) as string[]
@@ -223,10 +226,11 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     if (!coMakerSearch.trim()) { setCoMakerResults([]); return }
     const timer = setTimeout(async () => {
+      const search = coMakerSearch.replace(/[,()%]/g, ' ').trim()
       const { data } = await supabase
         .from('profiles')
         .select('id, display_name, email, public_name, name_preference, credit_consented')
-        .or(`display_name.ilike.%${coMakerSearch}%,public_name.ilike.%${coMakerSearch}%`)
+        .or(`display_name.ilike.%${search}%,public_name.ilike.%${search}%,email.ilike.%${search}%`)
         .neq('id', user?.id ?? '')
         .limit(6)
       setCoMakerResults(
@@ -267,6 +271,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
   function handleImageChange(file: File | null) {
     if (!file) return
+    const fileError = imageFileError(file)
+    if (fileError) { setSaveError(fileError); return }
+    setSaveError('')
     setImageFile(file)
     setClearImage(false)
     const reader = new FileReader()
@@ -290,15 +297,21 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     setOtherTool('')
   }
 
-  function addGalleryFiles(files: FileList | null) {
+  async function addGalleryFiles(files: FileList | null) {
     if (!files) return
-    const arr = Array.from(files)
+    const picked = Array.from(files)
+    const invalid = picked.map(imageFileError).find(Boolean)
+    if (invalid) { setSaveError(invalid); return }
+    const arr = picked.slice(0, Math.max(0, 40 - existingGallery.length - newGalleryFiles.length))
+    setSaveError('')
     setNewGalleryFiles(prev => [...prev, ...arr])
-    arr.forEach(file => {
+    const previews = await Promise.all(arr.map(file => new Promise<string>((resolve, reject) => {
       const reader = new FileReader()
-      reader.onload = e => setNewGalleryPreviews(prev => [...prev, e.target?.result as string])
+      reader.onload = event => resolve(event.target?.result as string)
+      reader.onerror = () => reject(new Error(`Could not read ${file.name}`))
       reader.readAsDataURL(file)
-    })
+    })))
+    setNewGalleryPreviews(prev => [...prev, ...previews])
   }
   function removeExistingGallery(url: string) {
     setExistingGallery(prev => prev.filter(u => u !== url))
@@ -314,6 +327,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
   function handleLogImageChange(i: number, file: File | null) {
     if (!file) return
+    const fileError = imageFileError(file)
+    if (fileError) { setSaveError(fileError); return }
+    setSaveError('')
     setLogEntryFiles(prev => prev.map((f, idx) => idx === i ? file : f))
     const reader = new FileReader()
     reader.onload = e => setLogEntryPreviews(prev => prev.map((p, idx) => idx === i ? e.target?.result as string : p))
@@ -341,8 +357,25 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       setSaveError(`Please add ${blank.join(' and ')} before saving.`)
       return
     }
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      setSaveError('Your session expired. Sign in and try again.')
+      return
+    }
     setSaving(true)
     setSaveError('')
+
+    const uploadedImagePaths: string[] = []
+    const cleanupUploads = async (mediaPaths: string[] = []) => {
+      await Promise.all([
+        uploadedImagePaths.length
+          ? supabase.storage.from('Project Images').remove(uploadedImagePaths)
+          : Promise.resolve(),
+        mediaPaths.length
+          ? supabase.storage.from('Project Media').remove(mediaPaths)
+          : Promise.resolve(),
+      ])
+    }
 
     let imageUrl: string | null | undefined = undefined
 
@@ -350,7 +383,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       imageUrl = null
     } else if (imageFile) {
       const shrunk = await compressForUpload(imageFile, 'cover')
-      const path = `${id}/cover.${shrunk.ext}`
+      const path = `${id}/cover-${Date.now()}.${shrunk.ext}`
       const { error: uploadError } = await supabase.storage
         .from('Project Images')
         .upload(path, shrunk.blob, { upsert: true, contentType: shrunk.contentType })
@@ -359,6 +392,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         setSaving(false)
         return
       }
+      uploadedImagePaths.push(path)
       const { data: { publicUrl } } = supabase.storage
         .from('Project Images')
         .getPublicUrl(path)
@@ -373,16 +407,14 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       const { error: gErr } = await supabase.storage
         .from('Project Images')
         .upload(path, shrunk.blob, { upsert: true, contentType: shrunk.contentType })
-      if (gErr) { setSaveError(`Gallery image ${i + 1} failed: ${gErr.message}`); setSaving(false); return }
+      if (gErr) { await cleanupUploads(); setSaveError(`Gallery image ${i + 1} failed: ${gErr.message}`); setSaving(false); return }
+      uploadedImagePaths.push(path)
       const { data: { publicUrl } } = supabase.storage
         .from('Project Images')
         .getPublicUrl(path)
       uploadedGalleryUrls.push(publicUrl)
     }
     const galleryImages = [...existingGallery, ...uploadedGalleryUrls]
-
-    const { media, error: mediaError } = await uploadMediaDrafts(id, mediaDrafts)
-    if (mediaError) { setSaveError(mediaError); setSaving(false); return }
 
     const retro_wins  = retroWins.split('\n').map(l => l.trim()).filter(Boolean)
     const retro_fixes = retroFixes.split('\n').map(l => l.trim()).filter(Boolean)
@@ -394,7 +426,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         const shrunk = await compressForUpload(file, 'inline')
         const path = `${id}/log/${Date.now()}-${i}.${shrunk.ext}`
         const { error: lErr } = await supabase.storage.from('Project Images').upload(path, shrunk.blob, { upsert: true, contentType: shrunk.contentType })
-        if (lErr) { setSaveError(`Log image ${i + 1} failed: ${lErr.message}`); setSaving(false); return }
+        if (lErr) { await cleanupUploads(); setSaveError(`Log image ${i + 1} failed: ${lErr.message}`); setSaving(false); return }
+        uploadedImagePaths.push(path)
         const { data: { publicUrl } } = supabase.storage.from('Project Images').getPublicUrl(path)
         logImageUrls.push(publicUrl)
       } else {
@@ -403,14 +436,15 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     }
 
     const build_log = logEntries
-      .filter(e => e.title.trim())
-      .map((e, i) => ({
+      .map((entry, originalIndex) => ({ entry, originalIndex }))
+      .filter(({ entry }) => entry.title.trim())
+      .map(({ entry: e, originalIndex }) => ({
         date:      e.date || new Date().toISOString().split('T')[0],
         title:     e.title.trim(),
         body:      e.body.trim(),
         milestone: e.milestone,
         tag:       e.tag.trim() || undefined,
-        image:     logImageUrls[i] || undefined,
+        image:     logImageUrls[originalIndex] || undefined,
       }))
 
     const bom = bomRows
@@ -422,6 +456,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         unit_cost: parseFloat(r.unit_cost) || 0,
         src:       r.src.trim() || undefined,
       }))
+
+    const { media, error: mediaError, uploadedPaths: uploadedMediaPaths } = await uploadMediaDrafts(id, mediaDrafts)
+    if (mediaError) { await cleanupUploads(); setSaveError(mediaError); setSaving(false); return }
 
     const finalCategory = category === 'Other' ? (otherCategory.trim() || 'Other') : category
 
@@ -446,25 +483,38 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       maker_ids:      realCoMakers.length > 0 ? realCoMakers.map(m => m.id) : null,
       anon_count:     anonCount,
       github:         github.trim() || null,
+      website:        website.trim() || null,
+      image:          imageUrl !== undefined ? imageUrl : (project?.image ?? null),
       start_date:     startDate || null,
       build_time:     buildTime.trim() || null,
       gallery_images: galleryImages.length > 0 ? galleryImages : null,
+      media,
       build_log:      build_log.length > 0 ? build_log : null,
       bom:            bom.length > 0 ? bom : null,
       retro_wins:     retro_wins.length > 0 ? retro_wins : null,
       retro_fixes:    retro_fixes.length > 0 ? retro_fixes : null,
     }
-    if (imageUrl !== undefined) update.image = imageUrl
-    // Sent when there's media now, or when there was some to clear — an edit to
-    // a project that never had any still saves on a pre-migration database.
-    if (media || (project?.media ?? null) !== null) update.media = media
-
-    let query = supabase.from('Projects').update(update).eq('id', id)
-    if (!isAdmin && !isProjectOwner) query = query.contains('maker_ids', [user!.id])
-    const { error } = await query
+    let response: Response
+    let result: { error?: string }
+    try {
+      response = await fetch(`/api/projects/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ project: update }),
+      })
+      result = await response.json()
+    } catch {
+      await cleanupUploads(uploadedMediaPaths)
+      setSaving(false)
+      setSaveError('Could not reach the server. Try saving again.')
+      return
+    }
 
     setSaving(false)
-    if (error) { setSaveError(error.message); return }
+    if (!response.ok) { await cleanupUploads(uploadedMediaPaths); setSaveError(result.error ?? 'Could not save project'); return }
     router.push(backHref)
   }
 
@@ -493,9 +543,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         <Link href={backHref} className={`${BACK_LINK} relative z-[1]`}>
           {backLabel}
         </Link>
-        <p className={`${pageBandTitle} text-pop-violet`}>
+        <h1 className={`${pageBandTitle} text-pop-violet`}>
           Edit, {project?.title}
-        </p>
+        </h1>
       </header>
 
       <main className={submitMain}>
@@ -507,32 +557,33 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               <h3 className={`${secHead} text-pop-blue mb-[18px] mt-1`}>The Basics</h3>
 
               <div className={field}>
-                <label className={fieldLabel}>Project title <span className={fieldReq}>*</span></label>
-                <input className={fieldInput} type="text" value={title} onChange={e => setTitle(e.target.value)} required />
+                <label className={fieldLabel} htmlFor="edit-title">Project title <span className={fieldReq}>*</span></label>
+                <input id="edit-title" className={fieldInput} type="text" value={title} onChange={e => setTitle(e.target.value)} required />
               </div>
 
               <div className={field}>
-                <label className={fieldLabel}>Category</label>
+                <label className={fieldLabel} htmlFor="edit-category">Category</label>
                 <CustomSelect
+                  id="edit-category"
                   value={category}
                   onChange={v => { setCategory(v); if (v !== 'Other') setOtherCategory('') }}
                   options={[...EDIT_CATEGORIES.map(c => ({ value: c, label: c })), { value: 'Other', label: 'Other…' }]}
                 />
                 {category === 'Other' && (
-                  <input className={`${fieldInput} mt-2`} type="text" placeholder="Describe the category"
+                  <input id="edit-category-other" aria-label="Other project category" className={`${fieldInput} mt-2`} type="text" placeholder="Describe the category"
                     value={otherCategory} onChange={e => setOtherCategory(e.target.value)}
                     autoFocus />
                 )}
               </div>
 
               <div className={field}>
-                <label className={fieldLabel}>Makers / contributors</label>
+                <label className={fieldLabel} htmlFor="edit-co-makers">Makers / contributors</label>
                 <div className={makersChips}>
                   {coMakers.map(m => (
                     <span key={m.id} className={makersChip}>
                       {m.id.startsWith('name:') ? m.display_name : resolvePublicName(m)}
                       {canRemoveMaker(m.id) && (
-                        <button type="button" className={makersChipRemove} onClick={() => handleRemoveMaker(m.id)}>✕</button>
+                        <button type="button" className={makersChipRemove} onClick={() => handleRemoveMaker(m.id)} aria-label={`Remove ${m.display_name} as a maker`}>✕</button>
                       )}
                     </span>
                   ))}
@@ -541,7 +592,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                       onClick={() => setCoMakers(prev => [...prev, {
                         id: user!.id,
                         display_name: profile?.display_name ?? user!.email?.split('@')[0] ?? '',
-                        email: profile?.email ?? user!.email ?? null,
+                        email: user!.email ?? null,
                         public_name: profile?.public_name ?? null,
                         name_preference: profile?.name_preference ?? null,
                         credit_consented: profile?.credit_consented ?? true,
@@ -550,18 +601,28 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                     </button>
                   )}
                 </div>
-                <div className={makersSearch}>
-                  <input className={fieldInput} type="text" placeholder="Search for a maker by name… They must have an account to be added" autoComplete="off"
+                <div className={makersSearch} data-comaker-picker onBlur={event => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setShowCoMakerDropdown(false)
+                }}>
+                  <input id="edit-co-makers" className={fieldInput} type="text" placeholder="Search for a maker by name, username, or email… They must have an account to be added" autoComplete="off"
                     value={coMakerSearch}
                     onChange={e => { setCoMakerSearch(e.target.value); setShowCoMakerDropdown(true) }}
                     onFocus={() => setShowCoMakerDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowCoMakerDropdown(false), 150)} />
+                    role="combobox" aria-autocomplete="list"
+                    aria-expanded={showCoMakerDropdown && !!coMakerSearch.trim()}
+                    aria-controls="edit-co-maker-results"
+                    onKeyDown={event => {
+                      if (event.key === 'ArrowDown' && coMakerResults.length > 0) {
+                        event.preventDefault()
+                        document.getElementById('edit-co-maker-option-0')?.focus()
+                      } else if (event.key === 'Escape') setShowCoMakerDropdown(false)
+                    }} />
                   {showCoMakerDropdown && coMakerSearch.trim() && (
-                    <div className={makersDropdown}>
-                      {coMakerResults.length > 0 ? coMakerResults.map(r => (
-                        <button key={r.id} type="button" className={makersDropdownItem} onMouseDown={() => addCoMaker(r)}>
+                    <div className={makersDropdown} id="edit-co-maker-results" role="listbox" aria-label="Matching co-makers">
+                      {coMakerResults.length > 0 ? coMakerResults.map((r, resultIndex) => (
+                        <button id={`edit-co-maker-option-${resultIndex}`} key={r.id} type="button" className={makersDropdownItem} onClick={() => addCoMaker(r)} role="option" aria-selected="false">
                           <span className={makersDropdownName}>{r.display_name}</span>
-                          <span className={makersDropdownEmail}>{r.email}</span>
+                          <span className={makersDropdownEmail}>{r.email ?? (r.credit_consented ? 'can be credited' : 'will appear anonymous')}</span>
                         </button>
                       )) : <div className={makersDropdownEmpty}>No users found</div>}
                     </div>
@@ -570,16 +631,17 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               <div className={field}>
-                <label className={fieldLabel}>
+                <label className={fieldLabel} htmlFor="edit-blurb">
                   One-line description <span className={fieldReq}>*</span>
                   <span className="font-normal normal-case tracking-normal">max 140 chars</span>
                 </label>
-                <input className={fieldInput} type="text" maxLength={140} value={blurb} onChange={e => setBlurb(e.target.value)} required />
+                <input id="edit-blurb" className={fieldInput} type="text" maxLength={140} value={blurb} onChange={e => setBlurb(e.target.value)} required />
               </div>
 
               <div className={field}>
-                <label className={fieldLabel}>Full story</label>
+                <label className={fieldLabel} htmlFor="edit-description">Full story</label>
                 <textarea
+                  id="edit-description"
                   className={`${fieldTextarea} min-h-[140px]`}
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -588,23 +650,24 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
 
               <div className={fieldRow}>
                 <div className={field}>
-                  <label className={fieldLabel}>When did it start?</label>
-                  <input className={fieldInput} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                  <label className={fieldLabel} htmlFor="edit-start-date">When did it start?</label>
+                  <input id="edit-start-date" className={fieldInput} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
                 </div>
                 <div className={field}>
-                  <label className={fieldLabel}>How long did it take?</label>
-                  <input className={fieldInput} type="text" placeholder="e.g. ~3 weeks"
+                  <label className={fieldLabel} htmlFor="edit-build-time">How long did it take?</label>
+                  <input id="edit-build-time" className={fieldInput} type="text" placeholder="e.g. ~3 weeks"
                     value={buildTime} onChange={e => setBuildTime(e.target.value)} />
                 </div>
               </div>
 
               <div className={field}>
-                <label className={fieldLabel}>Project photo</label>
+                <span className={fieldLabel} id="edit-cover-label">Project photo</span>
                 <label
                   className={`${imgUploadBase} ${imagePreview ? imgUploadPreview : imgUploadIdle}`}
                   style={imagePreview ? { backgroundImage: `url(${imagePreview})` } : undefined}
                   onDragOver={e => e.preventDefault()}
                   onDrop={e => { e.preventDefault(); handleImageChange(e.dataTransfer.files[0] ?? null) }}
+                  aria-labelledby="edit-cover-label"
                 >
                   {!imagePreview && (
                     <span className={imgUploadInner}>
@@ -614,6 +677,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                     </span>
                   )}
                   <input
+                    aria-labelledby="edit-cover-label"
                     type="file"
                     accept="image/*"
                     className="hidden"
@@ -628,23 +692,23 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               <div className={field}>
-                <label className={fieldLabel}>Tools &amp; materials used</label>
+                <span className={fieldLabel}>Tools &amp; materials used</span>
                 <div className={toolTags}>
                   {TOOL_SUGGESTIONS.map(t => (
                     <button key={t} type="button"
                       className={tools.includes(t) ? toolTagOn : toolTag}
-                      onClick={() => toggleTool(t)}>{t}</button>
+                      onClick={() => toggleTool(t)} aria-pressed={tools.includes(t)}>{t}</button>
                   ))}
                   {tools.filter(t => !TOOL_SUGGESTIONS.includes(t)).map(t => (
                     <button key={t} type="button"
                       className={toolTagOn}
-                      onClick={() => toggleTool(t)}>{t}</button>
+                      onClick={() => toggleTool(t)} aria-pressed="true">{t}</button>
                   ))}
                   <span className={toolTagOther}>
-                    <input className={toolTagOtherInput} type="text" placeholder="Other…" value={otherTool}
+                    <input className={toolTagOtherInput} type="text" placeholder="Other…" value={otherTool} aria-label="Add another tool or material"
                       onChange={e => setOtherTool(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitOtherTool() } }} />
-                    {otherTool.trim() && <button type="button" className={toolTagOtherBtn} onClick={commitOtherTool}>+</button>}
+                    {otherTool.trim() && <button type="button" className={toolTagOtherBtn} onClick={commitOtherTool} aria-label="Add tool or material">+</button>}
                   </span>
                 </div>
               </div>
@@ -659,30 +723,30 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                 <div className={dynList}>
                   {logEntries.map((entry, i) => (
                     <div key={i} className={dynRow}>
-                      <button type="button" className={dynRowRemove} onClick={() => {
+                      <button type="button" className={dynRowRemove} aria-label={`Remove build log entry ${i + 1}`} onClick={() => {
                         setLogEntries(prev => prev.filter((_, idx) => idx !== i))
                         setLogEntryFiles(prev => prev.filter((_, idx) => idx !== i))
                         setLogEntryPreviews(prev => prev.filter((_, idx) => idx !== i))
                       }}>✕</button>
                       <div className={dynRowCols3}>
                         <div className={fieldTight}>
-                          <label className={fieldLabel}>Date</label>
-                          <input className={fieldInput} type="date" value={entry.date} onChange={e => updateLog(i, 'date', e.target.value)} />
+                          <label className={fieldLabel} htmlFor={`edit-log-${i}-date`}>Date</label>
+                          <input id={`edit-log-${i}-date`} className={fieldInput} type="date" value={entry.date} onChange={e => updateLog(i, 'date', e.target.value)} />
                         </div>
                         <div className={fieldTight}>
-                          <label className={fieldLabel}>Title</label>
-                          <input className={fieldInput} type="text" placeholder="e.g. First prototype"
+                          <label className={fieldLabel} htmlFor={`edit-log-${i}-title`}>Title</label>
+                          <input id={`edit-log-${i}-title`} className={fieldInput} type="text" placeholder="e.g. First prototype"
                             value={entry.title} onChange={e => updateLog(i, 'title', e.target.value)} />
                         </div>
                         <div className={fieldTight}>
-                          <label className={fieldLabel}>Tag</label>
-                          <input className={fieldInput} type="text" placeholder="e.g. Prototype"
+                          <label className={fieldLabel} htmlFor={`edit-log-${i}-tag`}>Tag</label>
+                          <input id={`edit-log-${i}-tag`} className={fieldInput} type="text" placeholder="e.g. Prototype"
                             value={entry.tag} onChange={e => updateLog(i, 'tag', e.target.value)} />
                         </div>
                       </div>
                       <div className={fieldTight}>
-                        <label className={fieldLabel}>Notes</label>
-                        <textarea className={`${fieldTextarea} min-h-[64px]`} placeholder="What happened at this stage?"
+                        <label className={fieldLabel} htmlFor={`edit-log-${i}-notes`}>Notes</label>
+                        <textarea id={`edit-log-${i}-notes`} className={`${fieldTextarea} min-h-[64px]`} placeholder="What happened at this stage?"
                           value={entry.body} onChange={e => updateLog(i, 'body', e.target.value)} />
                       </div>
                       <label className={dynRowMilestone}>
@@ -691,12 +755,12 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                         Mark as milestone
                       </label>
                       <div className={`${fieldTight} mt-2`}>
-                        <label className={fieldLabel}>Photo <span className="font-normal normal-case tracking-normal">optional</span></label>
+                        <span className={fieldLabel}>Photo <span className="font-normal normal-case tracking-normal">optional</span></span>
                         {logEntryPreviews[i] ? (
                           <div className="relative inline-block">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={logEntryPreviews[i]!} alt="Log entry" className="max-w-full max-h-[200px] block rounded" />
-                            <button type="button" className={`${imgUploadRemove} top-1.5 right-1.5`} onClick={() => removeLogImage(i)}>✕ Remove</button>
+                            <button type="button" className={`${imgUploadRemove} top-1.5 right-1.5`} onClick={() => removeLogImage(i)} aria-label={`Remove photo from build log entry ${i + 1}`}>✕ Remove</button>
                           </div>
                         ) : (
                           <label className={`${galleryUpload} inline-flex`}>
@@ -730,14 +794,14 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                     <div key={url} className={galleryThumb}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={url} alt={`Gallery ${i + 1}`} className={galleryThumbImg} />
-                      <button type="button" className={galleryThumbRemove} onClick={() => removeExistingGallery(url)}>✕</button>
+                      <button type="button" className={galleryThumbRemove} onClick={() => removeExistingGallery(url)} aria-label={`Remove gallery photo ${i + 1}`}>✕</button>
                     </div>
                   ))}
                   {newGalleryPreviews.map((src, i) => (
                     <div key={i} className={galleryThumb}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={src} alt={`New ${i + 1}`} className={galleryThumbImg} />
-                      <button type="button" className={galleryThumbRemove} onClick={() => removeNewGallery(i)}>✕</button>
+                      <button type="button" className={galleryThumbRemove} onClick={() => removeNewGallery(i)} aria-label={`Remove new gallery photo ${i + 1}`}>✕</button>
                     </div>
                   ))}
                 </div>
@@ -765,32 +829,32 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                 <div className={dynList}>
                   {bomRows.map((row, i) => (
                     <div key={i} className={dynRow}>
-                      <button type="button" className={dynRowRemove} onClick={() => setBomRows(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                      <button type="button" className={dynRowRemove} aria-label={`Remove bill of materials row ${i + 1}`} onClick={() => setBomRows(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
                       <div className={dynRowCols4}>
                         <div className={fieldTight}>
-                          <label className={fieldLabel}>Item</label>
-                          <input className={fieldInput} type="text" placeholder="e.g. Arduino Pro Mini"
+                          <label className={fieldLabel} htmlFor={`edit-bom-${i}-item`}>Item</label>
+                          <input id={`edit-bom-${i}-item`} className={fieldInput} type="text" placeholder="e.g. Arduino Pro Mini"
                             value={row.item} onChange={e => updateBom(i, 'item', e.target.value)} />
                         </div>
                         <div className={fieldTight}>
-                          <label className={fieldLabel}>Qty</label>
-                          <input className={fieldInput} type="number" min="1" value={row.qty}
+                          <label className={fieldLabel} htmlFor={`edit-bom-${i}-qty`}>Qty</label>
+                          <input id={`edit-bom-${i}-qty`} className={fieldInput} type="number" min="1" value={row.qty}
                             onChange={e => updateBom(i, 'qty', e.target.value)} />
                         </div>
                         <div className={fieldTight}>
-                          <label className={fieldLabel}>Unit cost $</label>
-                          <input className={fieldInput} type="number" min="0" step="0.01" placeholder="0.00"
+                          <label className={fieldLabel} htmlFor={`edit-bom-${i}-cost`}>Unit cost $</label>
+                          <input id={`edit-bom-${i}-cost`} className={fieldInput} type="number" min="0" step="0.01" placeholder="0.00"
                             value={row.unit_cost} onChange={e => updateBom(i, 'unit_cost', e.target.value)} />
                         </div>
                         <div className={fieldTight}>
-                          <label className={fieldLabel}>Source</label>
-                          <input className={fieldInput} type="text" placeholder="e.g. Jaycar"
+                          <label className={fieldLabel} htmlFor={`edit-bom-${i}-source`}>Source</label>
+                          <input id={`edit-bom-${i}-source`} className={fieldInput} type="text" placeholder="e.g. Jaycar"
                             value={row.src} onChange={e => updateBom(i, 'src', e.target.value)} />
                         </div>
                       </div>
                       <div className={fieldTight}>
-                        <label className={fieldLabel}>Description</label>
-                        <input className={fieldInput} type="text" placeholder="e.g. With pin headers"
+                        <label className={fieldLabel} htmlFor={`edit-bom-${i}-description`}>Description</label>
+                        <input id={`edit-bom-${i}-description`} className={fieldInput} type="text" placeholder="e.g. With pin headers"
                           value={row.desc} onChange={e => updateBom(i, 'desc', e.target.value)} />
                       </div>
                     </div>
@@ -808,15 +872,17 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               </div>
               <div className={fieldRow}>
                 <div className={field}>
-                  <label className={fieldLabel}>What worked <span className="text-[#22c55e]">[ + ]</span></label>
+                  <label className={fieldLabel} htmlFor="edit-retro-wins">What worked <span className="text-[#22c55e]">[ + ]</span></label>
                   <textarea
+                    id="edit-retro-wins"
                     className={`${fieldTextarea} min-h-[100px]`}
                     placeholder={'Pin headers saved hours of debugging.\nPair-building at open hours was faster.'}
                     value={retroWins} onChange={e => setRetroWins(e.target.value)} />
                 </div>
                 <div className={field}>
-                  <label className={fieldLabel}>What we&rsquo;d change <span className="text-pop-red">[ - ]</span></label>
+                  <label className={fieldLabel} htmlFor="edit-retro-fixes">What we&rsquo;d change <span className="text-pop-red">[ - ]</span></label>
                   <textarea
+                    id="edit-retro-fixes"
                     className={`${fieldTextarea} min-h-[100px]`}
                     placeholder={'Should have ordered the PCB earlier.\nNeeds a service hatch.'}
                     value={retroFixes} onChange={e => setRetroFixes(e.target.value)} />
@@ -827,13 +893,26 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
               <h3 className={`${secHead} text-pop-orange mt-8 mb-[18px]`}>Links</h3>
 
               <div className={field}>
-                <label className={fieldLabel}>GitHub / source</label>
+                <label className={fieldLabel} htmlFor="edit-github">GitHub / source</label>
                 <input
+                  id="edit-github"
                   className={fieldInput}
                   type="url"
                   placeholder="https://github.com/…"
                   value={github}
                   onChange={e => setGithub(e.target.value)}
+                />
+              </div>
+
+              <div className={field}>
+                <label className={fieldLabel} htmlFor="edit-website">Demo / site</label>
+                <input
+                  id="edit-website"
+                  className={fieldInput}
+                  type="url"
+                  placeholder="https://…"
+                  value={website}
+                  onChange={e => setWebsite(e.target.value)}
                 />
               </div>
 
@@ -854,16 +933,14 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       </main>
 
       {showRemoveSelfModal && (
-        <div className={modalBackdrop} onClick={() => setShowRemoveSelfModal(false)}>
-          <div className={modal} onClick={e => e.stopPropagation()}>
+        <AccessibleModal onClose={() => setShowRemoveSelfModal(false)} labelledBy="remove-self-title">
             <p className={modalLabel}>Remove yourself?</p>
-            <p className={modalTitle}>Are you sure you want to remove yourself from this project&apos;s makers list?</p>
+            <p className={modalTitle} id="remove-self-title">Are you sure you want to remove yourself from this project&apos;s makers list?</p>
             <div className={modalActions}>
               <button className={btnGhost} onClick={() => setShowRemoveSelfModal(false)}>Cancel</button>
               <button className={btnDanger} onClick={confirmRemoveSelf}>Remove me</button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
       </div>
     </div>

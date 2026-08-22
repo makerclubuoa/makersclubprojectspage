@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import AccessibleModal from "@/app/components/AccessibleModal";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
 import {
   secHead,
   secHeadRow,
   secHint,
-  modalBackdrop,
-  modal,
   modalLabel,
   modalTitle,
   modalActions,
@@ -27,7 +26,6 @@ interface Comment {
 
 interface Props {
   projectId: string;
-  projectTitle: string;
   projectOwnerId: string | null;
 }
 
@@ -48,7 +46,6 @@ function fmtCommentDate(iso: string) {
 
 export default function CommentsSection({
   projectId,
-  projectTitle,
   projectOwnerId,
 }: Props) {
   const { user } = useAuth();
@@ -61,6 +58,7 @@ export default function CommentsSection({
   const [reported, setReported] = useState<Set<string>>(new Set());
   const [confirmReport, setConfirmReport] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [moderationError, setModerationError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -126,26 +124,37 @@ export default function CommentsSection({
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) setComments((prev) => prev.filter((c) => c.id !== commentId));
+    else setModerationError("Could not delete that comment. Please try again.");
   }
 
   async function handleReport(comment: Comment) {
+    if (!user) {
+      setShowSignIn(true);
+      return;
+    }
     if (confirmReport !== comment.id) {
       setConfirmReport(comment.id);
       return;
     }
     setConfirmReport(null);
-    setReported((prev) => new Set(prev).add(comment.id));
-    await fetch("/api/comments/report", {
+    setModerationError(null);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      setShowSignIn(true);
+      return;
+    }
+    const response = await fetch("/api/comments/report", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        comment_id: comment.id,
-        project_id: projectId,
-        project_title: projectTitle,
-        comment_body: comment.body,
-        author_name: comment.author_name,
-      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ comment_id: comment.id }),
     });
+    if (response.ok) setReported((prev) => new Set(prev).add(comment.id));
+    else setModerationError("Could not send that report. Please try again.");
   }
 
   return (
@@ -161,6 +170,9 @@ export default function CommentsSection({
       </div>
 
       <div className="flex flex-col gap-0">
+        {moderationError && (
+          <p className="text-pop-red text-xs font-semibold" role="alert">{moderationError}</p>
+        )}
         {loading && (
           <p className="text-muted text-[13px] m-0 mb-6">Loading...</p>
         )}
@@ -251,7 +263,11 @@ export default function CommentsSection({
         })}
 
         <form className="mt-2" onSubmit={handleSubmit}>
+          <label htmlFor="project-comment-body" className="sr-only">
+            Comment
+          </label>
           <textarea
+            id="project-comment-body"
             ref={textareaRef}
             className="w-full bg-white border-2 border-black rounded-[6px] text-ink text-[14px] max-[640px]:text-base leading-[1.5] px-3.5 py-3 resize-y min-h-[80px] outline-none transition-shadow duration-150 focus:shadow-[2px_2px_0px_0px_#000] read-only:cursor-pointer read-only:opacity-70 placeholder:text-muted"
             placeholder={
@@ -296,22 +312,20 @@ export default function CommentsSection({
       </div>
 
       {showSignIn && (
-        <div className={modalBackdrop} onClick={() => setShowSignIn(false)}>
-          <div className={modal} onClick={(e) => e.stopPropagation()}>
+        <AccessibleModal onClose={() => setShowSignIn(false)} labelledBy="comment-sign-in-title">
             <p className={modalLabel}>Sign in required</p>
-            <p className={modalTitle}>
+            <p className={modalTitle} id="comment-sign-in-title">
               You need an account to leave a comment.
             </p>
             <div className={modalActions}>
               <button className={btnGhost} onClick={() => setShowSignIn(false)}>
                 Cancel
               </button>
-              <Link href="/login" className={btnGradient}>
+              <Link href={`/login?next=${encodeURIComponent(`/projects/${projectId}`)}`} className={btnGradient}>
                 Sign in →
               </Link>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </section>
   );

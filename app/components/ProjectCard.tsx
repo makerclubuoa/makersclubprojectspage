@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { categoryColor, type Project } from '@/lib/projects'
 import { pickPreviewMedia } from '@/lib/media'
 import ProjectMediaPlayer from '@/app/components/ProjectMediaPlayer'
@@ -38,7 +38,6 @@ export default function ProjectCard({
   onToolClick?: (tool: string) => void
   makerDisplay?: { names: string[]; anonCount: number }
 }) {
-  const router = useRouter()
   const color = categoryColor(project.category)
   const previewMedia = pickPreviewMedia(project.media)
   const [hovered, setHovered] = useState(false)
@@ -53,20 +52,18 @@ export default function ProjectCard({
 
   const media = wide ? 'aspect-[16/9]' : tall ? 'flex-1 aspect-auto' : 'aspect-[4/3]'
 
-  function handleClick(e: React.MouseEvent) {
-    e.preventDefault()
-    router.push(`/projects/${project.id}`)
-  }
-
   return (
-    <a
+    <article
       className={`reveal relative flex flex-col bg-white outline-solid outline-3 outline-black cursor-pointer will-change-transform [transition:transform_0.35s_cubic-bezier(0.2,0.9,0.3,1.2),box-shadow_0.35s_ease] [transform:rotate(var(--card-rotate))] hover:[transform:translateY(-4px)_rotate(var(--card-rotate))] hover:shadow-[6px_6px_0px_0px_#000] max-[640px]:[transform:none] ${wide ? 'col-span-2' : ''} ${tall ? 'row-span-2' : ''} max-[640px]:col-span-1 max-[640px]:row-span-1`}
       style={{ '--card-rotate': `${rotate}deg` } as React.CSSProperties}
-      href={`/projects/${project.id}`}
-      onClick={handleClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      <Link
+        href={`/projects/${project.id}`}
+        className="absolute inset-0 z-[1]"
+        aria-label={`View ${project.title}`}
+      />
       <div className={`absolute z-10 w-16 h-5 outline-2 outline-black ${TAPES[index % TAPES.length]}`} />
       <div className={`${media} relative overflow-hidden bg-paper-2 border-b-[3px] border-black`}>
         {/* next/image rather than a CSS background: covers come off the phone
@@ -92,6 +89,7 @@ export default function ProjectCard({
           <button
             className={`${BADGE} bg-black/[0.78] border-0 cursor-pointer transition-opacity duration-150 hover:opacity-75`}
             onClick={e => { e.preventDefault(); e.stopPropagation(); onCatClick?.(project.category ?? '') }}
+            aria-label={`Filter projects by ${project.category}`}
           >
             {project.category}
           </button>
@@ -106,12 +104,13 @@ export default function ProjectCard({
       <div className={`p-4 pb-[18px] flex flex-col gap-2 ${tall ? 'flex-none' : 'flex-1'}`}>
         <h4 className="text-[18px] leading-[1.2] font-bold tracking-[-0.02em] m-0 max-[640px]:text-[16px]">{project.title}</h4>
         <p className="text-ink-2 text-[13px] m-0 leading-[1.55]">{project.blurb}</p>
-        <div className="flex flex-wrap gap-1">
+        <div className="relative z-[2] flex flex-wrap gap-1">
           {(project.tools ?? []).slice(0, 3).map(t => (
             <button
               key={t}
               className={`${TAG} text-ink-2 border-0 cursor-pointer transition-colors duration-150 hover:bg-ink hover:text-paper`}
               onClick={e => { e.preventDefault(); e.stopPropagation(); onToolClick?.(t) }}
+              aria-label={`Filter projects made with ${t}`}
             >
               {t}
             </button>
@@ -129,7 +128,7 @@ export default function ProjectCard({
               const label = [...names, ...(anon > 0 ? [`+${anon} Makers`] : [])].join(' + ')
               return (
                 <>
-                  <span className="flex">
+                  <span className="flex" aria-hidden="true">
                     {Array.from({ length: total }).map((_, i) => (
                       <span key={i} className={`w-[18px] h-[18px] rounded-full border-2 border-black inline-block${i > 0 ? ' -ml-1.5' : ''}`} style={{ background: color }} />
                     ))}
@@ -145,6 +144,6 @@ export default function ProjectCard({
           </span>
         </div>
       </div>
-    </a>
+    </article>
   )
 }

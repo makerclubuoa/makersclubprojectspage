@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabase-server'
-
-function anonClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
-}
+import { userFromRequest } from '@/lib/server-auth'
 
 export async function GET(req: NextRequest) {
   const projectId = req.nextUrl.searchParams.get('project_id')
   if (!projectId) return NextResponse.json({ error: 'Missing project_id' }, { status: 400 })
+
+  const { data: project } = await supabaseAdmin
+    .from('Projects')
+    .select('id')
+    .eq('id', projectId)
+    .eq('status', 'APPROVED')
+    .maybeSingle()
+  if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data, error } = await supabaseAdmin
     .from('comments')
@@ -24,19 +25,24 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: { user }, error: authError } = await anonClient().auth.getUser(token)
-  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await userFromRequest(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { project_id, body } = await req.json()
-  if (!project_id || !body?.trim()) {
+  if (typeof project_id !== 'string' || typeof body !== 'string' || !body.trim()) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
   if (body.trim().length > 1000) {
     return NextResponse.json({ error: 'Comment too long' }, { status: 400 })
   }
+
+  const { data: project } = await supabaseAdmin
+    .from('Projects')
+    .select('id')
+    .eq('id', project_id)
+    .eq('status', 'APPROVED')
+    .maybeSingle()
+  if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
 
   // Resolve display name from profile
   const { data: profile } = await supabaseAdmin

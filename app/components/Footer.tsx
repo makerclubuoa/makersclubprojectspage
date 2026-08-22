@@ -34,19 +34,19 @@ export default function Footer() {
 
         <ul className="list-none p-0 m-0 flex flex-col gap-3 mb-8 max-w-[70%] md:max-w-none">
           <li>
-            <a className={FOOTERLINK} href="/about">
+            <Link className={FOOTERLINK} href="/about">
               About
-            </a>
+            </Link>
           </li>
           <li>
-            <a className={FOOTERLINK} href="/faq">
+            <Link className={FOOTERLINK} href="/faq">
               Frequently Asked Questions
-            </a>
+            </Link>
           </li>
           <li>
-            <a className={FOOTERLINK} href="/events">
+            <Link className={FOOTERLINK} href="/events">
               Events
-            </a>
+            </Link>
           </li>
           <li>
             <Link className={FOOTERLINK} href="/projects">

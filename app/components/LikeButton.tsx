@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/components/AuthProvider'
-import { modalBackdrop, modal, modalLabel, modalTitle, modalActions, btnGhost, btnGradient } from '@/lib/ui'
+import AccessibleModal from '@/app/components/AccessibleModal'
+import { modalLabel, modalTitle, modalActions, btnGhost, btnGradient } from '@/lib/ui'
 
 interface LikeButtonProps {
   projectId: string
@@ -17,6 +18,7 @@ export default function LikeButton({ projectId, initialLikes }: LikeButtonProps)
   const [likes, setLikes] = useState(initialLikes)
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [likeError, setLikeError] = useState('')
 
   useEffect(() => {
     if (!user) { setLiked(false); return }
@@ -33,12 +35,14 @@ export default function LikeButton({ projectId, initialLikes }: LikeButtonProps)
     if (!user) { setShowModal(true); return }
     if (loading) return
     setLoading(true)
+    setLikeError('')
     const { data, error } = await supabase.rpc('toggle_like', { p_project_id: projectId })
     if (!error && data) {
       const result = data as { liked: boolean; likes: number }
       setLiked(result.liked)
       setLikes(result.likes)
     }
+    else if (error) setLikeError('Could not update your like. Try again.')
     setLoading(false)
   }
 
@@ -48,24 +52,25 @@ export default function LikeButton({ projectId, initialLikes }: LikeButtonProps)
         className={`inline-flex items-center gap-2 px-5 py-1.5 rounded-full border-2 border-black text-xs font-bold tracking-[0.08em] uppercase cursor-pointer shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-[background-color,color,transform,box-shadow] duration-150 disabled:opacity-60 disabled:cursor-default ${liked ? 'bg-pop-magenta text-white' : 'bg-white text-ink hover:text-pop-magenta'}`}
         onClick={handleLike}
         disabled={loading}
+        aria-pressed={liked}
+        aria-label={`${liked ? 'Unlike' : 'Like'} this project. ${likes} ${likes === 1 ? 'like' : 'likes'}.`}
         title={user ? (liked ? 'Unlike this project' : 'Like this project') : 'Sign in to like'}
       >
-        <span className={`text-sm leading-none transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]${liked ? ' scale-125' : ''}`}>♥</span>
+        <span aria-hidden="true" className={`text-sm leading-none transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]${liked ? ' scale-125' : ''}`}>♥</span>
         <span className="text-sm">{likes}</span>
         <span className="text-[10px] opacity-70">{liked ? 'Liked' : 'Like'}</span>
       </button>
+      {likeError && <span className="ml-2 text-[11px] font-semibold text-pop-red" role="alert">{likeError}</span>}
 
       {showModal && (
-        <div className={modalBackdrop} onClick={() => setShowModal(false)}>
-          <div className={modal} onClick={e => e.stopPropagation()}>
+        <AccessibleModal onClose={() => setShowModal(false)} labelledBy="like-sign-in-title">
             <p className={modalLabel}>Sign in required</p>
-            <p className={modalTitle}>You need an account to <em className="not-italic text-ink-2">love</em> a project.</p>
+            <p className={modalTitle} id="like-sign-in-title">You need an account to <em className="not-italic text-ink-2">love</em> a project.</p>
             <div className={modalActions}>
               <button className={btnGhost} onClick={() => setShowModal(false)}>Cancel</button>
-              <Link href="/login" className={btnGradient}>Sign in →</Link>
+              <Link href={`/login?next=${encodeURIComponent(`/projects/${projectId}`)}`} className={btnGradient}>Sign in →</Link>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </>
   )
