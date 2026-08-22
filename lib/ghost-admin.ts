@@ -193,7 +193,9 @@ export async function upsertGhostMember(input: {
   const member = {
     email: input.email,
     name: input.name,
-    note: input.note || null,
+    // Ghost validates `note` as a string; `null` causes a 422 for members
+    // whose optional faculty/note field was left blank.
+    note: input.note || '',
     labels,
     newsletters,
   }
