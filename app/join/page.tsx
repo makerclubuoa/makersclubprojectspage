@@ -1,11 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/components/AuthProvider";
 import Screentone from "@/app/components/global/Screentone";
 import Turnstile from "@/app/components/membership/Turnstile";
 import doodle from "@/public/doodle-soldering-iron.png";
 import { currentMembershipYear } from "@/lib/membership";
+import { supabase } from "@/lib/supabase";
 import {
   btnArr,
   btnGradient,
@@ -33,11 +37,12 @@ import {
 type FormState = {
   full_name: string;
   email: string;
+  confirm_email: string;
   upi: string;
   student_id: string;
   study_years: string;
   faculty: string;
-  graduating: "" | "yes" | "no";
+  interests_to_gain: string;
   skills_to_share: string;
   consent: boolean;
   company: string;
@@ -49,11 +54,12 @@ const TURNSTILE_ENABLED = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 const INITIAL: FormState = {
   full_name: "",
   email: "",
+  confirm_email: "",
   upi: "",
   student_id: "",
   study_years: "",
   faculty: "",
-  graduating: "",
+  interests_to_gain: "",
   skills_to_share: "",
   consent: false,
   company: "",
@@ -61,6 +67,8 @@ const INITIAL: FormState = {
 };
 
 export default function JoinPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const membershipYear = currentMembershipYear();
   const [formState, setFormState] = useState(INITIAL);
   const [startedAt, setStartedAt] = useState(() => Date.now());
@@ -68,9 +76,18 @@ export default function JoinPage() {
   const [submitError, setSubmitError] = useState("");
   const [sent, setSent] = useState(false);
   const [engageQueued, setEngageQueued] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileReset, setTurnstileReset] = useState(0);
   const acceptTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
+
+  useEffect(() => {
+    const requestedEmail = new URLSearchParams(window.location.search).get("email")?.trim();
+    if (requestedEmail) {
+      setFormState(current => ({ ...current, email: requestedEmail }));
+    }
+  }, []);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setFormState(current => ({ ...current, [key]: value }));
@@ -86,7 +103,6 @@ export default function JoinPage() {
           student_id: "NONE",
           study_years: "",
           faculty: "NONE",
-          graduating: "",
         }
       : {
           ...current,
@@ -102,6 +118,10 @@ export default function JoinPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
+    if (formState.email.trim().toLowerCase() !== formState.confirm_email.trim().toLowerCase()) {
+      setSubmitError("The email addresses do not match.");
+      return;
+    }
     if (TURNSTILE_ENABLED && !turnstileToken) {
       setSubmitError("Please complete the verification before submitting.");
       return;
@@ -115,15 +135,32 @@ export default function JoinPage() {
         body: JSON.stringify({
           ...formState,
           study_years: formState.uoa_member === "no" ? null : Number(formState.study_years),
-          graduating_this_year:
-            formState.graduating === "" ? null : formState.graduating === "yes",
           started_at: startedAt,
           turnstile_token: turnstileToken,
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Signup failed.");
+      if (!response.ok) {
+        if (response.status === 409) {
+          router.push(
+            `/login?next=/dashboard&email=${encodeURIComponent(formState.email.trim().toLowerCase())}`,
+          );
+          return;
+        }
+        throw new Error(data.error ?? "Signup failed.");
+      }
       setEngageQueued(data.engage_eligible === true);
+      const normalizedEmail = formState.email.trim().toLowerCase();
+      setRegisteredEmail(normalizedEmail);
+
+      const { error: confirmationError } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          shouldCreateUser: false,
+        },
+      });
+      setConfirmationSent(!confirmationError);
       setSent(true);
       setFormState(INITIAL);
       setStartedAt(Date.now());
@@ -144,47 +181,61 @@ export default function JoinPage() {
           <Image src={doodle} alt="" className={`${pageBandDoodle} h-56 -bottom-16`} />
           <h1 className={`${pageBandTitle} text-pop-pink`}>Join Maker Club</h1>
           <p className={pageBandSub}>
-            Membership is free. Makers of every background and ability are welcome.
+            New here? Create your membership and website account. Already registered?{" "}
+            <Link href="/login?next=/dashboard" className="font-bold underline text-white">
+              Sign in
+            </Link>.
           </p>
         </header>
 
         <main className={submitMain}>
           <div className={container}>
-            <div className="grid grid-cols-[0.8fr_1.2fr] gap-12 items-start max-[900px]:grid-cols-1">
-              <aside className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-6 md:p-8">
-                <h2 className={`${secHead} text-pop-violet mb-4`}>One signup, all sorted</h2>
-                <p className="text-sm font-medium leading-[1.7] m-0">
-                  This registers your Maker Club membership, subscribes you to club updates,
-                  and gives the committee the information needed for annual reporting.
-                </p>
-                <ul className="mt-5 mb-0 pl-5 text-[13px] font-semibold leading-[1.8]">
-                  <li>Free Maker Club membership</li>
-                  <li>Event and workshop updates</li>
-                  <li>UoA members queued for the official Engage roster</li>
-                  <li>No second signup form</li>
-                </ul>
-                <p className="mt-5 mb-0 text-[11px] text-ink-2 leading-[1.55]">
-                  Your UPI and student ID are kept private and are not displayed on the website.
-                </p>
-              </aside>
-
-              {sent ? (
-                <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-8">
+            <div className="max-w-[760px] mx-auto">
+              {!loading && user ? (
+                <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-8 text-center">
+                  <span className="text-4xl" aria-hidden>✓</span>
+                  <h2 className={`${secHead} text-pop-violet mt-3 mb-3`}>You already have an account</h2>
+                  <p className="font-medium leading-[1.7] mb-0">
+                    You&rsquo;re signed in as {user.email}. Registration is only for new members.
+                  </p>
+                  <Link href="/dashboard" className={`${btnGradient} mt-6`}>
+                    Go to your dashboard <span className={btnArr}>→</span>
+                  </Link>
+                </div>
+              ) : loading ? null : sent ? (
+                <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] p-8 text-center">
                   <span className="text-4xl" aria-hidden>★</span>
                   <h2 className={`${secHead} text-pop-pink mt-3 mb-3`}>You&rsquo;re in!</h2>
                   <p className="font-medium leading-[1.7] mb-0">
-                    Your Maker Club membership details are registered. Keep an eye on
-                    your inbox for club updates{engageQueued ? " and your official Engage invitation" : ""}.
+                    {confirmationSent
+                      ? "Check your inbox and use the magic link to confirm your email and sign in."
+                      : "Your registration was saved, but the confirmation email could not be sent."}
                   </p>
-                  <button className={`${btnGradient} mt-6`} onClick={() => setSent(false)}>
-                    Register another person <span className={btnArr}>→</span>
-                  </button>
+                  <p className="font-medium text-sm text-ink-2 leading-[1.6] mt-3 mb-0">
+                    {confirmationSent
+                      ? `Your Ghost membership${engageQueued ? " and Engage queue entry" : ""} will activate after confirmation.`
+                      : "Use the sign-in page to send the magic link again."}
+                  </p>
+                  <Link
+                    href={`/login?next=/dashboard&email=${encodeURIComponent(registeredEmail)}`}
+                    className={`${btnGradient} mt-6`}
+                  >
+                    Sign in to your account <span className={btnArr}>→</span>
+                  </Link>
                 </div>
               ) : (
                 <form className={form} onSubmit={submit}>
                   <div className={formInner}>
                     <span className={formFig}>{membershipYear} membership</span>
-                    <h2 className={`${secHead} text-pop-blue mb-5 mt-1`}>Your details</h2>
+                    <div className="flex items-start justify-between gap-4 mb-5 mt-1 flex-wrap">
+                      <h2 className={`${secHead} text-pop-blue m-0`}>Create your account</h2>
+                      <p className="m-0 text-xs font-semibold text-ink-2">
+                        Already registered?{" "}
+                        <Link href="/login?next=/dashboard" className="text-ink underline">
+                          Sign in
+                        </Link>
+                      </p>
+                    </div>
 
                     <div className={field}>
                       <label className={fieldLabel} htmlFor="join-name">
@@ -216,6 +267,21 @@ export default function JoinPage() {
                       <p className="m-0 text-[11px] text-ink-2">
                         Use your @aucklanduni.ac.nz address to receive an Engage invitation.
                       </p>
+                    </div>
+
+                    <div className={field}>
+                      <label className={fieldLabel} htmlFor="join-confirm-email">
+                        Confirm email address <span className={fieldReq}>*</span>
+                      </label>
+                      <input
+                        id="join-confirm-email"
+                        className={fieldInput}
+                        type="email"
+                        value={formState.confirm_email}
+                        onChange={event => update("confirm_email", event.target.value)}
+                        autoComplete="email"
+                        required
+                      />
                     </div>
 
                     <div className={field}>
@@ -306,23 +372,23 @@ export default function JoinPage() {
                       </div>
                     </div>
 
-                    <div className={field}>
-                      <label className={fieldLabel} htmlFor="join-graduating">
-                        Are you graduating this year?
-                      </label>
-                      <select
-                        id="join-graduating"
-                        className={fieldInput}
-                        value={formState.graduating}
-                        onChange={event => update("graduating", event.target.value as FormState["graduating"])}
-                      >
-                        <option value="">Prefer not to say</option>
-                        <option value="no">No</option>
-                        <option value="yes">Yes</option>
-                      </select>
-                    </div>
                       </>
                     )}
+
+                    <div className={field}>
+                      <label className={fieldLabel} htmlFor="join-interests">
+                        What events or skills would you like to see?
+                        <span className="font-normal normal-case tracking-normal">optional</span>
+                      </label>
+                      <textarea
+                        id="join-interests"
+                        className={fieldTextarea}
+                        placeholder="Workshops, tools, crafts, software, project ideas…"
+                        value={formState.interests_to_gain}
+                        onChange={event => update("interests_to_gain", event.target.value)}
+                        maxLength={2000}
+                      />
+                    </div>
 
                     <div className={field}>
                       <label className={fieldLabel} htmlFor="join-skills">

@@ -19,11 +19,26 @@ import {
 
 type Snapshot = { profiles: MembershipProfile[] };
 type StatusFilter = "all" | EngageStatus | "sync_failed";
+type SortKey = "member" | "identity" | "faculty" | "study" | "account" | "engage" | "last_signup";
+type SortDirection = "asc" | "desc";
+
+const SORT_COLUMNS: { key: SortKey; label: string }[] = [
+  { key: "member", label: "Member" },
+  { key: "identity", label: "UPI / ID" },
+  { key: "faculty", label: "Faculty" },
+  { key: "study", label: "Study" },
+  { key: "account", label: "Account" },
+  { key: "engage", label: "Engage" },
+  { key: "last_signup", label: "Last signup" },
+];
 
 const SMALL_BTN =
-  "inline-flex items-center justify-center rounded-full border-2 border-black bg-white px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.06em] shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none";
+  "inline-flex items-center justify-center rounded-full border-2 border-black px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.06em] shadow-[2px_2px_0px_0px_#000] transition-colors disabled:opacity-50 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none";
 
 function effectiveEngageStatus(profile: MembershipProfile, year: number): EngageStatus {
+  if (profile.membership_year != null && !profile.membership_email_confirmed_at) {
+    return "pending_confirmation";
+  }
   if (
     !isEngageEligible(profile.email)
     || (profile.engage_eligible_until_year != null && profile.engage_eligible_until_year < year)
@@ -38,41 +53,18 @@ function csvCell(value: unknown): string {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quoted = false;
-  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  for (let index = 0; index < normalized.length; index += 1) {
-    const character = normalized[index];
-    if (quoted) {
-      if (character === '"' && normalized[index + 1] === '"') {
-        field += '"';
-        index += 1;
-      } else if (character === '"') quoted = false;
-      else field += character;
-    } else if (character === '"') quoted = true;
-    else if (character === ",") {
-      row.push(field);
-      field = "";
-    } else if (character === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else field += character;
-  }
-  if (field || row.length) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows;
-}
-
-function csvColumn(headers: string[], ...needles: string[]): number {
-  const normalized = headers.map(header => header.trim().toLowerCase());
-  return normalized.findIndex(header => needles.some(needle => header.includes(needle)));
+function sortValue(
+  profile: MembershipProfile,
+  key: SortKey,
+  membershipYear: number,
+): string | number | null {
+  if (key === "member") return (profile.display_name || profile.email).toLowerCase();
+  if (key === "identity") return (profile.upi || profile.student_id)?.toLowerCase() ?? null;
+  if (key === "faculty") return profile.faculty?.toLowerCase() ?? null;
+  if (key === "study") return profile.expected_graduation_year ?? profile.study_years_remaining;
+  if (key === "account") return profile.membership_sync_status ?? "existing";
+  if (key === "engage") return effectiveEngageStatus(profile, membershipYear);
+  return profile.membership_updated_at ? Date.parse(profile.membership_updated_at) : null;
 }
 
 export default function MembershipAdminPanel() {
@@ -84,6 +76,10 @@ export default function MembershipAdminPanel() {
   const [notice, setNotice] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [sortKey, setSortKey] = useState<SortKey>("last_signup");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [lastCopiedIds, setLastCopiedIds] = useState<string[]>([]);
 
@@ -117,22 +113,46 @@ export default function MembershipAdminPanel() {
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return snapshot.profiles.filter(profile => {
+    const filtered = snapshot.profiles.filter(profile => {
       const status = effectiveEngageStatus(profile, membershipYear);
       if (statusFilter === "sync_failed" && profile.membership_sync_status !== "failed") return false;
       if (statusFilter !== "all" && statusFilter !== "sync_failed" && status !== statusFilter) return false;
       return !query || [profile.display_name ?? "", profile.email, profile.upi ?? "", profile.faculty ?? ""]
         .some(value => value.toLowerCase().includes(query));
     });
-  }, [membershipYear, search, snapshot.profiles, statusFilter]);
+    return [...filtered].sort((leftProfile, rightProfile) => {
+      const left = sortValue(leftProfile, sortKey, membershipYear);
+      const right = sortValue(rightProfile, sortKey, membershipYear);
+      if (left == null && right == null) return 0;
+      if (left == null) return 1;
+      if (right == null) return -1;
+      const comparison = typeof left === "number" && typeof right === "number"
+        ? left - right
+        : String(left).localeCompare(String(right), "en-NZ", { numeric: true, sensitivity: "base" });
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [membershipYear, search, snapshot.profiles, sortDirection, sortKey, statusFilter]);
   const counts = useMemo(() => ({
     all: snapshot.profiles.length,
+    pending_confirmation: snapshot.profiles.filter(profile => effectiveEngageStatus(profile, membershipYear) === "pending_confirmation").length,
     queued: snapshot.profiles.filter(profile => effectiveEngageStatus(profile, membershipYear) === "queued").length,
     invited: snapshot.profiles.filter(profile => effectiveEngageStatus(profile, membershipYear) === "invited").length,
     joined: snapshot.profiles.filter(profile => effectiveEngageStatus(profile, membershipYear) === "joined").length,
     not_eligible: snapshot.profiles.filter(profile => effectiveEngageStatus(profile, membershipYear) === "not_eligible").length,
     sync_failed: snapshot.profiles.filter(profile => profile.membership_sync_status === "failed").length,
   }), [membershipYear, snapshot.profiles]);
+  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * pageSize;
+  const paginatedProfiles = visible.slice(pageStart, pageStart + pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, pageSize, sortDirection, sortKey]);
+
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
 
   async function action(body: Record<string, unknown>, success: string) {
     setBusy(true);
@@ -151,80 +171,13 @@ export default function MembershipAdminPanel() {
     }
   }
 
-  async function importGoogleFormCsv(file: File) {
-    setBusy(true);
-    setError("");
-    setNotice("");
-    try {
-      const table = parseCsv(await file.text());
-      if (table.length < 2) throw new Error("The CSV has no response rows.");
-      const headers = table[0];
-      const nameColumn = csvColumn(headers, "full name", "name");
-      const emailColumn = csvColumn(headers, "email address", "email");
-      const upiColumn = csvColumn(headers, "upi");
-      const studentIdColumn = csvColumn(headers, "student id");
-      const yearsColumn = csvColumn(headers, "how many years", "expect to be studying", "study years");
-      const facultyColumn = csvColumn(headers, "faculty");
-      const graduatingColumn = csvColumn(headers, "graduate", "graduating");
-      const skillsColumn = csvColumn(headers, "mad making skills", "down to share", "skills to share");
-      if (nameColumn < 0 || (emailColumn < 0 && upiColumn < 0)) {
-        throw new Error("Could not find the name and email/UPI columns in this CSV.");
-      }
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Admin session expired.");
-      let imported = 0;
-      const failures: string[] = [];
-      for (let index = 1; index < table.length; index += 1) {
-        const row = table[index];
-        if (row.every(cell => !cell.trim())) continue;
-        const upi = (upiColumn >= 0 ? row[upiColumn] : "")?.trim() || "NONE";
-        const explicitEmail = (emailColumn >= 0 ? row[emailColumn] : "")?.trim().toLowerCase();
-        const derivedEmail = /^[a-z]{2,5}\d{3}$/i.test(upi)
-          ? `${upi.toLowerCase()}@aucklanduni.ac.nz`
-          : "";
-        const email = explicitEmail || derivedEmail;
-        const fullName = row[nameColumn]?.trim();
-        if (!email || !fullName) {
-          failures.push(`Row ${index + 1}: missing name or usable email`);
-          continue;
-        }
-        const yearsRaw = yearsColumn >= 0 ? Number.parseInt(row[yearsColumn] || "", 10) : Number.NaN;
-        const graduatingRaw = graduatingColumn >= 0 ? row[graduatingColumn]?.trim().toLowerCase() : "";
-        const response = await fetch("/api/membership/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            membership_year: membershipYear,
-            full_name: fullName,
-            email,
-            upi,
-            student_id: (studentIdColumn >= 0 ? row[studentIdColumn] : "")?.trim() || "NONE",
-            study_years: Number.isInteger(yearsRaw) && yearsRaw > 0 ? Math.min(yearsRaw, 20) : null,
-            faculty: (facultyColumn >= 0 ? row[facultyColumn] : "")?.trim() || "NONE",
-            graduating_this_year: graduatingRaw ? graduatingRaw.startsWith("y") : null,
-            skills_to_share: (skillsColumn >= 0 ? row[skillsColumn] : "")?.trim() || "",
-            consent: true,
-          }),
-        });
-        const result = await response.json();
-        if (response.ok) imported += 1;
-        else failures.push(`Row ${index + 1} (${email}): ${result.error ?? "failed"}`);
-      }
-      setNotice(
-        `${imported} response${imported === 1 ? "" : "s"} imported`
-          + (failures.length ? `; ${failures.length} skipped or failed.` : "."),
-      );
-      if (failures.length) setError(failures.slice(0, 8).join(" · "));
-      await load();
-    } catch (importError) {
-      setError(importError instanceof Error ? importError.message : "CSV import failed.");
-    } finally {
-      setBusy(false);
+  function changeSort(nextKey: SortKey) {
+    if (nextKey === sortKey) {
+      setSortDirection(current => current === "asc" ? "desc" : "asc");
+      return;
     }
+    setSortKey(nextKey);
+    setSortDirection(nextKey === "last_signup" ? "desc" : "asc");
   }
 
   async function copyQueued() {
@@ -258,7 +211,8 @@ export default function MembershipAdminPanel() {
   function exportCsv() {
     const headers = [
       "Full Name", "Email", "UPI", "Student ID", "Expected Years Remaining", "Known Through Year",
-      "Faculty", "Graduating This Year", "Skills To Share", "Last Signup Year", "Account Sync",
+      "Faculty", "Expected Graduation Year", "Events / Skills Wanted",
+      "Skills To Share", "Last Signup Year", "Account Sync",
       `${membershipYear} Engage Status`, "Joined At", "Updated At",
     ];
     const rows = visible.map(profile => [
@@ -269,7 +223,8 @@ export default function MembershipAdminPanel() {
       profile.study_years_remaining ?? "",
       profile.engage_eligible_until_year ?? "Unlimited / unknown",
       profile.faculty ?? "",
-      profile.graduating_this_year == null ? "" : profile.graduating_this_year ? "Yes" : "No",
+      profile.expected_graduation_year ?? "",
+      profile.interests_to_gain ?? "",
       profile.skills_to_share ?? "",
       profile.membership_year ?? "Existing member",
       profile.membership_sync_status ?? "Existing member",
@@ -313,20 +268,6 @@ export default function MembershipAdminPanel() {
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <label className={`${btnGhost} cursor-pointer ${busy ? "opacity-50 pointer-events-none" : ""}`}>
-              Import Google Form CSV
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                disabled={busy}
-                onChange={event => {
-                  const file = event.target.files?.[0];
-                  if (file) void importGoogleFormCsv(file);
-                  event.target.value = "";
-                }}
-              />
-            </label>
             <button className={btnGhost} onClick={() => void copyQueued()}>Copy queued emails</button>
             {lastCopiedIds.length > 0 && (
               <button className={btnGradient} disabled={busy} onClick={() => void markStatus("invited", lastCopiedIds)}>
@@ -344,10 +285,12 @@ export default function MembershipAdminPanel() {
           onChange={event => setSearch(event.target.value)}
         />
         <div className="flex gap-2 mb-4 flex-wrap">
-          {(["all", "queued", "invited", "joined", "not_eligible", "sync_failed"] as StatusFilter[]).map(status => (
+          {(["all", "pending_confirmation", "queued", "invited", "joined", "not_eligible", "sync_failed"] as StatusFilter[]).map(status => (
             <button
               key={status}
-              className={`${SMALL_BTN} ${statusFilter === status ? "bg-black text-white" : ""}`}
+              className={`${SMALL_BTN} ${statusFilter === status
+                ? "bg-pop-violet text-white"
+                : "bg-white text-ink hover:bg-paper-2"}`}
               onClick={() => setStatusFilter(status)}
             >
               {status.replaceAll("_", " ")} ({counts[status]})
@@ -358,18 +301,51 @@ export default function MembershipAdminPanel() {
         {visible.length === 0 ? (
           <div className={emptyState}>No members match this view.</div>
         ) : (
-          <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000] overflow-x-auto">
+          <div className="bg-white outline-solid outline-3 outline-black shadow-[6px_6px_0px_0px_#000]">
+            <div className="flex items-center justify-between gap-3 flex-wrap border-b-2 border-black bg-paper-2 px-3 py-2.5">
+              <p className="m-0 text-xs font-bold">
+                Showing {pageStart + 1}–{Math.min(pageStart + pageSize, visible.length)} of {visible.length}
+              </p>
+              <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.07em]">
+                Rows per page
+                <select
+                  className="rounded-[5px] border-2 border-black bg-white px-2 py-1 text-xs font-bold text-ink"
+                  value={pageSize}
+                  onChange={event => setPageSize(Number(event.target.value))}
+                >
+                  {[25, 50, 100].map(size => <option key={size} value={size}>{size}</option>)}
+                </select>
+              </label>
+            </div>
+            <div className="overflow-x-auto">
             <table className="w-full min-w-[1060px] border-collapse text-left text-xs">
               <thead className="bg-paper-2 border-b-2 border-black">
                 <tr>
                   <th className="p-3 w-10"><span className="sr-only">Select</span></th>
-                  {["Member", "UPI / ID", "Faculty", "Study", "Account", "Engage", "Last signup"].map(label => (
-                    <th key={label} className="p-3 text-[10px] uppercase tracking-[0.08em]">{label}</th>
+                  {SORT_COLUMNS.map(column => (
+                    <th
+                      key={column.key}
+                      className="p-0 text-[10px] uppercase tracking-[0.08em]"
+                      aria-sort={sortKey === column.key
+                        ? sortDirection === "asc" ? "ascending" : "descending"
+                        : "none"}
+                    >
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-1.5 p-3 text-left font-bold hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-pop-violet"
+                        onClick={() => changeSort(column.key)}
+                      >
+                        {column.label}
+                        <span className={sortKey === column.key ? "text-pop-violet" : "text-ink-2/60"} aria-hidden>
+                          {sortKey === column.key ? sortDirection === "asc" ? "↑" : "↓" : "↕"}
+                        </span>
+                      </button>
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {visible.map(profile => {
+                {paginatedProfiles.map(profile => {
                   const engageStatus = effectiveEngageStatus(profile, membershipYear);
                   const selected = selectedIds.includes(profile.id);
                   return (
@@ -404,6 +380,9 @@ export default function MembershipAdminPanel() {
                             ? "not applicable"
                             : profile.engage_eligible_until_year ?? "no known end"}
                         </span>
+                        {profile.expected_graduation_year != null && (
+                          <><br /><span className="text-ink-2">Graduates: {profile.expected_graduation_year}</span></>
+                        )}
                       </td>
                       <td className="p-3">
                         <span className={`${dashStatus} ${profile.membership_sync_status === "synced" ? "bg-pop-blue text-white" : profile.membership_sync_status === "failed" ? "bg-pop-red text-white" : "bg-paper-2"}`}>
@@ -438,6 +417,7 @@ export default function MembershipAdminPanel() {
                 })}
               </tbody>
             </table>
+            </div>
             {selectedIds.length > 0 && (
               <div className="sticky left-0 flex items-center gap-2 flex-wrap border-t-2 border-black bg-paper-2 p-3">
                 <strong className="text-xs mr-auto">{selectedIds.length} selected</strong>
@@ -446,6 +426,25 @@ export default function MembershipAdminPanel() {
                 <button className={SMALL_BTN} disabled={busy} onClick={() => void markStatus("joined")}>Mark joined</button>
               </div>
             )}
+            <div className="flex items-center justify-center gap-3 border-t-2 border-black bg-paper-2 p-3">
+              <button
+                className={`${SMALL_BTN} bg-white text-ink disabled:shadow-none`}
+                disabled={currentPage === 1}
+                onClick={() => setPage(current => Math.max(1, current - 1))}
+              >
+                Previous
+              </button>
+              <span className="min-w-24 text-center text-xs font-bold">
+                Page {currentPage} of {pageCount}
+              </span>
+              <button
+                className={`${SMALL_BTN} bg-white text-ink disabled:shadow-none`}
+                disabled={currentPage === pageCount}
+                onClick={() => setPage(current => Math.min(pageCount, current + 1))}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </section>

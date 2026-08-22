@@ -1,6 +1,6 @@
 export const MEMBERSHIP_CONSENT_VERSION = "2026-08-22";
 
-export type EngageStatus = "not_eligible" | "queued" | "invited" | "joined";
+export type EngageStatus = "pending_confirmation" | "not_eligible" | "queued" | "invited" | "joined";
 export type MembershipSyncStatus = "pending" | "synced" | "failed";
 
 export interface MembershipProfile {
@@ -12,17 +12,19 @@ export interface MembershipProfile {
   membership_updated_at: string | null;
   membership_consent_version: string | null;
   membership_consented_at: string | null;
+  membership_email_confirmed_at: string | null;
   upi: string | null;
   student_id: string | null;
   study_years_remaining: number | null;
   study_years_as_of_year: number | null;
   faculty: string | null;
-  graduating_this_year: boolean | null;
+  expected_graduation_year: number | null;
+  interests_to_gain: string | null;
   skills_to_share: string | null;
   ghost_member_id: string | null;
   membership_sync_status: MembershipSyncStatus | null;
   membership_sync_error: string | null;
-  engage_status: Exclude<EngageStatus, "not_eligible"> | null;
+  engage_status: Exclude<EngageStatus, "not_eligible" | "pending_confirmation"> | null;
   engage_status_year: number | null;
   engage_invited_at: string | null;
   engage_eligible_until_year: number | null;
@@ -35,7 +37,7 @@ export type MembershipSignupInput = {
   student_id: string;
   study_years: number | null;
   faculty: string;
-  graduating_this_year: boolean | null;
+  interests_to_gain?: string;
   skills_to_share: string;
   consent: true;
   company?: string;
@@ -75,8 +77,8 @@ export function validateMembershipSignup(raw: unknown): ValidationResult {
   const student_id = clean(input.student_id, 40);
   const faculty = clean(input.faculty, 120);
   const skills_to_share = clean(input.skills_to_share, 2000);
+  const interests_to_gain = clean(input.interests_to_gain, 2000);
   const study_years = input.study_years === null ? null : Number(input.study_years);
-  const graduating = input.graduating_this_year;
 
   if (!full_name) return { ok: false, error: "Enter your full name." };
   if (!EMAIL_RE.test(email)) {
@@ -102,9 +104,6 @@ export function validateMembershipSignup(raw: unknown): ValidationResult {
     return { ok: false, error: "Study duration must be between 1 and 20 years." };
   }
   if (!faculty) return { ok: false, error: "Enter your faculty, or NONE." };
-  if (graduating !== null && typeof graduating !== "boolean") {
-    return { ok: false, error: "Choose whether you are graduating this year." };
-  }
   if (input.consent !== true) {
     return { ok: false, error: "Consent is required to join Maker Club." };
   }
@@ -118,7 +117,7 @@ export function validateMembershipSignup(raw: unknown): ValidationResult {
       student_id: isNone(student_id) ? "NONE" : student_id,
       study_years,
       faculty: isNone(faculty) ? "NONE" : faculty,
-      graduating_this_year: graduating as boolean | null,
+      interests_to_gain,
       skills_to_share,
       consent: true,
       company: clean(input.company, 200),

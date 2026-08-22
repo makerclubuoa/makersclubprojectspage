@@ -22,5 +22,10 @@ tsconfig.tsbuildinfo
 !.env.example
 .claude/settings.local.json
 scripts/**
+!scripts/import-membership-csv-to-supabase.mjs
 docs
 supabase
+!supabase/
+supabase/*
+!supabase/migrations/
+!supabase/migrations/*.sql

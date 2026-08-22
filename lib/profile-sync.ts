@@ -41,14 +41,18 @@ export async function syncMemberProfile(input: ProfileSyncInput): Promise<string
     if (!current && previous) {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(existing.id, {
         email,
-        email_confirm: true,
+        email_confirm: false,
         user_metadata: { display_name: displayName },
       });
       if (error) throw new Error(`Account email sync failed: ${error.message}`);
     }
     const { error } = await supabaseAdmin
       .from("profiles")
-      .update({ email, display_name: displayName })
+      .update({
+        email,
+        display_name: displayName,
+        ...(!current && previous ? { membership_email_confirmed_at: null } : {}),
+      })
       .eq("id", existing.id);
     if (error) throw new Error(`Profile sync failed: ${error.message}`);
     return existing.id;
@@ -56,7 +60,7 @@ export async function syncMemberProfile(input: ProfileSyncInput): Promise<string
 
   const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
     email,
-    email_confirm: true,
+    email_confirm: false,
     user_metadata: { display_name: displayName },
   });
   if (createError || !created.user) {

@@ -26,8 +26,10 @@ export async function GET(req: NextRequest) {
     .select([
       "id", "email", "display_name", "membership_joined_at", "membership_updated_at",
       "membership_year", "membership_consent_version", "membership_consented_at", "upi",
+      "membership_email_confirmed_at",
       "student_id", "study_years_remaining", "study_years_as_of_year", "faculty",
-      "graduating_this_year", "skills_to_share", "ghost_member_id", "membership_sync_status",
+      "expected_graduation_year", "interests_to_gain",
+      "skills_to_share", "ghost_member_id", "membership_sync_status",
       "membership_sync_error", "engage_status", "engage_status_year", "engage_invited_at",
       "engage_eligible_until_year",
     ].join(","))
@@ -75,13 +77,14 @@ export async function POST(req: NextRequest) {
 
     const { data: candidates, error: candidateError } = await supabaseAdmin
       .from("profiles")
-      .select("id, email, engage_eligible_until_year")
+      .select("id, email, membership_year, membership_email_confirmed_at, engage_eligible_until_year")
       .in("id", ids);
     if (candidateError) return NextResponse.json({ error: candidateError.message }, { status: 500 });
     const eligibleIds = (candidates ?? [])
       .filter(profile =>
         typeof profile.email === "string"
         && isEngageEligible(profile.email)
+        && (profile.membership_year == null || profile.membership_email_confirmed_at != null)
         && (profile.engage_eligible_until_year == null || profile.engage_eligible_until_year >= year),
       )
       .map(profile => profile.id);
@@ -105,11 +108,18 @@ export async function POST(req: NextRequest) {
   if (body.action === "retry_member_sync") {
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, email, display_name, faculty, membership_year")
+      .select("id, email, display_name, faculty, membership_year, membership_email_confirmed_at")
       .eq("id", body.profile_id)
       .maybeSingle();
     if (profileError || !profile?.email) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    if (profile.membership_year && !profile.membership_email_confirmed_at) {
+      const { data: authData } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+      if (!authData.user?.email_confirmed_at) {
+        return NextResponse.json({ error: "This member has not confirmed their email yet" }, { status: 409 });
+      }
     }
 
     try {
@@ -126,6 +136,8 @@ export async function POST(req: NextRequest) {
           ghost_member_id: member.id || null,
           membership_sync_status: "synced",
           membership_sync_error: null,
+          membership_email_confirmed_at:
+            profile.membership_email_confirmed_at ?? new Date().toISOString(),
         })
         .eq("id", profile.id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });

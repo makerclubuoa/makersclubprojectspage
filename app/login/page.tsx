@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Nav from "@/app/components/Nav";
 import Screentone from "@/app/components/global/Screentone";
 import { supabase } from "@/lib/supabase";
@@ -42,17 +43,45 @@ export default function LoginPage() {
     if (!loading && user) router.replace(destination());
   }, [user, loading, router]);
 
+  useEffect(() => {
+    const requestedEmail = new URLSearchParams(window.location.search).get("email")?.trim();
+    if (requestedEmail) setEmail(requestedEmail);
+  }, []);
+
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setSending(true);
     setError("");
 
-    // Open signup: Supabase creates the user on first sign-in (shouldCreateUser
-    // defaults true); the post-login ensure-ghost sync mirrors them into Ghost.
+    const normalizedEmail = email.trim().toLowerCase();
+    try {
+      const statusResponse = await fetch("/api/auth/account-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+      const status = await statusResponse.json() as { exists?: boolean; error?: string };
+      if (!statusResponse.ok) throw new Error(status.error || "Account status could not be checked.");
+      if (!status.exists) {
+        setSending(false);
+        router.push(`/join?email=${encodeURIComponent(normalizedEmail)}`);
+        return;
+      }
+    } catch (statusError) {
+      setSending(false);
+      setError(statusError instanceof Error ? statusError.message : "Account status could not be checked.");
+      return;
+    }
+
+    // Registration happens only through /join. The sign-in form must never
+    // create a second path that bypasses membership details and consent.
     const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}${destination()}` },
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}${destination()}`,
+        shouldCreateUser: false,
+      },
     });
     setSending(false);
     if (error) setError(error.message);
@@ -90,7 +119,8 @@ export default function LoginPage() {
             ) : (
               <>
                 <p className="font-semibold mb-7 text-sm leading-[1.65]">
-                  Sign in to like projects and submit your own to the archive.
+                  Already registered? Sign in to manage your profile, like projects,
+                  and submit your own work to the archive.
                 </p>
 
                 <form onSubmit={handleMagicLink}>
@@ -126,9 +156,10 @@ export default function LoginPage() {
                 <p className="text-[11px] font-medium text-ink-2 mt-5 leading-[1.5] tracking-[0.04em]">
                   No password needed. We&rsquo;ll send a one-click sign-in link
                   to your inbox.{" "}
-                  <a href="https://makeuoa.nz" className="text-ink font-semibold underline">
-                    Not a member yet?
-                  </a>
+                  Not registered yet?{" "}
+                  <Link href="/join" className="text-ink font-semibold underline">
+                    Join Maker Club first.
+                  </Link>
                 </p>
               </>
             )}

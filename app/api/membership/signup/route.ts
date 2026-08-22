@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { upsertGhostMember } from "@/lib/ghost-admin";
+import { findGhostMember, upsertGhostMember } from "@/lib/ghost-admin";
 import {
   currentMembershipYear,
   isEngageEligible,
@@ -79,6 +79,50 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (!admin) {
+    const confirmEmail = typeof (body as Record<string, unknown>).confirm_email === "string"
+      ? String((body as Record<string, unknown>).confirm_email).trim().toLowerCase()
+      : "";
+    if (confirmEmail !== input.email) {
+      return NextResponse.json({ error: "The email addresses do not match." }, { status: 400 });
+    }
+
+    const { data: existingAccount, error: existingAccountError } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("email", input.email)
+      .maybeSingle();
+    if (existingAccountError) {
+      console.error("[membership-signup] existing account lookup", existingAccountError);
+      return NextResponse.json({ error: "Registration could not be checked." }, { status: 500 });
+    }
+    if (existingAccount) {
+      return NextResponse.json(
+        { error: "An account already exists for this email. Sign in instead." },
+        { status: 409 },
+      );
+    }
+
+    try {
+      const ghostMember = await findGhostMember(input.email);
+      if (ghostMember) {
+        // Repair the website side before routing this existing Ghost member to
+        // sign in. This keeps the same email from becoming a second identity.
+        await syncMemberProfile({
+          email: input.email,
+          displayName: ghostMember.name || input.full_name,
+        });
+        return NextResponse.json(
+          { error: "An account already exists for this email. Sign in instead." },
+          { status: 409 },
+        );
+      }
+    } catch (ghostLookupError) {
+      console.error("[membership-signup] Ghost account lookup", ghostLookupError);
+      return NextResponse.json({ error: "Registration could not be checked." }, { status: 502 });
+    }
+  }
+
   const requestedYear = Number((body as Record<string, unknown>).membership_year);
   const membershipYear =
     admin && Number.isInteger(requestedYear) && requestedYear >= 2020 && requestedYear <= 2100
@@ -134,10 +178,13 @@ export async function POST(req: NextRequest) {
       study_years_remaining: input.study_years,
       study_years_as_of_year: input.study_years == null ? null : membershipYear,
       faculty: input.faculty === "NONE" ? null : input.faculty,
-      graduating_this_year: input.graduating_this_year,
+      expected_graduation_year:
+        input.study_years == null ? null : membershipYear + input.study_years - 1,
+      interests_to_gain: input.interests_to_gain || null,
       skills_to_share: input.skills_to_share || null,
       membership_sync_status: "pending",
       membership_sync_error: null,
+      membership_email_confirmed_at: admin ? now : null,
       engage_status: engageEligible ? (sameYearEngageStatus ?? "queued") : null,
       engage_status_year: engageEligible ? membershipYear : null,
       engage_invited_at:
@@ -150,6 +197,18 @@ export async function POST(req: NextRequest) {
   if (membershipError) {
     console.error("[membership-signup] membership profile update", membershipError);
     return NextResponse.json({ error: "Your membership could not be saved." }, { status: 500 });
+  }
+
+  // Public registrations remain pending until the emailed magic link is used.
+  // AuthProvider then calls /api/auth/ensure-ghost with the confirmed session,
+  // which activates Ghost and the newsletter without trusting an unverified address.
+  if (!admin) {
+    return NextResponse.json({
+      ok: true,
+      membership_year: membershipYear,
+      engage_eligible: engageEligible,
+      confirmation_required: true,
+    });
   }
 
   try {
