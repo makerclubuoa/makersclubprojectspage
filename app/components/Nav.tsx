@@ -124,9 +124,6 @@ export default function Nav() {
         <Link href="/about" className={NAVLINK} onClick={close}>
           About
         </Link>
-        <Link href="/join" className={NAVLINK} onClick={close}>
-          Join
-        </Link>
         <Link href="/faq" className={NAVLINK} onClick={close}>
           FAQ
         </Link>
@@ -175,9 +172,14 @@ export default function Nav() {
                   </button>
                 </>
               ) : (
-                <Link href="/login" className={NAVAUTH} onClick={close}>
-                  Sign in
-                </Link>
+                <>
+                  <Link href="/login" className={NAVAUTH} onClick={close}>
+                    Sign in
+                  </Link>
+                  <Link href="/join" className={NAVAUTH} onClick={close}>
+                    Register
+                  </Link>
+                </>
               ))}
           </div>
         )}
@@ -212,9 +214,14 @@ export default function Nav() {
               </button>
             </>
           ) : (
-            <Link href="/login" className={NAVAUTH} onClick={close}>
-              Sign in
-            </Link>
+            <>
+              <Link href="/login" className={NAVAUTH} onClick={close}>
+                Sign in
+              </Link>
+              <Link href="/join" className={NAVAUTH} onClick={close}>
+                Register
+              </Link>
+            </>
           ))}
         <Link
           href="/submit"

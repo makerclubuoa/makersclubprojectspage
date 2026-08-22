@@ -1,4 +1,4 @@
-import getLatestUpcomingEvent from "@/lib/ghost/events";
+import getLatestUpcomingEvent, { getPastEvents } from "@/lib/ghost/events";
 import placeholder from "@/public/placeholder.png";
 import PinnedPostSnippet from "../components/global/PinnedPostSnippet";
 import Photo from "../components/global/Photo";
@@ -11,10 +11,13 @@ import JoinSection from "../components/homepage/JoinSection";
 import Footer from "../components/Footer";
 
 export default async function Events() {
-  const upcomingEvent = await getLatestUpcomingEvent();
-  // Same source as the homepage: the Supabase Timeline table, which is what
-  // the admin panel edits.
-  const timelines: TimelineType[] = await getTimelineItems();
+  const [upcomingEvent, initialPastEvents, timelines] = await Promise.all([
+    getLatestUpcomingEvent(),
+    getPastEvents(),
+    // Same source as the homepage: the Supabase Timeline table, which is what
+    // the admin panel edits.
+    getTimelineItems() as Promise<TimelineType[]>,
+  ]);
   return (
     <div className="bg-purple-grad min-h-dvh">
       <div className="pt-20">
@@ -69,7 +72,7 @@ export default async function Events() {
       >
         Past Events
       </p>
-      <PastEventsSection />
+      <PastEventsSection initialPage={initialPastEvents} />
       <div className="mt-10">
         <div className="flex-col border-y-4 bg-white min-h-36 flex jusitfy-center py-10 px-5 md:px-10">
           <p

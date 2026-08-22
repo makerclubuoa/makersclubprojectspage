@@ -1,32 +1,33 @@
 "use client";
-import { getPastEvents, type Event } from "@/lib/ghost/events";
-import { useEffect, useState } from "react";
+import type { Event } from "@/lib/ghost/events";
+import { useState } from "react";
 import EventSlide from "./EventSlide";
 import Button from "../global/Button";
 import placeholder from "@/public/placeholder.png";
 
-export default function PastEventsSection() {
-  const [pastEvents, setPastEvents] = useState<Event[]>([]);
-  const [skip, setSkip] = useState<number>(12);
-  const [page, setPage] = useState<number>(1);
-  const [hasMore, setHasMore] = useState<boolean>(false);
+type PastEventPage = { pastEvents: Event[]; skip: number; hasMore: boolean };
 
-  useEffect(() => {
-    loadMoreEvents(true);
-  }, []);
+export default function PastEventsSection({ initialPage }: { initialPage: PastEventPage }) {
+  const [pastEvents, setPastEvents] = useState<Event[]>(initialPage.pastEvents);
+  const [skip, setSkip] = useState<number>(initialPage.skip);
+  const [page, setPage] = useState<number>(2);
+  const [hasMore, setHasMore] = useState<boolean>(initialPage.hasMore);
+  const [loading, setLoading] = useState(false);
 
-  function loadMoreEvents(firstPage: boolean = false) {
-    (async () => {
-      const {
-        pastEvents: newPastEvents,
-        skip: newSkip,
-        hasMore: newHasMore,
-      } = await getPastEvents(skip, page);
-      setPastEvents([...pastEvents, ...newPastEvents]);
-      setSkip(newSkip);
-      setHasMore(newHasMore);
-      setPage(2);
-    })();
+  async function loadMoreEvents() {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/events?offset=${skip}&page=${page}`);
+      if (!response.ok) throw new Error("Events could not be loaded");
+      const nextPage = await response.json() as PastEventPage;
+      setPastEvents(current => [...current, ...nextPage.pastEvents]);
+      setSkip(nextPage.skip);
+      setHasMore(nextPage.hasMore);
+      setPage(current => current + 1);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -50,7 +51,7 @@ export default function PastEventsSection() {
       {hasMore ? (
         <div className="flex justify-center py-3 lg:pt-5">
           <Button onClick={loadMoreEvents} bgColour="white" textColour="black">
-            Load More
+            {loading ? "Loading…" : "Load More"}
           </Button>
         </div>
       ) : null}

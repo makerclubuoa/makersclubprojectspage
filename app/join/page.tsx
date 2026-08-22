@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/components/AuthProvider";
 import Screentone from "@/app/components/global/Screentone";
 import Turnstile from "@/app/components/membership/Turnstile";
@@ -68,12 +67,12 @@ const INITIAL: FormState = {
 
 export default function JoinPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const membershipYear = currentMembershipYear();
   const [formState, setFormState] = useState(INITIAL);
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [duplicateEmail, setDuplicateEmail] = useState(false);
   const [sent, setSent] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [confirmationSent, setConfirmationSent] = useState(false);
@@ -91,6 +90,7 @@ export default function JoinPage() {
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setFormState(current => ({ ...current, [key]: value }));
     setSubmitError("");
+    setDuplicateEmail(false);
   }
 
   function updateUoaMembership(value: FormState["uoa_member"]) {
@@ -141,9 +141,8 @@ export default function JoinPage() {
       const data = await response.json();
       if (!response.ok) {
         if (response.status === 409) {
-          router.push(
-            `/login?next=/dashboard&email=${encodeURIComponent(formState.email.trim().toLowerCase())}`,
-          );
+          setDuplicateEmail(true);
+          setSubmitError("That email is already registered. Sign in instead.");
           return;
         }
         throw new Error(data.error ?? "Signup failed.");
@@ -436,7 +435,15 @@ export default function JoinPage() {
 
                     {submitError && (
                       <p className={`${fieldError} mt-4`} role="alert">
-                        <span aria-hidden>⚠</span> {submitError}
+                        <span aria-hidden>⚠</span> {submitError}{" "}
+                        {duplicateEmail && (
+                          <Link
+                            href={`/login?next=/dashboard&email=${encodeURIComponent(formState.email.trim().toLowerCase())}`}
+                            className="font-black underline"
+                          >
+                            Go to sign in
+                          </Link>
+                        )}
                       </p>
                     )}
 
