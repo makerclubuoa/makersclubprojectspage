@@ -85,7 +85,9 @@ function bomList(value: unknown): BOMItem[] | null {
       desc: optionalString(row.desc, 1000) ?? undefined,
       qty,
       unit_cost: unitCost,
-      src: httpUrl(row.src) ?? undefined,
+      // “Source” is the supplier/place (for example “Jaycar”), not
+      // necessarily a link. The form intentionally accepts ordinary text.
+      src: optionalString(row.src, 500) ?? undefined,
     };
   });
 }
