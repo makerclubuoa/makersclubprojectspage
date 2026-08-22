@@ -44,7 +44,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { user, project } = await projectAndUser(req, id);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!isAdmin(user) && project.submitted_by !== user.id) {
+  const isSharedOwner = (project.maker_ids ?? []).includes(user.id);
+  if (!isAdmin(user) && project.submitted_by !== user.id && !isSharedOwner) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const { error } = await supabaseAdmin.from("Projects").delete().eq("id", id);

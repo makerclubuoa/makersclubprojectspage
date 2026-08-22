@@ -683,6 +683,7 @@ export default async function ProjectPage({
                 <CommentsSection
                   projectId={project.id}
                   projectOwnerId={project.submitted_by ?? null}
+                  projectMakerIds={project.maker_ids}
                 />
 
                 {/* Related */}

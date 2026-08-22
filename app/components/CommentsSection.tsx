@@ -27,6 +27,7 @@ interface Comment {
 interface Props {
   projectId: string;
   projectOwnerId: string | null;
+  projectMakerIds?: string[] | null;
 }
 
 const ADMIN_EMAIL = "makerclubuoa@gmail.com";
@@ -47,6 +48,7 @@ function fmtCommentDate(iso: string) {
 export default function CommentsSection({
   projectId,
   projectOwnerId,
+  projectMakerIds,
 }: Props) {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -188,6 +190,7 @@ export default function CommentsSection({
             !!user &&
             (c.user_id === user.id ||
               user.id === projectOwnerId ||
+              (projectMakerIds ?? []).includes(user.id) ||
               user.email === ADMIN_EMAIL);
           return (
             <div

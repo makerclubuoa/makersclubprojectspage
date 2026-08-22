@@ -19,14 +19,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const isCommentAuthor = comment.user_id === user.id
 
-  // Fetch the project to check if user is the project owner
+  // Every named maker has full project ownership for moderation purposes.
   const { data: project } = await supabaseAdmin
     .from('Projects')
-    .select('submitted_by')
+    .select('submitted_by, maker_ids')
     .eq('id', comment.project_id)
     .single()
 
   const isProjectOwner = project?.submitted_by === user.id
+    || (project?.maker_ids ?? []).includes(user.id)
   const admin = isAdmin(user)
 
   if (!isCommentAuthor && !isProjectOwner && !admin) {

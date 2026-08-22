@@ -89,6 +89,16 @@ export async function findGhostMember(email: string): Promise<AdminMember | null
   return json.members?.[0] ?? null
 }
 
+/** Removes a Ghost member if they exist. Safe to call repeatedly. */
+export async function deleteGhostMember(email: string): Promise<boolean> {
+  const member = await findGhostMember(email)
+  if (!member) return false
+
+  const res = await ghostFetch(`members/${member.id}/`, { method: 'DELETE' })
+  if (res.ok || res.status === 404) return true
+  throw new Error(`Ghost member delete ${res.status}: ${await res.text()}`)
+}
+
 async function findActiveNewsletter(name: string): Promise<AdminMemberNewsletter> {
   const res = await ghostFetch('newsletters/?limit=all')
   if (!res.ok) throw new Error(`Ghost newsletter lookup ${res.status}: ${await res.text()}`)

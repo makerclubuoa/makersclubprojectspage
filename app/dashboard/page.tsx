@@ -92,6 +92,9 @@ export default function DashboardPage() {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [showNameModal, setShowNameModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteAccountConfirmation, setDeleteAccountConfirmation] = useState("");
+  const [accountDeleting, setAccountDeleting] = useState(false);
   const [pendingPreference, setPendingPreference] = useState<
     "name" | "public_name" | null
   >(null);
@@ -277,8 +280,8 @@ export default function DashboardPage() {
 
   async function handleDelete(id: string) {
     const p = myProjects.find((p) => p.id === id);
-    if (p?._role !== "owner") return;
-    if (!confirm("Remove this project? This cannot be undone.")) return;
+    if (!p) return;
+    if (!confirm(`Remove “${p.title}” for every maker? This cannot be undone.`)) return;
     setDeletingId(id);
     setDashboardError(null);
     const { data: { session } } = await supabase.auth.getSession();
@@ -291,6 +294,36 @@ export default function DashboardPage() {
     }
     else setDashboardError("The project could not be removed. Please try again.");
     setDeletingId(null);
+  }
+
+  function closeDeleteAccountModal() {
+    if (accountDeleting) return;
+    setShowDeleteAccountModal(false);
+    setDeleteAccountConfirmation("");
+  }
+
+  async function deleteAccount() {
+    if (!session || deleteAccountConfirmation !== "DELETE" || accountDeleting) return;
+    setAccountDeleting(true);
+    setDashboardError(null);
+    try {
+      const response = await fetch("/api/profile/account", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ confirmation: deleteAccountConfirmation }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Account deletion failed.");
+      await supabase.auth.signOut({ scope: "local" });
+      window.location.assign("/join?account=deleted");
+    } catch (error) {
+      setDashboardError(error instanceof Error ? error.message : "Account deletion failed.");
+      setAccountDeleting(false);
+      setShowDeleteAccountModal(false);
+    }
   }
 
   async function handleUnlike(projectId: string) {
@@ -353,6 +386,49 @@ export default function DashboardPage() {
                 Confirm
               </button>
             </div>
+        </AccessibleModal>
+      )}
+
+      {showDeleteAccountModal && (
+        <AccessibleModal onClose={closeDeleteAccountModal} labelledBy="delete-account-title">
+          <p className={modalLabel}>Permanent account deletion</p>
+          <p className={modalTitle} id="delete-account-title">
+            Delete your Maker Club account?
+          </p>
+          <div className="space-y-3 text-[13px] leading-relaxed text-ink-2">
+            <p className="m-0">
+              This removes your login, profile, Ghost membership, comments, likes and private
+              membership details. Projects made only by you and their uploaded files will also
+              be permanently deleted.
+            </p>
+            <p className={`${modalWarn} m-0`}>
+              Shared projects will not be deleted. Ownership will move to a remaining co-maker.
+            </p>
+          </div>
+          <label className={`${fieldLabel} mt-5`} htmlFor="delete-account-confirmation">
+            Type DELETE to confirm
+          </label>
+          <input
+            id="delete-account-confirmation"
+            className={fieldInput}
+            type="text"
+            autoComplete="off"
+            value={deleteAccountConfirmation}
+            onChange={event => setDeleteAccountConfirmation(event.target.value)}
+            disabled={accountDeleting}
+          />
+          <div className={modalActions}>
+            <button className={btn} onClick={closeDeleteAccountModal} disabled={accountDeleting}>
+              Keep my account
+            </button>
+            <button
+              className="inline-flex items-center justify-center rounded-full border-2 border-black bg-pop-red px-5 py-2 text-xs font-bold text-white shadow-[2px_2px_0px_0px_#000] disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => void deleteAccount()}
+              disabled={deleteAccountConfirmation !== "DELETE" || accountDeleting}
+            >
+              {accountDeleting ? "Deleting…" : "Delete account permanently"}
+            </button>
+          </div>
         </AccessibleModal>
       )}
 
@@ -524,6 +600,27 @@ export default function DashboardPage() {
                   <span className={btnArr}>→</span>
                 </button>
               </div>
+
+              <div className="mt-7 border-t-2 border-black/15 pt-5">
+                <div className="flex items-center justify-between gap-4 max-sm:items-start max-sm:flex-col">
+                  <div>
+                    <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-pop-red">
+                      Delete account
+                    </p>
+                    <p className="mt-1 mb-0 max-w-xl text-[11px] font-medium leading-relaxed text-ink-2">
+                      Permanently remove your profile and personal data. Shared projects are kept
+                      and transferred to another co-maker.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-full border-2 border-black bg-white px-4 py-1.5 text-xs font-bold text-pop-red shadow-[2px_2px_0px_0px_#000] hover:bg-pop-red hover:text-white"
+                    onClick={() => setShowDeleteAccountModal(true)}
+                  >
+                    Delete account
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -601,7 +698,7 @@ export default function DashboardPage() {
                             <span
                               className={`${dashStatus} ${dashStatusComaker}`}
                             >
-                              Co-maker
+                              Shared owner
                             </span>
                           )}
                           <Link
@@ -610,16 +707,14 @@ export default function DashboardPage() {
                           >
                             Edit
                           </Link>
-                          {isOwner && (
-                            <button
-                              className={dashRowDelete}
-                              onClick={() => handleDelete(p.id)}
-                              disabled={deletingId === p.id}
-                              title="Remove project"
-                            >
-                              {deletingId === p.id ? "…" : "✕ Remove"}
-                            </button>
-                          )}
+                          <button
+                            className={dashRowDelete}
+                            onClick={() => handleDelete(p.id)}
+                            disabled={deletingId === p.id}
+                            title={isOwner ? "Remove project" : "Remove shared project for everyone"}
+                          >
+                            {deletingId === p.id ? "…" : "✕ Remove"}
+                          </button>
                         </div>
                       );
                     })}

@@ -2,6 +2,8 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { syncMemberProfile } from "@/lib/profile-sync";
 import { serverEnv } from "@/lib/server-env";
+import { deleteSupabaseAccount } from "@/lib/account-deletion";
+import { supabaseAdmin } from "@/lib/supabase-server";
 
 function verifySignature(body: string, header: string | null, secret: string): boolean {
   if (!header) return false;
@@ -64,8 +66,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Member sync failed" }, { status: 500 });
     }
   } else if (previous?.email) {
-    // Keep the website identity and projects if a Ghost member is deleted.
-    console.log("[ghost-webhook] member deleted:", previous.email);
+    const email = previous.email.trim().toLowerCase();
+    try {
+      const { data: profile, error } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle();
+      if (error) throw error;
+      if (profile?.id) await deleteSupabaseAccount(profile.id);
+      console.log("[ghost-webhook] member deleted everywhere:", email);
+    } catch (error) {
+      console.error("[ghost-webhook] member deletion", error);
+      return NextResponse.json({ error: "Member deletion failed" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true });
