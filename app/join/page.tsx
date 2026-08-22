@@ -75,7 +75,6 @@ export default function JoinPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [sent, setSent] = useState(false);
-  const [engageQueued, setEngageQueued] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [confirmationSent, setConfirmationSent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -149,7 +148,6 @@ export default function JoinPage() {
         }
         throw new Error(data.error ?? "Signup failed.");
       }
-      setEngageQueued(data.engage_eligible === true);
       const normalizedEmail = formState.email.trim().toLowerCase();
       setRegisteredEmail(normalizedEmail);
 
@@ -213,7 +211,7 @@ export default function JoinPage() {
                   </p>
                   <p className="font-medium text-sm text-ink-2 leading-[1.6] mt-3 mb-0">
                     {confirmationSent
-                      ? `Your Ghost membership${engageQueued ? " and Engage queue entry" : ""} will activate after confirmation.`
+                      ? "Your Ghost membership and newsletter access will activate after confirmation."
                       : "Use the sign-in page to send the magic link again."}
                   </p>
                   <Link
@@ -265,7 +263,7 @@ export default function JoinPage() {
                         required
                       />
                       <p className="m-0 text-[11px] text-ink-2">
-                        Use your @aucklanduni.ac.nz address to receive an Engage invitation.
+                        Use your @aucklanduni.ac.nz address to receive the official Engage join link.
                       </p>
                     </div>
 
@@ -427,7 +425,7 @@ export default function JoinPage() {
                       <span>
                         I consent to Maker Club storing these details for membership administration,
                         subscribing this email to club updates, and, where applicable, using my
-                        UoA details for the official Engage roster. <span className={fieldReq}>*</span>
+                        University details for club administration. <span className={fieldReq}>*</span>
                       </span>
                     </label>
 

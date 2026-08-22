@@ -23,6 +23,7 @@ tsconfig.tsbuildinfo
 .claude/settings.local.json
 scripts/**
 !scripts/import-membership-csv-to-supabase.mjs
+!scripts/reconcile-membership-statuses.mjs
 docs
 supabase
 !supabase/

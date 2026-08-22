@@ -9,6 +9,7 @@
     "test:projects": "playwright test --config scripts/project-tests/playwright.config.ts",
     "lint": "eslint .",
     "seed:memberships": "node scripts/import-membership-csv-to-supabase.mjs",
+    "reconcile:memberships": "node scripts/reconcile-membership-statuses.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",

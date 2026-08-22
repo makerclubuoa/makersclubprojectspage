@@ -1,6 +1,5 @@
 export const MEMBERSHIP_CONSENT_VERSION = "2026-08-22";
 
-export type EngageStatus = "pending_confirmation" | "not_eligible" | "queued" | "invited" | "joined";
 export type MembershipSyncStatus = "pending" | "synced" | "failed";
 
 export interface MembershipProfile {
@@ -24,10 +23,6 @@ export interface MembershipProfile {
   ghost_member_id: string | null;
   membership_sync_status: MembershipSyncStatus | null;
   membership_sync_error: string | null;
-  engage_status: Exclude<EngageStatus, "not_eligible" | "pending_confirmation"> | null;
-  engage_status_year: number | null;
-  engage_invited_at: string | null;
-  engage_eligible_until_year: number | null;
 }
 
 export type MembershipSignupInput = {
@@ -60,10 +55,6 @@ function clean(value: unknown, max: number): string {
 
 function isNone(value: string): boolean {
   return NONE_VALUES.has(value.toLowerCase());
-}
-
-export function isEngageEligible(email: string): boolean {
-  return email.toLowerCase().endsWith("@aucklanduni.ac.nz");
 }
 
 export function validateMembershipSignup(raw: unknown): ValidationResult {

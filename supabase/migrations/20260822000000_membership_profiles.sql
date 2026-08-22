@@ -28,21 +28,12 @@ alter table public.profiles
   add column if not exists membership_sync_status text
     check (membership_sync_status is null or membership_sync_status in ('pending', 'synced', 'failed')),
   add column if not exists membership_sync_error text,
-  add column if not exists engage_status text
-    check (engage_status is null or engage_status in ('queued', 'invited', 'joined')),
-  add column if not exists engage_status_year integer
-    check (engage_status_year is null or engage_status_year between 2020 and 2100),
-  add column if not exists engage_invited_at timestamptz,
-  add column if not exists engage_eligible_until_year integer
-    check (engage_eligible_until_year is null or engage_eligible_until_year between 2020 and 2120);
+  add column if not exists engage_welcome_sent_at timestamptz;
 
 create index if not exists profiles_membership_year
   on public.profiles (membership_year);
 create unique index if not exists profiles_email_unique_ci
   on public.profiles (lower(email)) where email is not null;
-create index if not exists profiles_engage_eligibility
-  on public.profiles (engage_eligible_until_year, engage_status_year);
-
 -- profiles is queried client-side for public maker names. Replace broad table
 -- reads with a safe column allow-list so private membership data cannot be
 -- requested with the public Supabase key.

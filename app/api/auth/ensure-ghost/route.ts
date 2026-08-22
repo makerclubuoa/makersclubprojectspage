@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-server'
 import { ghostMemberExists, createGhostMember, upsertGhostMember } from '@/lib/ghost-admin'
 import { membershipYearLabel } from '@/lib/membership'
 import { serverEnv } from '@/lib/server-env'
+import { sendEngageEmailOnce } from '@/lib/engage-email'
 
 // Outbound sync: mirror a freshly-authenticated Supabase user into Ghost so the
 // two stay consistent while Ghost still exists. Idempotent — safe to call on
@@ -63,6 +64,20 @@ export async function POST(req: NextRequest) {
         .eq('id', user.id)
     }
     return NextResponse.json({ error: 'Ghost sync failed' }, { status: 502 })
+  }
+
+  if (profile?.membership_year) {
+    try {
+      await sendEngageEmailOnce({
+        profileId: user.id,
+        email,
+        name: name || email.split('@')[0],
+        membershipYear: profile.membership_year,
+      })
+    } catch (e) {
+      console.error('[ensure-ghost] Engage email failed for', email, e)
+      return NextResponse.json({ error: 'Engage email failed' }, { status: 502 })
+    }
   }
 
   return NextResponse.json({ ok: true })

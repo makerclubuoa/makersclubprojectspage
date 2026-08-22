@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { upsertGhostMember } from "@/lib/ghost-admin";
 import {
   currentMembershipYear,
-  isEngageEligible,
   membershipYearLabel,
+  type MembershipProfile,
 } from "@/lib/membership";
 import { isAdmin, userFromRequest } from "@/lib/server-auth";
 import { serverEnv } from "@/lib/server-env";
@@ -21,32 +21,39 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { data: profiles, error } = await supabaseAdmin
-    .from("profiles")
-    .select([
-      "id", "email", "display_name", "membership_joined_at", "membership_updated_at",
-      "membership_year", "membership_consent_version", "membership_consented_at", "upi",
-      "membership_email_confirmed_at",
-      "student_id", "study_years_remaining", "study_years_as_of_year", "faculty",
-      "expected_graduation_year", "interests_to_gain",
-      "skills_to_share", "ghost_member_id", "membership_sync_status",
-      "membership_sync_error", "engage_status", "engage_status_year", "engage_invited_at",
-      "engage_eligible_until_year",
-    ].join(","))
-    .order("membership_updated_at", { ascending: false, nullsFirst: false })
-    .limit(5000);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ profiles: profiles ?? [] });
+  const columns = [
+    "id", "email", "display_name", "membership_joined_at", "membership_updated_at",
+    "membership_year", "membership_consent_version", "membership_consented_at", "upi",
+    "membership_email_confirmed_at",
+    "student_id", "study_years_remaining", "study_years_as_of_year", "faculty",
+    "expected_graduation_year", "interests_to_gain",
+    "skills_to_share", "ghost_member_id", "membership_sync_status",
+    "membership_sync_error",
+  ].join(",");
+  const profiles: MembershipProfile[] = [];
+  const batchSize = 1000;
+
+  // Supabase applies its configured maximum-row limit to every REST request,
+  // even when a larger .limit() is requested. Read successive ranges so the
+  // admin view and its client-side pagination receive the complete directory.
+  for (let offset = 0; ; offset += batchSize) {
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select(columns)
+      .order("membership_updated_at", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: true })
+      .range(offset, offset + batchSize - 1);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const batch = (data ?? []) as unknown as MembershipProfile[];
+    profiles.push(...batch);
+    if (batch.length < batchSize) break;
+  }
+
+  return NextResponse.json({ profiles });
 }
 
 type AdminAction =
-  | {
-      action: "set_engage_status";
-      profile_ids: string[];
-      year: number;
-      status: "queued" | "invited" | "joined";
-    }
-  | { action: "retry_member_sync"; profile_id: string };
+  { action: "retry_member_sync"; profile_id: string };
 
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin(req))) {
@@ -58,51 +65,6 @@ export async function POST(req: NextRequest) {
     body = (await req.json()) as AdminAction;
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
-
-  if (body.action === "set_engage_status") {
-    const ids = [...new Set((body.profile_ids ?? []).map(id => String(id).trim()))]
-      .filter(Boolean)
-      .slice(0, 500);
-    const year = Number(body.year);
-    if (
-      !ids.length
-      || !Number.isInteger(year)
-      || year < 2020
-      || year > 2100
-      || !["queued", "invited", "joined"].includes(body.status)
-    ) {
-      return NextResponse.json({ error: "Invalid invitation update" }, { status: 400 });
-    }
-
-    const { data: candidates, error: candidateError } = await supabaseAdmin
-      .from("profiles")
-      .select("id, email, membership_year, membership_email_confirmed_at, engage_eligible_until_year")
-      .in("id", ids);
-    if (candidateError) return NextResponse.json({ error: candidateError.message }, { status: 500 });
-    const eligibleIds = (candidates ?? [])
-      .filter(profile =>
-        typeof profile.email === "string"
-        && isEngageEligible(profile.email)
-        && (profile.membership_year == null || profile.membership_email_confirmed_at != null)
-        && (profile.engage_eligible_until_year == null || profile.engage_eligible_until_year >= year),
-      )
-      .map(profile => profile.id);
-    if (!eligibleIds.length) {
-      return NextResponse.json({ error: "No selected profiles are Engage-eligible for that year" }, { status: 400 });
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        engage_status: body.status,
-        engage_status_year: year,
-        engage_invited_at: body.status === "queued" ? null : new Date().toISOString(),
-      })
-      .in("id", eligibleIds)
-      .select("id");
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ ok: true, updated: data?.length ?? 0 });
   }
 
   if (body.action === "retry_member_sync") {

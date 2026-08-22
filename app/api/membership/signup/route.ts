@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { findGhostMember, upsertGhostMember } from "@/lib/ghost-admin";
 import {
   currentMembershipYear,
-  isEngageEligible,
   membershipYearLabel,
   MEMBERSHIP_CONSENT_VERSION,
   validateMembershipSignup,
@@ -146,23 +145,13 @@ export async function POST(req: NextRequest) {
 
   const { data: existing, error: lookupError } = await supabaseAdmin
     .from("profiles")
-    .select("membership_joined_at, engage_status, engage_status_year, engage_invited_at, engage_eligible_until_year")
+    .select("membership_joined_at")
     .eq("id", profileId)
     .single();
   if (lookupError) {
     console.error("[membership-signup] membership profile lookup", lookupError);
     return NextResponse.json({ error: "Your membership could not be saved." }, { status: 500 });
   }
-
-  const engageEligible = isEngageEligible(input.email);
-  const eligibleUntilYear = engageEligible
-    ? input.study_years == null
-      ? existing.engage_eligible_until_year
-      : membershipYear + input.study_years - 1
-    : null;
-  const sameYearEngageStatus = existing.engage_status_year === membershipYear
-    ? existing.engage_status
-    : null;
 
   const { error: membershipError } = await supabaseAdmin
     .from("profiles")
@@ -185,13 +174,6 @@ export async function POST(req: NextRequest) {
       membership_sync_status: "pending",
       membership_sync_error: null,
       membership_email_confirmed_at: admin ? now : null,
-      engage_status: engageEligible ? (sameYearEngageStatus ?? "queued") : null,
-      engage_status_year: engageEligible ? membershipYear : null,
-      engage_invited_at:
-        engageEligible && sameYearEngageStatus && sameYearEngageStatus !== "queued"
-          ? existing.engage_invited_at
-          : null,
-      engage_eligible_until_year: eligibleUntilYear,
     })
     .eq("id", profileId);
   if (membershipError) {
@@ -206,7 +188,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       membership_year: membershipYear,
-      engage_eligible: engageEligible,
       confirmation_required: true,
     });
   }
@@ -247,6 +228,5 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     membership_year: membershipYear,
-    engage_eligible: engageEligible,
   });
 }

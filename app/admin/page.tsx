@@ -287,7 +287,7 @@ export default function AdminPage() {
           {tab === "projects"
             ? "Approve, feature, reject, or delete any project."
             : tab === "members"
-              ? "Review annual memberships and prepare the official Engage invitation queue."
+              ? "Review memberships, private signup details, and Ghost sync health."
             : tab === "vending"
               ? "Manage the vending machine: stock, prices, shelves, and the dispense queue."
               : "Add or remove events shown on the homepage timeline."}

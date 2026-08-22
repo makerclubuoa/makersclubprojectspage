@@ -110,7 +110,7 @@ async function ensureProfile(supabase, candidate, profilesByEmail, usersByEmail)
   const { data: profile, error } = await supabase
     .from("profiles")
     .upsert({ id: user.id, email: candidate.email, display_name: candidate.fullName }, { onConflict: "id" })
-    .select("id,email,membership_joined_at,membership_email_confirmed_at,ghost_member_id,membership_sync_status,engage_status,engage_status_year,engage_invited_at")
+    .select("id,email,membership_joined_at,membership_email_confirmed_at,ghost_member_id,membership_sync_status,engage_welcome_sent_at")
     .single();
   if (error) throw new Error(`Profile creation failed: ${error.message}`);
   profilesByEmail.set(candidate.email, profile);
@@ -211,8 +211,7 @@ if (checkOnly) {
   const requiredColumns = [
     "membership_year", "membership_joined_at", "membership_email_confirmed_at", "upi",
     "student_id", "study_years_remaining", "study_years_as_of_year", "faculty",
-    "expected_graduation_year", "interests_to_gain", "skills_to_share", "engage_status",
-    "engage_status_year", "engage_eligible_until_year",
+    "expected_graduation_year", "interests_to_gain", "skills_to_share", "engage_welcome_sent_at",
   ];
   const checks = await Promise.all(requiredColumns.map(async column => {
     const { error } = await supabase.from("profiles").select(`id,${column}`).limit(1);
@@ -229,7 +228,7 @@ if (checkOnly) {
 const [{ data: profiles, error: profileError }, users] = await Promise.all([
   supabase
     .from("profiles")
-    .select("id,email,membership_joined_at,membership_email_confirmed_at,ghost_member_id,membership_sync_status,engage_status,engage_status_year,engage_invited_at")
+    .select("id,email,membership_joined_at,membership_email_confirmed_at,ghost_member_id,membership_sync_status,engage_welcome_sent_at")
     .limit(10000),
   listAuthUsers(supabase),
 ]);
@@ -245,11 +244,6 @@ for (const candidate of candidates) {
   try {
     const wasExisting = profilesByEmail.has(candidate.email);
     const profile = await ensureProfile(supabase, candidate, profilesByEmail, usersByEmail);
-    const eligible = candidate.email.endsWith("@aucklanduni.ac.nz");
-    const eligibleUntil = eligible
-      ? candidate.expectedGraduationYear ?? (candidate.studyYears == null ? null : membershipYear + candidate.studyYears - 1)
-      : null;
-    const sameYearStatus = profile.engage_status_year === membershipYear ? profile.engage_status : null;
     const submittedAt = candidate.submittedAt ?? new Date().toISOString();
     const { error } = await supabase
       .from("profiles")
@@ -270,12 +264,9 @@ for (const candidate of candidates) {
         interests_to_gain: candidate.interestsToGain,
         skills_to_share: candidate.skillsToShare,
         membership_sync_status: profile.membership_sync_status ?? "pending",
-        engage_status: eligible ? (sameYearStatus ?? "queued") : null,
-        engage_status_year: eligible ? membershipYear : null,
-        engage_invited_at: eligible && sameYearStatus && sameYearStatus !== "queued"
-          ? profile.engage_invited_at
-          : null,
-        engage_eligible_until_year: eligibleUntil,
+        // A historical import must never trigger a surprise welcome email on
+        // the member's next login. New public signups leave this null.
+        engage_welcome_sent_at: profile.engage_welcome_sent_at ?? submittedAt,
       })
       .eq("id", profile.id);
     if (error) throw new Error(error.message);
