@@ -43,7 +43,7 @@ export default function JoinSection() {
             Register for {year} now for free!
           </p>
           <LinkButton
-            link={process.env.NEXT_PUBLIC_SIGN_UP!}
+            link="/join"
             bgColour="pop-pink"
             textColour="white"
           >

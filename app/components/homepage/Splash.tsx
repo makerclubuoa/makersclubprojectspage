@@ -35,7 +35,7 @@ export default function Splash() {
           </p>
         </div>
         <div className="w-full h-full z-50 flex items-center justify-center">
-          <LinkButton link={process.env.NEXT_PUBLIC_SIGN_UP!}>
+          <LinkButton link="/join">
             Join Now!
           </LinkButton>
         </div>

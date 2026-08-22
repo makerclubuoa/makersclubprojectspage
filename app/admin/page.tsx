@@ -13,6 +13,7 @@ import Pagination from "@/app/components/Pagination";
 import AccessibleModal from "@/app/components/AccessibleModal";
 import VendingAdminPanel from "@/app/components/vending/VendingAdminPanel";
 import TimelineAdminPanel from "@/app/components/timeline/TimelineAdminPanel";
+import MembershipAdminPanel from "@/app/components/membership/MembershipAdminPanel";
 import {
   container,
   pageWrap,
@@ -58,7 +59,7 @@ const DASH_ACTION =
   "text-[10.5px] font-bold tracking-[0.08em] uppercase shrink-0 px-2 py-1 transition-colors duration-150";
 
 type Filter = "all" | "pending" | "live" | "featured" | "rejected";
-type Tab = "projects" | "vending" | "timeline";
+type Tab = "projects" | "members" | "vending" | "timeline";
 
 // Section tabs (Projects / Vending Machine) — larger cousins of FILTER_BTN.
 const TAB_BTN =
@@ -98,7 +99,8 @@ export default function AdminPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("tab");
-    if (t === "vending") setTab("vending");
+    if (t === "members") setTab("members");
+    else if (t === "vending") setTab("vending");
     else if (t === "timeline") setTab("timeline");
   }, []);
 
@@ -284,6 +286,8 @@ export default function AdminPage() {
         <p className={pageBandSub}>
           {tab === "projects"
             ? "Approve, feature, reject, or delete any project."
+            : tab === "members"
+              ? "Review annual memberships and prepare the official Engage invitation queue."
             : tab === "vending"
               ? "Manage the vending machine: stock, prices, shelves, and the dispense queue."
               : "Add or remove events shown on the homepage timeline."}
@@ -300,6 +304,12 @@ export default function AdminPage() {
               Projects
             </button>
             <button
+              className={`${TAB_BTN} ${tab === "members" ? TAB_BTN_ON : TAB_BTN_OFF}`}
+              onClick={() => switchTab("members")}
+            >
+              Memberships
+            </button>
+            <button
               className={`${TAB_BTN} ${tab === "vending" ? TAB_BTN_ON : TAB_BTN_OFF}`}
               onClick={() => switchTab("vending")}
             >
@@ -314,6 +324,8 @@ export default function AdminPage() {
           </div>
 
           {tab === "vending" && <VendingAdminPanel />}
+
+          {tab === "members" && <MembershipAdminPanel />}
 
           {tab === "timeline" && <TimelineAdminPanel />}
 

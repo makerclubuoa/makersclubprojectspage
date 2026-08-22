@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!caller) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!process.env.RESEND_API_KEY) return NextResponse.json({ ok: true, skipped: true });
 
-  let reservedNotification: string | null = null;
+  let reservedNotification: { projectId: string; reservedAt: string } | null = null;
   try {
     const body = await req.json() as { type?: unknown; projectId?: unknown; change?: unknown };
     if (typeof body.projectId !== "string") {
@@ -36,14 +36,19 @@ export async function POST(req: NextRequest) {
       if (project.submitted_by !== caller.id && !isAdmin(caller)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
-      reservedNotification = `new-post:${body.projectId}`;
-      const { error: reserveError } = await supabaseAdmin
-        .from("notification_log")
-        .insert({ notification_key: reservedNotification });
-      if (reserveError?.code === "23505") {
+      const reservedAt = new Date().toISOString();
+      const { data: reservation, error: reserveError } = await supabaseAdmin
+        .from("Projects")
+        .update({ submission_notified_at: reservedAt })
+        .eq("id", body.projectId)
+        .is("submission_notified_at", null)
+        .select("id")
+        .maybeSingle();
+      if (!reservation && !reserveError) {
         return NextResponse.json({ ok: true, alreadySent: true });
       }
       if (reserveError) throw new Error(reserveError.message);
+      reservedNotification = { projectId: body.projectId, reservedAt };
       const { data: contactRow } = await supabaseAdmin
         .from("project_contacts")
         .select("contact")
@@ -87,7 +92,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (reservedNotification) {
-      await supabaseAdmin.from("notification_log").delete().eq("notification_key", reservedNotification);
+      await supabaseAdmin
+        .from("Projects")
+        .update({ submission_notified_at: null })
+        .eq("id", reservedNotification.projectId)
+        .eq("submission_notified_at", reservedNotification.reservedAt);
     }
     console.error("[notify]", error);
     return NextResponse.json({ error: "Notification failed" }, { status: 500 });

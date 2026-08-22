@@ -22,12 +22,33 @@ import { getRandomProduct } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const timelines: TimelineType[] = await getTimelineItems();
-  const makeathon = await getMakeathon();
-  const photos = await getPhotos();
-  const upcomingEvent = await getLatestUpcomingEvent();
-  const randomProduct = await getRandomProduct();
-  const projects = await fetchProjects();
+  // These sections come from independent external services. A temporary
+  // failure in one should hide only that section's live content, not turn the
+  // entire homepage into a 500 response.
+  const [timelineResult, makeathonResult, photosResult, eventResult, productResult, projectsResult] =
+    await Promise.allSettled([
+      getTimelineItems(),
+      getMakeathon(),
+      getPhotos(),
+      getLatestUpcomingEvent(),
+      getRandomProduct(),
+      fetchProjects(),
+    ]);
+
+  const timelines: TimelineType[] = timelineResult.status === "fulfilled" ? timelineResult.value : [];
+  const makeathon = makeathonResult.status === "fulfilled" ? makeathonResult.value : {
+    title: "Join our Make-A-Thon",
+    date: "Details coming soon",
+    description: ["Make something ambitious with other makers."],
+    image: "/placeholder.png",
+  };
+  const photos = photosResult.status === "fulfilled" ? photosResult.value : [];
+  const upcomingEvent = eventResult.status === "fulfilled" ? eventResult.value : null;
+  const randomProduct = productResult.status === "fulfilled" ? productResult.value : {
+    name: "Maker Club creations",
+    src: "/placeholder.png",
+  };
+  const projects = projectsResult.status === "fulfilled" ? projectsResult.value : [];
   const previewProjects = [...projects].sort(
     (a, b) => Number(b.Featured) - Number(a.Featured),
   );

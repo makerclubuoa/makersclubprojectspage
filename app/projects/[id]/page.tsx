@@ -3,13 +3,19 @@ import Link from "next/link";
 import Image from "next/image";
 import LikeButton from "@/app/components/LikeButton";
 import CommentsSection from "@/app/components/CommentsSection";
+import ProjectMediaPlayer from "@/app/components/ProjectMediaPlayer";
 import {
   fetchProject,
   fetchProjects,
   fetchMakerDisplay,
   categoryColor,
 } from "@/lib/projects";
-import { embedUrl, formatClock, providerLabel } from "@/lib/media";
+import {
+  embedUrl,
+  formatClock,
+  pickPreviewMedia,
+  providerLabel,
+} from "@/lib/media";
 import {
   container,
   pageWrap,
@@ -689,53 +695,69 @@ export default async function ProjectPage({
                       <span className={secHint}>three picks</span>
                     </div>
                     <div className="grid grid-cols-3 gap-4 max-[980px]:grid-cols-2 max-[720px]:grid-cols-1">
-                      {related.map((r) => (
-                        <Link
-                          key={r.id}
-                          href={`/projects/${r.id}`}
-                          className="group border-2 border-black bg-white flex flex-col no-underline text-inherit [transition:transform_0.2s_ease,box-shadow_0.2s] hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_#000]"
-                        >
-                          <div
-                            className="aspect-[4/3] relative overflow-hidden bg-cover bg-center border-b-2 border-black"
-                            style={
-                              r.image
-                                ? undefined
-                                : { backgroundImage: categoryColor(r.category) }
-                            }
+                      {related.map((r) => {
+                        const previewMedia = pickPreviewMedia(r.media);
+
+                        return (
+                          <article
+                            key={r.id}
+                            className="group relative border-2 border-black bg-white flex flex-col no-underline text-inherit [transition:transform_0.2s_ease,box-shadow_0.2s] hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_#000]"
                           >
-                            {r.image ? (
-                              <Image
-                                src={r.image}
-                                alt={r.title}
-                                fill
-                                sizes="(max-width: 720px) 100vw, (max-width: 980px) 50vw, 25vw"
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className={ph}>
-                                <span className={phLabel}>{r.title}</span>
-                              </div>
-                            )}
-                          </div>
-                          <h5 className="text-[15px] font-bold mx-[14px] mt-3 mb-1">
-                            {r.title}
-                          </h5>
-                          <p className="mx-[14px] mt-0 mb-[14px] text-ink-2 text-[10.5px] font-semibold tracking-[0.06em] uppercase">
-                            {r.category} ·{" "}
-                            {[
-                              ...(relatedMakerDisplays[r.id]?.names ??
-                                r.makers ??
-                                []),
-                              ...((relatedMakerDisplays[r.id]?.anonCount ?? 0) >
-                              0
-                                ? [
-                                    `+${relatedMakerDisplays[r.id].anonCount} others`,
-                                  ]
-                                : []),
-                            ].join(" + ")}
-                          </p>
-                        </Link>
-                      ))}
+                            <Link
+                              href={`/projects/${r.id}`}
+                              className="absolute inset-0 z-[1]"
+                              aria-label={`View ${r.title}`}
+                            />
+                            <div
+                              className="aspect-[4/3] relative overflow-hidden bg-cover bg-center border-b-2 border-black"
+                              style={
+                                r.image
+                                  ? undefined
+                                  : {
+                                      backgroundImage: categoryColor(r.category),
+                                    }
+                              }
+                            >
+                              {r.image ? (
+                                <Image
+                                  src={r.image}
+                                  alt={r.title}
+                                  fill
+                                  sizes="(max-width: 720px) 100vw, (max-width: 980px) 50vw, 25vw"
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className={ph}>
+                                  <span className={phLabel}>{r.title}</span>
+                                </div>
+                              )}
+                              {previewMedia && (
+                                <ProjectMediaPlayer
+                                  media={previewMedia}
+                                  poster={r.image}
+                                />
+                              )}
+                            </div>
+                            <h5 className="text-[15px] font-bold mx-[14px] mt-3 mb-1">
+                              {r.title}
+                            </h5>
+                            <p className="mx-[14px] mt-0 mb-[14px] text-ink-2 text-[10.5px] font-semibold tracking-[0.06em] uppercase">
+                              {r.category} ·{" "}
+                              {[
+                                ...(relatedMakerDisplays[r.id]?.names ??
+                                  r.makers ??
+                                  []),
+                                ...((relatedMakerDisplays[r.id]?.anonCount ??
+                                  0) > 0
+                                  ? [
+                                      `+${relatedMakerDisplays[r.id].anonCount} others`,
+                                    ]
+                                  : []),
+                              ].join(" + ")}
+                            </p>
+                          </article>
+                        );
+                      })}
                     </div>
                   </section>
                 )}

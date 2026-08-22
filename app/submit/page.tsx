@@ -15,6 +15,7 @@ import MediaUploader, {
   uploadMediaDrafts,
   type DraftMedia,
 } from "@/app/components/MediaUploader";
+import { searchCoMakerProfiles } from "@/lib/co-maker-search";
 import {
   container,
   projectBack,
@@ -185,6 +186,7 @@ export default function SubmitPage() {
   const [coMakers, setCoMakers] = useState<CoMakerProfile[]>([]);
   const [coMakerSearch, setCoMakerSearch] = useState("");
   const [coMakerResults, setCoMakerResults] = useState<CoMakerProfile[]>([]);
+  const [coMakerSearchError, setCoMakerSearchError] = useState("");
   const [showCoMakerDropdown, setShowCoMakerDropdown] = useState(false);
 
   // Tools
@@ -270,27 +272,27 @@ export default function SubmitPage() {
   useEffect(() => {
     if (!coMakerSearch.trim()) {
       setCoMakerResults([]);
+      setCoMakerSearchError("");
       return;
     }
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
-      const search = coMakerSearch.replace(/[,()%]/g, " ").trim();
-      const { data } = await supabase
-        .from("profiles")
-        .select(
-          "id, display_name, email, public_name, name_preference, credit_consented",
-        )
-        .or(
-          `display_name.ilike.%${search}%,public_name.ilike.%${search}%,email.ilike.%${search}%`,
-        )
-        .neq("id", user?.id ?? "")
-        .limit(6);
-      setCoMakerResults(
-        (data ?? []).filter(
+      try {
+        const data = await searchCoMakerProfiles(coMakerSearch, controller.signal);
+        setCoMakerSearchError("");
+        setCoMakerResults(data.filter(
           (r: { id: string }) => !coMakers.some((m) => m.id === r.id),
-        ),
-      );
+        ));
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setCoMakerResults([]);
+        setCoMakerSearchError(error instanceof Error ? error.message : "Co-maker search failed.");
+      }
     }, 250);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [coMakerSearch, coMakers, user]);
 
   // ── Makers ──────────────────────────────────────────
@@ -439,7 +441,7 @@ export default function SubmitPage() {
   }
 
   // ── Submit ───────────────────────────────────────────
-  async function handleSubmit(e: React.MouseEvent<HTMLButtonElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!user) {
@@ -809,7 +811,7 @@ export default function SubmitPage() {
                   </Link>
                 </div>
               ) : (
-                <div className={form}>
+                <form className={form} onSubmit={handleSubmit}>
                   <div className={formInner}>
                     <span className={formFig}>
                       Project submission
@@ -947,7 +949,10 @@ export default function SubmitPage() {
                           aria-expanded={showCoMakerDropdown && !!coMakerSearch.trim()}
                           aria-controls="f-co-maker-results"
                           onKeyDown={(event) => {
-                            if (event.key === "ArrowDown" && coMakerResults.length > 0) {
+                            if (event.key === "Enter" && coMakerResults.length > 0) {
+                              event.preventDefault();
+                              addCoMaker(coMakerResults[0]);
+                            } else if (event.key === "ArrowDown" && coMakerResults.length > 0) {
                               event.preventDefault();
                               document.getElementById("f-co-maker-option-0")?.focus();
                             } else if (event.key === "Escape") {
@@ -987,7 +992,7 @@ export default function SubmitPage() {
                               ))
                             ) : (
                               <div className={makersDropdownEmpty}>
-                                No users found
+                                {coMakerSearchError || "No users found"}
                               </div>
                             )}
                           </div>
@@ -1703,8 +1708,8 @@ export default function SubmitPage() {
                         )}
                       </span>
                       <button
+                        type="submit"
                         className={btnGradient}
-                        onClick={handleSubmit}
                         disabled={submitting}
                       >
                         {submitting ? "Submitting…" : "Submit it"}{" "}
@@ -1712,7 +1717,7 @@ export default function SubmitPage() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </form>
               )}
             </div>
           </div>

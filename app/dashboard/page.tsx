@@ -64,7 +64,7 @@ function statusLabel(status: string | null, featured: boolean | null) {
 }
 
 export default function DashboardPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, session, profile, loading } = useAuth();
   const router = useRouter();
 
   const [myProjects, setMyProjects] = useState<
@@ -86,6 +86,9 @@ export default function DashboardPage() {
   const [creditConsented, setCreditConsented] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+  const [newsletterLoading, setNewsletterLoading] = useState(true);
+  const [newsletterSaving, setNewsletterSaving] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [showNameModal, setShowNameModal] = useState(false);
@@ -114,6 +117,24 @@ export default function DashboardPage() {
     );
     setCreditConsented(profile.credit_consented ?? false);
   }, [profile]);
+
+  useEffect(() => {
+    if (!session) return;
+    setNewsletterLoading(true);
+    fetch("/api/profile/newsletter", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      cache: "no-store",
+    })
+      .then(async response => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? "Newsletter preference could not be loaded.");
+        setNewsletterSubscribed(data.subscribed === true);
+      })
+      .catch(error => setDashboardError(
+        error instanceof Error ? error.message : "Newsletter preference could not be loaded.",
+      ))
+      .finally(() => setNewsletterLoading(false));
+  }, [session]);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login?next=/dashboard");
@@ -224,6 +245,34 @@ export default function DashboardPage() {
     }
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
+  }
+
+  async function updateNewsletterSubscription(subscribed: boolean) {
+    if (!session || newsletterSaving) return;
+    const previous = newsletterSubscribed;
+    setNewsletterSubscribed(subscribed);
+    setNewsletterSaving(true);
+    setDashboardError(null);
+    try {
+      const response = await fetch("/api/profile/newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ subscribed }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Newsletter preference could not be saved.");
+      setNewsletterSubscribed(data.subscribed === true);
+    } catch (error) {
+      setNewsletterSubscribed(previous);
+      setDashboardError(
+        error instanceof Error ? error.message : "Newsletter preference could not be saved.",
+      );
+    } finally {
+      setNewsletterSaving(false);
+    }
   }
 
   async function handleDelete(id: string) {
@@ -425,6 +474,27 @@ export default function DashboardPage() {
                       : "name"}{" "}
                     appears publicly on projects you submit or are added to as a
                     co-maker. Leave unchecked to stay anonymous.
+                  </span>
+                </label>
+              </div>
+
+              <div className={`${field} mt-4 mb-0`}>
+                <label className="flex flex-col gap-1.5 normal-case tracking-normal text-[13px] text-ink">
+                  <span className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={newsletterSubscribed}
+                      disabled={newsletterLoading || newsletterSaving}
+                      onChange={event => void updateNewsletterSubscription(event.target.checked)}
+                      className="w-auto m-0 accent-pop-magenta"
+                    />
+                    <span className="font-semibold">
+                      {newsletterLoading ? "Loading email preference…" : "Email me Maker Club updates"}
+                    </span>
+                  </span>
+                  <span className="text-[11px] font-medium text-ink-2 pl-6">
+                    This changes your Ghost newsletter subscription. Unsubscribing keeps your
+                    Maker Club profile, projects and membership.
                   </span>
                 </label>
               </div>

@@ -124,6 +124,9 @@ export default function Nav() {
         <Link href="/about" className={NAVLINK} onClick={close}>
           About
         </Link>
+        <Link href="/join" className={NAVLINK} onClick={close}>
+          Join
+        </Link>
         <Link href="/faq" className={NAVLINK} onClick={close}>
           FAQ
         </Link>

@@ -57,7 +57,7 @@ export default async function About() {
             </div>
             <div>
               <LinkButton
-                link={process.env.NEXT_PUBLIC_SIGN_UP!}
+                link="/join"
                 bgColour="pop-red"
                 textColour="white"
               >

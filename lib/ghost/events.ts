@@ -76,13 +76,19 @@ function isPastEvent(event: PostsOrPages[number]) {
 
 /** All events whose #DATE: tag hasn't passed yet, soonest-starting first. */
 export async function getUpcomingEvents(limit: number = 12): Promise<Event[]> {
-  const events: PostsOrPages = await api().posts.browse({
-    filter: "tag:Events",
-    formats: "html",
-    limit: 50,
-    order: "published_at DESC",
-    include: "tags",
-  });
+  let events: PostsOrPages;
+  try {
+    events = await api().posts.browse({
+      filter: "tag:Events",
+      formats: "html",
+      limit: 50,
+      order: "published_at DESC",
+      include: "tags",
+    });
+  } catch (error) {
+    console.warn("[ghost-events] Could not load upcoming events", error);
+    return [];
+  }
 
   // Ghost posts are ordered by publish date, not event date, so this has to
   // scan and re-sort rather than trust the API's ordering.
@@ -109,13 +115,19 @@ export async function getPastEvents(
   offset: number = 12,
   page: number = 1,
 ): Promise<{ pastEvents: Event[]; skip: number; hasMore: boolean }> {
-  const pastEvents: PostsOrPages = await api().posts.browse({
-    filter: "tag:Events",
-    formats: "html",
-    page: page,
-    limit: offset,
-    include: "tags",
-  });
+  let pastEvents: PostsOrPages;
+  try {
+    pastEvents = await api().posts.browse({
+      filter: "tag:Events",
+      formats: "html",
+      page: page,
+      limit: offset,
+      include: "tags",
+    });
+  } catch (error) {
+    console.warn("[ghost-events] Could not load past events", error);
+    return { pastEvents: [], skip: offset, hasMore: false };
+  }
 
   let res: Event[] = [];
   let total = 0;
@@ -142,13 +154,19 @@ export async function getPastEvents(
   //NOTE: total is the number of valid past events.
 
   if (page === 1) {
-    const additionalPastEvents: PostsOrPages = await api().posts.browse({
-      filter: "tag:Events",
-      formats: "html",
-      page: 1,
-      limit: 12 - total + 12,
-      include: "tags",
-    });
+    let additionalPastEvents: PostsOrPages;
+    try {
+      additionalPastEvents = await api().posts.browse({
+        filter: "tag:Events",
+        formats: "html",
+        page: 1,
+        limit: 12 - total + 12,
+        include: "tags",
+      });
+    } catch (error) {
+      console.warn("[ghost-events] Could not load the additional past-event page", error);
+      return { pastEvents: res, skip: offset, hasMore: false };
+    }
 
     const countNotPast = 12 - total;
 

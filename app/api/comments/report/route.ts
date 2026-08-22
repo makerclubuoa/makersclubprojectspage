@@ -28,10 +28,13 @@ export async function POST(req: NextRequest) {
 
   const { data: comment } = await supabaseAdmin
     .from("comments")
-    .select("id, project_id, author_name, body")
+    .select("id, project_id, author_name, body, reported_at")
     .eq("id", body.comment_id)
     .single();
   if (!comment) return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+  if (comment.reported_at) {
+    return NextResponse.json({ ok: true, alreadyReported: true });
+  }
 
   const { data: project } = await supabaseAdmin
     .from("Projects")
@@ -39,11 +42,15 @@ export async function POST(req: NextRequest) {
     .eq("id", comment.project_id)
     .single();
 
-  const { error: reserveError } = await supabaseAdmin.from("comment_reports").insert({
-    comment_id: comment.id,
-    reporter_id: user.id,
-  });
-  if (reserveError?.code === "23505") {
+  const reportedAt = new Date().toISOString();
+  const { data: reservation, error: reserveError } = await supabaseAdmin
+    .from("comments")
+    .update({ reported_at: reportedAt })
+    .eq("id", comment.id)
+    .is("reported_at", null)
+    .select("id")
+    .maybeSingle();
+  if (!reservation && !reserveError) {
     return NextResponse.json({ ok: true, alreadyReported: true });
   }
   if (reserveError) return NextResponse.json({ error: "Could not record report" }, { status: 500 });
@@ -62,8 +69,11 @@ export async function POST(req: NextRequest) {
 </div>`,
   });
   if (result.error) {
-    await supabaseAdmin.from("comment_reports").delete()
-      .eq("comment_id", comment.id).eq("reporter_id", user.id);
+    await supabaseAdmin
+      .from("comments")
+      .update({ reported_at: null })
+      .eq("id", comment.id)
+      .eq("reported_at", reportedAt);
     return NextResponse.json({ error: "Failed to send report" }, { status: 502 });
   }
 

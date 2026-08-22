@@ -13,6 +13,7 @@ import { CATEGORIES, resolvePublicName, type Project } from '@/lib/projects'
 import { compressForUpload, imageFileError } from '@/lib/image-compress'
 import CustomSelect from '@/app/components/CustomSelect'
 import MediaUploader, { draftFromStored, uploadMediaDrafts, type DraftMedia } from '@/app/components/MediaUploader'
+import { searchCoMakerProfiles } from '@/lib/co-maker-search'
 import {
   secHead, secHeadRow, secHint,
   pageWrap, pageBand, pageBandTitle, pageBandDoodle, submitMain,
@@ -84,6 +85,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const [coMakers, setCoMakers]                       = useState<CoMakerProfile[]>([])
   const [coMakerSearch, setCoMakerSearch]             = useState('')
   const [coMakerResults, setCoMakerResults]           = useState<CoMakerProfile[]>([])
+  const [coMakerSearchError, setCoMakerSearchError]   = useState('')
   const [showCoMakerDropdown, setShowCoMakerDropdown] = useState(false)
 
   // Tools
@@ -224,20 +226,20 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   }, [user, id, router])
 
   useEffect(() => {
-    if (!coMakerSearch.trim()) { setCoMakerResults([]); return }
+    if (!coMakerSearch.trim()) { setCoMakerResults([]); setCoMakerSearchError(''); return }
+    const controller = new AbortController()
     const timer = setTimeout(async () => {
-      const search = coMakerSearch.replace(/[,()%]/g, ' ').trim()
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, display_name, email, public_name, name_preference, credit_consented')
-        .or(`display_name.ilike.%${search}%,public_name.ilike.%${search}%,email.ilike.%${search}%`)
-        .neq('id', user?.id ?? '')
-        .limit(6)
-      setCoMakerResults(
-        (data ?? []).filter((r: { id: string }) => !coMakers.some(m => m.id === r.id))
-      )
+      try {
+        const data = await searchCoMakerProfiles(coMakerSearch, controller.signal)
+        setCoMakerSearchError('')
+        setCoMakerResults(data.filter((r: { id: string }) => !coMakers.some(m => m.id === r.id)))
+      } catch (error) {
+        if (controller.signal.aborted) return
+        setCoMakerResults([])
+        setCoMakerSearchError(error instanceof Error ? error.message : 'Co-maker search failed.')
+      }
     }, 250)
-    return () => clearTimeout(timer)
+    return () => { clearTimeout(timer); controller.abort() }
   }, [coMakerSearch, coMakers, user])
 
   const isAdmin = user?.email === 'makerclubuoa@gmail.com'
@@ -624,7 +626,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                           <span className={makersDropdownName}>{r.display_name}</span>
                           <span className={makersDropdownEmail}>{r.email ?? (r.credit_consented ? 'can be credited' : 'will appear anonymous')}</span>
                         </button>
-                      )) : <div className={makersDropdownEmpty}>No users found</div>}
+                      )) : <div className={makersDropdownEmpty}>{coMakerSearchError || 'No users found'}</div>}
                     </div>
                   )}
                 </div>

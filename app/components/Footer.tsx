@@ -34,6 +34,11 @@ export default function Footer() {
 
         <ul className="list-none p-0 m-0 flex flex-col gap-3 mb-8 max-w-[70%] md:max-w-none">
           <li>
+            <Link className={FOOTERLINK} href="/join">
+              Join Maker Club
+            </Link>
+          </li>
+          <li>
             <Link className={FOOTERLINK} href="/about">
               About
             </Link>
@@ -63,7 +68,7 @@ export default function Footer() {
         <div>
           <Socials />
           <LinkButton
-            link={process.env.NEXT_PUBLIC_SIGN_UP!}
+            link="/join"
             bgColour="pop-pink"
             textColour="white"
           >
