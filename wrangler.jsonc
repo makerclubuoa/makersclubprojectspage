@@ -9,7 +9,7 @@
     "NEXT_PUBLIC_GHOST_URL": "https://makeuoa.nz",
     "RESEND_FROM": "MAKE_UOA <noreply@makeuoa.nz>",
     "NEXT_PUBLIC_BASE_URL": "https://projects.makeuoa.nz",
-    "NEXT_PUBLIC_GHOST_CONTENT_API_KEY": "c75dced5a6f93991260f2509f8",
+    "NEXT_PUBLIC_GHOST_CONTENT_API_KEY": "32da50779fcc47dbe2b3f97330",
   },
   "assets": {
     "directory": ".open-next/assets",
