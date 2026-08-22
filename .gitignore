@@ -22,3 +22,5 @@ tsconfig.tsbuildinfo
 !.env.example
 .claude/settings.local.json
 scripts/**
+docs
+supabase
