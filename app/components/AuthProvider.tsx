@@ -42,12 +42,16 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('display_name, public_name, name_preference, credit_consented, membership_year, study_years_remaining, study_years_as_of_year, expected_graduation_year')
-      .eq('id', userId)
-      .single()
-    if (data) setProfile(data as Profile)
+    const { data: { session: currentSession } } = await supabase.auth.getSession()
+    if (!currentSession?.user || currentSession.user.id !== userId) return
+    const response = await fetch('/api/profile/account', {
+      headers: { Authorization: `Bearer ${currentSession.access_token}` },
+    })
+    if (!response.ok) {
+      setProfile(null)
+      return
+    }
+    setProfile(await response.json() as Profile)
   }
 
   // Mirror the signed-in user into Ghost (two-way sync during the Ghost transition).

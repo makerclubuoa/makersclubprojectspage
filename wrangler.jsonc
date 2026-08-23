@@ -6,7 +6,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "minify": true,
   "vars": {
-    "NEXT_PUBLIC_GHOST_URL": "https://makeuoa.nz",
+    // projects.makeuoa.nz is the development/staging site. Ghost is always
+    // reached through its backend hostname, never through the public app.
+    "NEXT_PUBLIC_GHOST_URL": "https://ghost.makeuoa.nz",
     "RESEND_FROM": "MAKE_UOA <noreply@makeuoa.nz>",
     "NEXT_PUBLIC_BASE_URL": "https://projects.makeuoa.nz",
     "NEXT_PUBLIC_GHOST_CONTENT_API_KEY":"b17df4b6695cec37e18795bb7b",

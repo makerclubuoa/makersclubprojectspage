@@ -214,39 +214,38 @@ export default function DashboardPage() {
   }
 
   async function saveProfile() {
-    if (!user) return;
+    if (!user || !session) return;
     setUsernameError(null);
     setDashboardError(null);
     const trimmed = publicName.trim();
-    if (trimmed) {
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("public_name", trimmed)
-        .neq("id", user.id)
-        .maybeSingle();
-      if (existing) {
-        setUsernameError("That username is already taken.");
-        return;
-      }
-    }
     setProfileSaving(true);
     setProfileSaved(false);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
+    try {
+      const response = await fetch("/api/profile/account", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
         public_name: trimmed || null,
         name_preference: namePreference,
         credit_consented: creditConsented,
-      })
-      .eq("id", user.id);
-    setProfileSaving(false);
-    if (error) {
-      setDashboardError(`Profile was not saved: ${error.message}`);
-      return;
+        }),
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) {
+        if (response.status === 409) setUsernameError(data.error ?? "That username is already taken.");
+        else setDashboardError(`Profile was not saved: ${data.error ?? "Unknown error"}`);
+        return;
+      }
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 3000);
+    } catch {
+      setDashboardError("Profile was not saved: the server could not be reached.");
+    } finally {
+      setProfileSaving(false);
     }
-    setProfileSaved(true);
-    setTimeout(() => setProfileSaved(false), 3000);
   }
 
   async function updateNewsletterSubscription(subscribed: boolean) {

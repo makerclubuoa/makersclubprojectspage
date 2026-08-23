@@ -46,6 +46,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "ghost.makeuoa.nz",
+        port: "",
+        pathname: "/content/images/**",
+      },
       ...(supabaseHost
         ? [
             {

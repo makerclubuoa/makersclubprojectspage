@@ -465,12 +465,21 @@ export default function SubmitPage() {
     }
 
     if (profile && !hideName !== (profile.credit_consented ?? true)) {
-      const { error: consentError } = await supabase
-        .from("profiles")
-        .update({ credit_consented: !hideName })
-        .eq("id", user.id);
-      if (consentError) {
-        setSubmitError(`Your name preference could not be saved: ${consentError.message}`);
+      const preferenceResponse = await fetch("/api/profile/account", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          public_name: profile.public_name,
+          name_preference: profile.name_preference === "public_name" ? "public_name" : "name",
+          credit_consented: !hideName,
+        }),
+      });
+      if (!preferenceResponse.ok) {
+        const result = await preferenceResponse.json().catch(() => null) as { error?: string } | null;
+        setSubmitError(`Your name preference could not be saved: ${result?.error ?? "unknown error"}`);
         return;
       }
     }
