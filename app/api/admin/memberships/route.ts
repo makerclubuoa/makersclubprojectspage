@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { upsertGhostMember } from "@/lib/ghost-admin";
+import { deleteGhostMember, upsertGhostMember } from "@/lib/ghost-admin";
+import { deleteSupabaseAccount } from "@/lib/account-deletion";
 import {
   currentMembershipYear,
   membershipYearLabel,
@@ -53,10 +54,12 @@ export async function GET(req: NextRequest) {
 }
 
 type AdminAction =
-  { action: "retry_member_sync"; profile_id: string };
+  | { action: "retry_member_sync"; profile_id: string }
+  | { action: "delete_member"; profile_id: string; confirmation: "DELETE" };
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin(req))) {
+  const admin = await requireAdmin(req);
+  if (!admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -111,6 +114,36 @@ export async function POST(req: NextRequest) {
         .update({ membership_sync_status: "failed", membership_sync_error: message.slice(0, 1000) })
         .eq("id", profile.id);
       return NextResponse.json({ error: message }, { status: 502 });
+    }
+  }
+
+  if (body.action === "delete_member") {
+    if (body.confirmation !== "DELETE") {
+      return NextResponse.json({ error: "Type DELETE to confirm member deletion." }, { status: 400 });
+    }
+    if (body.profile_id === admin.id) {
+      return NextResponse.json({ error: "You cannot delete your own admin account here." }, { status: 400 });
+    }
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, email")
+      .eq("id", body.profile_id)
+      .maybeSingle();
+    if (profileError || !profile?.email) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    try {
+      // Match self-service deletion: remove Ghost first, then all website data.
+      await deleteGhostMember(profile.email.toLowerCase());
+      const result = await deleteSupabaseAccount(profile.id);
+      return NextResponse.json({ ok: true, ...result });
+    } catch (error) {
+      console.error("[admin-memberships] member deletion", error);
+      return NextResponse.json(
+        { error: "The member account could not be fully deleted. Nothing shared was deleted; please try again." },
+        { status: 500 },
+      );
     }
   }
 

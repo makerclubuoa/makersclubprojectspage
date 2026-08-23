@@ -47,7 +47,7 @@ export default function MembershipAdminPanel() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(20);
   const [sortKey, setSortKey] = useState<SortKey>("last_signup");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -140,6 +140,17 @@ export default function MembershipAdminPanel() {
     }
     setSortKey(nextKey);
     setSortDirection(nextKey === "last_signup" ? "desc" : "asc");
+  }
+
+  function deleteMember(profile: MembershipProfile) {
+    const label = profile.display_name ?? profile.email;
+    if (!window.confirm(`Delete ${label}'s account, membership, comments, likes, and any solo projects? Shared projects will remain. This cannot be undone.`)) {
+      return;
+    }
+    void action(
+      { action: "delete_member", profile_id: profile.id, confirmation: "DELETE" },
+      `${label}'s account was deleted.`,
+    );
   }
 
   function exportCsv() {
@@ -266,6 +277,13 @@ export default function MembershipAdminPanel() {
                             `${profile.display_name ?? profile.email}'s Ghost membership synced.`,
                           )}>Retry</button>
                         )}
+                        <button
+                          className="block mt-2 text-[10px] font-bold uppercase underline text-pop-red"
+                          disabled={busy}
+                          onClick={() => deleteMember(profile)}
+                        >
+                          Delete user
+                        </button>
                       </td>
                       <td className="p-3 text-ink-2 whitespace-nowrap">
                         {profile.membership_year ?? "Before tracking"}<br />
