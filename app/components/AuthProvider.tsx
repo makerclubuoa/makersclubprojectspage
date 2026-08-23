@@ -9,6 +9,10 @@ interface Profile {
   public_name: string | null
   name_preference: string | null
   credit_consented: boolean
+  membership_year: number | null
+  study_years_remaining: number | null
+  study_years_as_of_year: number | null
+  expected_graduation_year: number | null
 }
 
 interface AuthContextType {
@@ -40,7 +44,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string) {
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, public_name, name_preference, credit_consented')
+      .select('display_name, public_name, name_preference, credit_consented, membership_year, study_years_remaining, study_years_as_of_year, expected_graduation_year')
       .eq('id', userId)
       .single()
     if (data) setProfile(data as Profile)

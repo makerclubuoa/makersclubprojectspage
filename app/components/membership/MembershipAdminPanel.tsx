@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { currentMembershipYear, type MembershipProfile } from "@/lib/membership";
+import { currentMembershipYear, currentStudyYearsRemaining, type MembershipProfile } from "@/lib/membership";
 import { btnGhost, dashStatus, emptyState, fieldInput, secHead } from "@/lib/ui";
 
 type Snapshot = { profiles: MembershipProfile[] };
@@ -253,7 +253,7 @@ export default function MembershipAdminPanel() {
                       <td className="p-3 font-semibold">{profile.upi ?? "—"}<br /><span className="text-ink-2">{profile.student_id ?? "—"}</span></td>
                       <td className="p-3 font-semibold">{profile.faculty ?? "—"}</td>
                       <td className="p-3">
-                        {profile.study_years_remaining == null ? "Unknown" : `${profile.study_years_remaining} yr${profile.study_years_remaining === 1 ? "" : "s"} left`}
+                        {currentStudyYearsRemaining(profile) == null ? "Unknown" : `${currentStudyYearsRemaining(profile)} yr${currentStudyYearsRemaining(profile) === 1 ? "" : "s"} left`}
                         {profile.expected_graduation_year != null && <><br /><span className="text-ink-2">Graduates: {profile.expected_graduation_year}</span></>}
                       </td>
                       <td className="p-3">

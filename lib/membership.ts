@@ -130,3 +130,15 @@ export function currentMembershipYear(now = new Date()): number {
 export function membershipYearLabel(year: number): string {
   return `${year} Signup Form`;
 }
+
+/** Returns the current years remaining from a value recorded in a prior year. */
+export function currentStudyYearsRemaining(
+  profile: Pick<MembershipProfile, "membership_year" | "study_years_remaining" | "study_years_as_of_year">,
+  now = new Date(),
+): number | null {
+  if (profile.study_years_remaining == null) return null;
+  // Earlier signups used membership_year as the only available baseline.
+  const asOfYear = profile.study_years_as_of_year ?? profile.membership_year;
+  if (asOfYear == null) return profile.study_years_remaining;
+  return Math.max(0, profile.study_years_remaining - (currentMembershipYear(now) - asOfYear));
+}

@@ -11,6 +11,7 @@ import Pagination from "@/app/components/Pagination";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { resolvePublicName, type Project } from "@/lib/projects";
+import { currentStudyYearsRemaining } from "@/lib/membership";
 import {
   container,
   holt,
@@ -83,6 +84,10 @@ export default function DashboardPage() {
   const [creditConsented, setCreditConsented] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [studyYears, setStudyYears] = useState("");
+  const [expectedGraduationYear, setExpectedGraduationYear] = useState<number | null>(null);
+  const [studySaving, setStudySaving] = useState(false);
+  const [studySaved, setStudySaved] = useState(false);
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
   const [newsletterLoading, setNewsletterLoading] = useState(true);
   const [newsletterSaving, setNewsletterSaving] = useState(false);
@@ -116,6 +121,9 @@ export default function DashboardPage() {
       (profile.name_preference as "name" | "public_name") ?? "name",
     );
     setCreditConsented(profile.credit_consented ?? false);
+    const currentYears = currentStudyYearsRemaining(profile);
+    setStudyYears(currentYears == null ? "none" : String(currentYears));
+    setExpectedGraduationYear(profile.expected_graduation_year);
   }, [profile]);
 
   useEffect(() => {
@@ -266,6 +274,33 @@ export default function DashboardPage() {
       );
     } finally {
       setNewsletterSaving(false);
+    }
+  }
+
+  async function saveStudyDetails() {
+    if (!session || studySaving) return;
+    setStudySaving(true);
+    setStudySaved(false);
+    setDashboardError(null);
+    try {
+      const study_years_remaining = studyYears === "none" ? null : Number(studyYears);
+      const response = await fetch("/api/profile/study", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ study_years_remaining }),
+      });
+      const data = await response.json() as { expected_graduation_year?: number | null; error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Study details could not be saved.");
+      setExpectedGraduationYear(data.expected_graduation_year ?? null);
+      setStudySaved(true);
+      setTimeout(() => setStudySaved(false), 3000);
+    } catch (error) {
+      setDashboardError(error instanceof Error ? error.message : "Study details could not be saved.");
+    } finally {
+      setStudySaving(false);
     }
   }
 
@@ -565,6 +600,40 @@ export default function DashboardPage() {
                   </span>
                 </label>
               </div>
+
+              {profile?.membership_year && (
+                <div className={`${field} mt-6 mb-0 border-t-2 border-black/15 pt-5`}>
+                  <label className={fieldLabel} htmlFor="profile-study-years">
+                    Years left in university
+                  </label>
+                  <select
+                    id="profile-study-years"
+                    className={fieldInput}
+                    value={studyYears}
+                    onChange={event => setStudyYears(event.target.value)}
+                  >
+                    <option value="none">Not currently studying at UoA</option>
+                    <option value="0">Finished / graduated</option>
+                    {Array.from({ length: 20 }, (_, index) => index + 1).map(year => (
+                      <option key={year} value={year}>{year} {year === 1 ? "year" : "years"}</option>
+                    ))}
+                  </select>
+                  <span className="text-[11px] font-medium text-ink-2 mt-1.5">
+                    {expectedGraduationYear == null
+                      ? "This is stored as not currently studying."
+                      : `Expected graduation: ${expectedGraduationYear}.`}
+                  </span>
+                  <button
+                    type="button"
+                    className={`${btnGradient} mt-3`}
+                    onClick={() => void saveStudyDetails()}
+                    disabled={studySaving}
+                  >
+                    {studySaving ? "Savingâ€¦" : studySaved ? "âœ“ Saved" : "Save study details"}
+                    <span className={btnArr}>â†’</span>
+                  </button>
+                </div>
+              )}
 
               <div className={formActions}>
                 <span className={formActionsSmall}>
