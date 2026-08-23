@@ -139,7 +139,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
         .single()
 
       if (!data) { router.replace('/dashboard'); return }
-      const isMaker = data.submitted_by === user!.id || (data.maker_ids ?? []).includes(user!.id)
+      const makerIds = (data.maker_ids ?? []) as string[]
+      const isMaker = makerIds.length ? makerIds.includes(user!.id) : data.submitted_by === user!.id
       if (user!.email !== 'makerclubuoa@gmail.com' && !isMaker) { setNotAllowed(true); setFetching(false); return }
 
       setProject(data as Project)
@@ -159,10 +160,10 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       setBuildTime(data.build_time ?? '')
       setGithub(data.github ?? '')
       setWebsite(data.website ?? '')
-      // Load real profiles for submitted_by + maker_ids
+      // maker_ids is the equal-owner list. submitted_by is only the contact
+      // fallback for legacy projects that have not yet been edited.
       const submittedBy = data.submitted_by as string | null
-      const makerIds = (data.maker_ids ?? []) as string[]
-      const allIds = Array.from(new Set([...(submittedBy ? [submittedBy] : []), ...makerIds]))
+      const allIds = makerIds.length ? makerIds : (submittedBy ? [submittedBy] : [])
       let realProfiles: CoMakerProfile[] = []
       if (allIds.length > 0) {
         const { data: profiles } = await supabase
@@ -171,13 +172,9 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
           .in('id', allIds)
         realProfiles = (profiles ?? []) as CoMakerProfile[]
       }
-      // Order: submitted_by first, then remaining maker_ids
+      // Preserve the makers' selected order; no maker is privileged.
       const orderedProfiles: CoMakerProfile[] = []
-      if (submittedBy) {
-        const found = realProfiles.find(p => p.id === submittedBy)
-        if (found) orderedProfiles.push(found)
-      }
-      for (const mid of makerIds) {
+      for (const mid of allIds) {
         if (!orderedProfiles.some(p => p.id === mid)) {
           const found = realProfiles.find(p => p.id === mid)
           if (found) orderedProfiles.push(found)
@@ -243,12 +240,8 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   }, [coMakerSearch, coMakers, user])
 
   const isAdmin = user?.email === 'makerclubuoa@gmail.com'
-  const isProjectOwner = project?.submitted_by === user?.id
-
   function canRemoveMaker(makerId: string): boolean {
-    if (isAdmin || isProjectOwner) return true
-    if (makerId.startsWith('name:')) return false
-    return makerId === user?.id
+    return isAdmin || !makerId.startsWith('name:')
   }
 
   function handleRemoveMaker(makerId: string) {

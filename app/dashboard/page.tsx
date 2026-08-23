@@ -47,7 +47,6 @@ import {
   dashStatusDraft,
   dashStatusRejected,
   dashStatusLiked,
-  dashStatusComaker,
   dashRowEdit,
   dashRowDelete,
 } from "@/lib/ui";
@@ -67,9 +66,7 @@ export default function DashboardPage() {
   const { user, session, profile, loading } = useAuth();
   const router = useRouter();
 
-  const [myProjects, setMyProjects] = useState<
-    (Project & { _role: "owner" | "co-maker" })[]
-  >([]);
+  const [myProjects, setMyProjects] = useState<Project[]>([]);
   const [likedProjects, setLikedProjects] = useState<Project[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -148,42 +145,36 @@ export default function DashboardPage() {
     async function load() {
       setDataLoading(true);
       setDashboardError(null);
-      const [mineResult, coMakerResult, likesResult] = await Promise.all([
+      const [legacyResult, memberResult, likesResult] = await Promise.all([
           supabase
             .from("Projects")
             .select("*")
             .eq("submitted_by", user!.id)
+            .is("maker_ids", null)
             .order("date", { ascending: false }),
           supabase
             .from("Projects")
             .select("*")
             .contains("maker_ids", [user!.id])
-            .neq("submitted_by", user!.id)
             .order("date", { ascending: false }),
           supabase
             .from("user_likes")
             .select("project_id")
             .eq("user_id", user!.id),
       ]);
-      const loadError = mineResult.error ?? coMakerResult.error ?? likesResult.error;
+      const loadError = legacyResult.error ?? memberResult.error ?? likesResult.error;
       if (loadError) {
         setDashboardError(`Dashboard could not be loaded: ${loadError.message}`);
         setDataLoading(false);
         return;
       }
-      const mine = mineResult.data;
-      const coMakerOf = coMakerResult.data;
+      const legacy = legacyResult.data;
+      const memberOf = memberResult.data;
       const likeRows = likesResult.data;
 
-      const owned = (mine ?? []).map((p: Project) => ({
-        ...p,
-        _role: "owner" as const,
-      }));
-      const coMade = (coMakerOf ?? []).map((p: Project) => ({
-        ...p,
-        _role: "co-maker" as const,
-      }));
-      setMyProjects([...owned, ...coMade]);
+      setMyProjects([...new Map(
+        [...(legacy ?? []), ...(memberOf ?? [])].map((project: Project) => [project.id, project]),
+      ).values()]);
 
       if (likeRows && likeRows.length > 0) {
         const ids = likeRows.map((r: { project_id: string }) => r.project_id);
@@ -627,7 +618,7 @@ export default function DashboardPage() {
           {/* My Projects */}
           <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
             <h2 className={`${holt} text-3xl md:text-4xl text-white m-0`}>
-              My Submissions
+              My Projects
             </h2>
             <Link
               href="/submit"
@@ -662,7 +653,6 @@ export default function DashboardPage() {
                   <div className={dashTable}>
                     {myPaginated.map((p) => {
                       const { text, cls } = statusLabel(p.status, p.Featured);
-                      const isOwner = p._role === "owner";
                       return (
                         <div key={p.id} className={dashRow}>
                           <div className={dashRowMain}>
@@ -690,17 +680,7 @@ export default function DashboardPage() {
                               )}
                             </span>
                           </div>
-                          {isOwner ? (
-                            <span className={`${dashStatus} ${cls}`}>
-                              {text}
-                            </span>
-                          ) : (
-                            <span
-                              className={`${dashStatus} ${dashStatusComaker}`}
-                            >
-                              Shared owner
-                            </span>
-                          )}
+                          <span className={`${dashStatus} ${cls}`}>{text}</span>
                           <Link
                             href={`/projects/${p.id}/edit`}
                             className={dashRowEdit}
@@ -711,7 +691,7 @@ export default function DashboardPage() {
                             className={dashRowDelete}
                             onClick={() => handleDelete(p.id)}
                             disabled={deletingId === p.id}
-                            title={isOwner ? "Remove project" : "Remove shared project for everyone"}
+                            title="Remove project for everyone"
                           >
                             {deletingId === p.id ? "…" : "✕ Remove"}
                           </button>

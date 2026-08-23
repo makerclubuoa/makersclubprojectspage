@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { isAdmin, userFromRequest } from '@/lib/server-auth'
+import { canManageProject } from '@/lib/project-members'
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await userFromRequest(req)
@@ -19,15 +20,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const isCommentAuthor = comment.user_id === user.id
 
-  // Every named maker has full project ownership for moderation purposes.
+  // Every project maker has equal moderation rights.
   const { data: project } = await supabaseAdmin
     .from('Projects')
     .select('submitted_by, maker_ids')
     .eq('id', comment.project_id)
     .single()
 
-  const isProjectOwner = project?.submitted_by === user.id
-    || (project?.maker_ids ?? []).includes(user.id)
+  const isProjectOwner = Boolean(project && canManageProject(project, user.id))
   const admin = isAdmin(user)
 
   if (!isCommentAuthor && !isProjectOwner && !admin) {

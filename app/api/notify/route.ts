@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { isAdmin, userFromRequest } from "@/lib/server-auth";
+import { canManageProject } from "@/lib/project-members";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = "makerclubuoa@gmail.com";
@@ -29,11 +30,11 @@ export async function POST(req: NextRequest) {
     if (body.type === "new-post") {
       const { data: project } = await supabaseAdmin
         .from("Projects")
-        .select("id, title, blurb, category, makers, submitted_by")
+        .select("id, title, blurb, category, makers, submitted_by, maker_ids")
         .eq("id", body.projectId)
         .single();
       if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
-      if (project.submitted_by !== caller.id && !isAdmin(caller)) {
+      if (!isAdmin(caller) && !canManageProject(project, caller.id)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       const reservedAt = new Date().toISOString();

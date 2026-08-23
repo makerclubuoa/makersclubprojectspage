@@ -16,6 +16,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
     }
     const project = validatedProjectWrite(body.project);
+    const requestedMakerIds = Array.isArray(project.maker_ids) ? project.maker_ids as string[] : [];
+    const makerIds = [...new Set([user.id, ...requestedMakerIds])];
+    const { data: memberProfiles, error: memberLookupError } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .in("id", makerIds);
+    if (memberLookupError || memberProfiles?.length !== makerIds.length) {
+      return NextResponse.json({ error: "Every maker must have a valid Maker Club account." }, { status: 400 });
+    }
     const row = {
       ...project,
       id: body.id,
@@ -23,6 +32,7 @@ export async function POST(req: NextRequest) {
       Featured: false,
       likes: 0,
       submitted_by: user.id,
+      maker_ids: makerIds,
       date: new Date().toISOString().slice(0, 10),
     };
 

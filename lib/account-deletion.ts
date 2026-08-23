@@ -1,6 +1,7 @@
 import { removeProjectAssets } from '@/lib/project-write'
 import type { Project } from '@/lib/projects'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { projectMemberIds } from '@/lib/project-members'
 
 type AccountDeletionResult = {
   deletedProjects: number
@@ -43,7 +44,11 @@ async function deleteUserRows(table: string, column: string, userId: string) {
  * user-initiated deletion can safely overlap or be retried.
  */
 export async function deleteSupabaseAccount(userId: string): Promise<AccountDeletionResult> {
-  const [{ data: profile, error: profileError }, { data: ownedRows, error: ownedError }] =
+  const [
+    { data: profile, error: profileError },
+    { data: memberRows, error: memberError },
+    { data: contactRows, error: contactError },
+  ] =
     await Promise.all([
       supabaseAdmin
         .from('profiles')
@@ -53,15 +58,23 @@ export async function deleteSupabaseAccount(userId: string): Promise<AccountDele
       supabaseAdmin
         .from('Projects')
         .select('*')
+        .contains('maker_ids', [userId]),
+      supabaseAdmin
+        .from('Projects')
+        .select('*')
         .eq('submitted_by', userId),
     ])
 
   if (profileError) throw new Error(`Profile lookup failed: ${profileError.message}`)
-  if (ownedError) throw new Error(`Owned project lookup failed: ${ownedError.message}`)
+  if (memberError || contactError) {
+    throw new Error(`Project lookup failed: ${memberError?.message ?? contactError?.message}`)
+  }
 
-  const ownedProjects = (ownedRows ?? []) as Project[]
+  const relevantProjects = [...new Map(
+    [...(memberRows ?? []), ...(contactRows ?? [])].map((project: Project) => [project.id, project]),
+  ).values()]
   const possibleCoMakerIds = [...new Set(
-    ownedProjects.flatMap(project => project.maker_ids ?? []).filter(id => id !== userId),
+    relevantProjects.flatMap(project => projectMemberIds(project)).filter(id => id !== userId),
   )]
   const validCoMakerIds = new Set<string>()
 
@@ -77,11 +90,23 @@ export async function deleteSupabaseAccount(userId: string): Promise<AccountDele
   let transferredProjects = 0
   const soloProjects: Project[] = []
 
-  // Preserve every shared project before removing any account records.
-  for (const project of ownedProjects) {
+  // maker_ids is the equal-owner set. submitted_by is only its notification
+  // contact, and is reassigned when that contact leaves a shared project.
+  for (const project of relevantProjects) {
+    const memberIds = projectMemberIds(project)
+    const isMember = memberIds.includes(userId)
     const remainingIds = [...new Set(
-      (project.maker_ids ?? []).filter(id => id !== userId && validCoMakerIds.has(id)),
+      memberIds.filter(id => id !== userId && validCoMakerIds.has(id)),
     )]
+
+    if (isMember && !remainingIds.length) {
+      soloProjects.push(project)
+      continue
+    }
+
+    // A departing contact who is no longer a maker must not delete a project.
+    // Give an existing maker the contact role instead.
+    if (!isMember && project.submitted_by !== userId) continue
     if (!remainingIds.length) {
       soloProjects.push(project)
       continue
@@ -90,44 +115,23 @@ export async function deleteSupabaseAccount(userId: string): Promise<AccountDele
     const { error } = await supabaseAdmin
       .from('Projects')
       .update({
-        submitted_by: remainingIds[0],
-        maker_ids: remainingIds,
-        makers: withoutDepartingNames(project.makers, profile as ProfileName | null),
+        ...(project.submitted_by === userId ? { submitted_by: remainingIds[0] } : {}),
+        ...(isMember ? {
+          maker_ids: remainingIds,
+          makers: withoutDepartingNames(project.makers, profile as ProfileName | null),
+        } : {}),
       })
       .eq('id', project.id)
-      .eq('submitted_by', userId)
     if (error) throw new Error(`Shared project transfer failed: ${error.message}`)
     transferredProjects++
   }
 
-  // Remove this person from projects submitted by somebody else, without
-  // changing or deleting those projects.
-  const { data: coMadeRows, error: coMadeError } = await supabaseAdmin
-    .from('Projects')
-    .select('*')
-    .contains('maker_ids', [userId])
-    .neq('submitted_by', userId)
-  if (coMadeError) throw new Error(`Shared project lookup failed: ${coMadeError.message}`)
-
-  for (const project of (coMadeRows ?? []) as Project[]) {
-    const remainingIds = (project.maker_ids ?? []).filter(id => id !== userId)
-    const { error } = await supabaseAdmin
-      .from('Projects')
-      .update({
-        maker_ids: remainingIds.length ? remainingIds : null,
-        makers: withoutDepartingNames(project.makers, profile as ProfileName | null),
-      })
-      .eq('id', project.id)
-    if (error) throw new Error(`Co-maker cleanup failed: ${error.message}`)
-  }
-
-  // Only projects made solely by this account are removed.
+  // Only projects with no remaining account-backed maker are removed.
   for (const project of soloProjects) {
     const { error } = await supabaseAdmin
       .from('Projects')
       .delete()
       .eq('id', project.id)
-      .eq('submitted_by', userId)
     if (error) throw new Error(`Project deletion failed: ${error.message}`)
     await removeProjectAssets(project, project.id)
   }

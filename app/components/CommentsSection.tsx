@@ -189,8 +189,9 @@ export default function CommentsSection({
           const canDelete =
             !!user &&
             (c.user_id === user.id ||
-              user.id === projectOwnerId ||
-              (projectMakerIds ?? []).includes(user.id) ||
+              ((projectMakerIds?.length
+                ? projectMakerIds
+                : projectOwnerId ? [projectOwnerId] : []).includes(user.id)) ||
               user.email === ADMIN_EMAIL);
           return (
             <div
