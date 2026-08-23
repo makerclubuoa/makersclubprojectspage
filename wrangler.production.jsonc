@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "makersclubprojectspage",
+  "compatibility_date": "2026-05-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "minify": true,
+  "workers_dev": true,
+  "preview_urls": true,
+  "vars": {
+    "NEXT_PUBLIC_GHOST_URL": "https://ghost.makeuoa.nz",
+    "RESEND_FROM": "MAKE_UOA <noreply@makeuoa.nz>",
+    "NEXT_PUBLIC_BASE_URL": "https://makeuoa.nz",
+    "NEXT_PUBLIC_GHOST_CONTENT_API_KEY": "b17df4b6695cec37e18795bb7b"
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "makersclubprojectspage"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "makeuoa.nz/*",
+      "zone_name": "makeuoa.nz"
+    }
+  ]
+}
