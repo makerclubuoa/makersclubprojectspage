@@ -10,7 +10,7 @@ in CapRover.
 
 ## What changes, and what does not
 
-| Component | After cutover |
+| Component | After cutover
 | --- | --- |
 | `https://makeuoa.nz` | This Cloudflare Worker / Next.js app |
 | Ghost in CapRover | Stays online; provides content, newsletters, members, and its Admin API |
