@@ -11,9 +11,20 @@ type GhostPost = {
   tags?: GhostTag[];
 };
 
-type GhostPostsResponse = { posts?: GhostPost[] };
+type GhostPagination = {
+  next?: number | null;
+};
 
-let eventsRequest: Promise<GhostPost[]> | undefined;
+type GhostPostsResponse = {
+  posts?: GhostPost[];
+  meta?: { pagination?: GhostPagination };
+};
+
+const SOURCE_PAGE_SIZE = 20;
+let eventPosts: GhostPost[] = [];
+let nextEventPage = 1;
+let hasMoreEventPages = true;
+let eventPageRequest: Promise<void> | undefined;
 
 function ghostApiUrl(path: string): URL {
   const base = process.env.NEXT_PUBLIC_GHOST_URL;
@@ -27,7 +38,7 @@ function ghostApiUrl(path: string): URL {
   return url;
 }
 
-async function fetchGhostPosts(url: URL): Promise<GhostPost[]> {
+async function fetchGhostResponse(url: URL): Promise<GhostPostsResponse> {
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) {
     throw new Error(`Ghost Content API returned ${response.status}`);
@@ -36,8 +47,11 @@ async function fetchGhostPosts(url: URL): Promise<GhostPost[]> {
     throw new Error("Ghost Content API returned a non-JSON response");
   }
 
-  const payload = (await response.json()) as GhostPostsResponse;
-  return payload.posts ?? [];
+  return (await response.json()) as GhostPostsResponse;
+}
+
+async function fetchGhostPosts(url: URL): Promise<GhostPost[]> {
+  return (await fetchGhostResponse(url)).posts ?? [];
 }
 
 function eventDateTag(event: GhostPost): string | null {
@@ -146,24 +160,48 @@ function toEvent(post: GhostPost): Event {
   };
 }
 
-async function browseEvents(): Promise<GhostPost[]> {
-  if (!eventsRequest) {
-    const url = ghostApiUrl("posts/");
-    url.searchParams.set("filter", "tag:Events");
-    url.searchParams.set("limit", "all");
-    url.searchParams.set("order", "published_at DESC");
-    url.searchParams.set("include", "tags");
-    eventsRequest = fetchGhostPosts(url).catch((error) => {
-      eventsRequest = undefined;
-      throw error;
+async function loadNextEventPage(): Promise<void> {
+  if (!hasMoreEventPages) return;
+  if (eventPageRequest) return eventPageRequest;
+
+  const page = nextEventPage;
+  const url = ghostApiUrl("posts/");
+  url.searchParams.set("filter", "tag:Events");
+  url.searchParams.set("limit", String(SOURCE_PAGE_SIZE));
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("order", "published_at DESC");
+  url.searchParams.set("include", "tags");
+  url.searchParams.set(
+    "fields",
+    "title,slug,feature_image,excerpt,published_at",
+  );
+
+  eventPageRequest = fetchGhostResponse(url)
+    .then((payload) => {
+      const posts = payload.posts ?? [];
+      eventPosts = [...eventPosts, ...posts];
+      nextEventPage = page + 1;
+      hasMoreEventPages = payload.meta?.pagination?.next != null;
+    })
+    .finally(() => {
+      eventPageRequest = undefined;
     });
+
+  return eventPageRequest;
+}
+
+async function ensurePastEventCount(count: number): Promise<void> {
+  while (
+    eventPosts.filter(isPastEvent).length < count &&
+    hasMoreEventPages
+  ) {
+    await loadNextEventPage();
   }
-  return eventsRequest;
 }
 
 export async function getPublicUpcomingEvents(limit = 12): Promise<Event[]> {
-  const events = await browseEvents();
-  return events
+  if (eventPosts.length === 0) await loadNextEventPage();
+  return eventPosts
     .map((post) => {
       const tag = eventDateTag(post);
       const range = tag ? parseEventDateRange(tag) : null;
@@ -190,13 +228,14 @@ export async function getPublicPastEvents(
   page = 1,
   pageSize = 12,
 ): Promise<PublicEventPage> {
-  const events = await browseEvents();
-  const pastEvents = events.filter(isPastEvent).map(toEvent);
   const start = Math.max(0, (page - 1) * pageSize);
+  await ensurePastEventCount(start + pageSize);
+  const pastEvents = eventPosts.filter(isPastEvent).map(toEvent);
+  const end = start + pageSize;
   return {
-    pastEvents: pastEvents.slice(start, start + pageSize),
-    skip: start + pageSize,
-    hasMore: start + pageSize < pastEvents.length,
+    pastEvents: pastEvents.slice(start, end),
+    skip: end,
+    hasMore: end < pastEvents.length || hasMoreEventPages,
   };
 }
 

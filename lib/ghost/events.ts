@@ -1,5 +1,4 @@
 import { api } from "@/lib/ghost-content-api";
-import { sanitizeGhostHtml } from "@/lib/sanitize";
 import { PostOrPage, PostsOrPages } from "@tryghost/content-api";
 import * as chrono from "chrono-node";
 export interface Event {
@@ -21,7 +20,7 @@ function toEvent(post: PostOrPage): Event {
     slug: post.slug,
     src: post.feature_image ?? undefined,
     date: date ?? "TBA | No date provided.",
-    html: post.html ? sanitizeGhostHtml(post.html) : "No body provided.",
+    html: "",
     excerpt: post.excerpt ?? "No excerpt provided.",
   };
 }
@@ -80,7 +79,7 @@ export async function getUpcomingEvents(limit: number = 12): Promise<Event[]> {
   try {
     events = await api().posts.browse({
       filter: "tag:Events",
-      formats: "html",
+      fields: "title,slug,feature_image,excerpt,published_at",
       limit: 50,
       order: "published_at DESC",
       include: "tags",
@@ -119,7 +118,7 @@ export async function getPastEvents(
   try {
     pastEvents = await api().posts.browse({
       filter: "tag:Events",
-      formats: "html",
+      fields: "title,slug,feature_image,excerpt,published_at",
       page: page,
       limit: offset,
       include: "tags",
@@ -144,7 +143,7 @@ export async function getPastEvents(
         slug: pastEvent.slug,
         src: pastEvent.feature_image ?? undefined,
         date: date ?? "TBA | No date provided.",
-        html: pastEvent.html ?? "No body provided.",
+        html: "",
         excerpt: pastEvent.excerpt ?? "No except provided.",
       });
       total++;
@@ -158,7 +157,7 @@ export async function getPastEvents(
     try {
       additionalPastEvents = await api().posts.browse({
         filter: "tag:Events",
-        formats: "html",
+        fields: "title,slug,feature_image,excerpt,published_at",
         page: 1,
         limit: 12 - total + 12,
         include: "tags",
@@ -190,7 +189,7 @@ export async function getPastEvents(
           slug: event.slug,
           src: event.feature_image ?? undefined,
           date: date ?? "TBA | No date provided.",
-          html: event.html ?? "No body provided.",
+          html: "",
           excerpt: event.excerpt ?? "No excerpt provided.",
         });
       }
