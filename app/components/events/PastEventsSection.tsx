@@ -1,28 +1,32 @@
 "use client";
 import type { Event } from "@/lib/ghost/events";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EventSlide from "./EventSlide";
 import Button from "../global/Button";
 import placeholder from "@/public/placeholder.png";
+import {
+  getPublicPastEvents,
+  type PublicEventPage,
+} from "@/lib/ghost-public-client";
 
-type PastEventPage = { pastEvents: Event[]; skip: number; hasMore: boolean };
-
-export default function PastEventsSection({ initialPage }: { initialPage: PastEventPage }) {
+export default function PastEventsSection({ initialPage }: { initialPage: PublicEventPage }) {
   const [pastEvents, setPastEvents] = useState<Event[]>(initialPage.pastEvents);
-  const [skip, setSkip] = useState<number>(initialPage.skip);
   const [page, setPage] = useState<number>(2);
   const [hasMore, setHasMore] = useState<boolean>(initialPage.hasMore);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setPastEvents(initialPage.pastEvents);
+    setPage(2);
+    setHasMore(initialPage.hasMore);
+  }, [initialPage]);
 
   async function loadMoreEvents() {
     if (loading) return;
     setLoading(true);
     try {
-      const response = await fetch(`/api/events?offset=${skip}&page=${page}`);
-      if (!response.ok) throw new Error("Events could not be loaded");
-      const nextPage = await response.json() as PastEventPage;
+      const nextPage = await getPublicPastEvents(page);
       setPastEvents(current => [...current, ...nextPage.pastEvents]);
-      setSkip(nextPage.skip);
       setHasMore(nextPage.hasMore);
       setPage(current => current + 1);
     } finally {

@@ -17,7 +17,7 @@ export default function EventSlide({
   return (
     <div className="flex flex-col items-center w-full">
       <Polaroid
-        link={`/events/${slug}`}
+        link={`/events/view?slug=${encodeURIComponent(slug ?? "")}`}
         src={src}
         description={title}
         typeOverride="md:w-full"

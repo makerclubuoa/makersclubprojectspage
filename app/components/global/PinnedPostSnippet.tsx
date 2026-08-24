@@ -6,7 +6,7 @@ interface PinnedPostSnippetProps {
   pinned?: boolean;
 }
 
-export default async function PinnedPostSnippet({
+export default function PinnedPostSnippet({
   upcomingEvent,
   children,
   pinned,

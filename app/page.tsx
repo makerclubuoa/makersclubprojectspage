@@ -1,30 +1,15 @@
-import { TimelineType } from "@/lib/ghost/timeline";
+import type { TimelineType } from "@/lib/ghost/timeline";
 import { getTimelineItems } from "@/lib/timeline";
-import Header from "./components/homepage/Header";
-import MakeathonSection from "./components/homepage/MakeathonSection";
-import MovingText from "./components/homepage/MovingText";
-import Splash from "./components/homepage/Splash";
-import TimelineSection from "./components/homepage/TimelineSection";
-import VendingMachineSection from "./components/homepage/VendingMachineSection";
-import ProjectsPreviewSection from "./components/homepage/ProjectsPreviewSection";
 import { getMakeathon } from "@/lib/ghost/makeathon";
 import { fetchProjects } from "@/lib/projects";
-import JoinSection from "./components/homepage/JoinSection";
 import { getPhotos } from "@/lib/ghost/photos";
 import getLatestUpcomingEvent from "@/lib/ghost/events";
-import WhatsNewSection from "./components/homepage/WhatsNewSection";
-import Nav from "./components/Nav";
-import Footer from "./components/Footer";
-import LinkButton from "./components/global/LinkButton";
-import Image from "next/image";
 import { getRandomProduct } from "@/lib/stripe";
+import HomePageContent from "./components/homepage/HomePageContent";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 export default async function Home() {
-  // These sections come from independent external services. A temporary
-  // failure in one should hide only that section's live content, not turn the
-  // entire homepage into a 500 response.
   const [timelineResult, makeathonResult, photosResult, eventResult, productResult, projectsResult] =
     await Promise.allSettled([
       getTimelineItems(),
@@ -35,67 +20,35 @@ export default async function Home() {
       fetchProjects(),
     ]);
 
-  const timelines: TimelineType[] = timelineResult.status === "fulfilled" ? timelineResult.value : [];
-  const makeathon = makeathonResult.status === "fulfilled" ? makeathonResult.value : {
-    title: "Join our Make-A-Thon",
-    date: "Details coming soon",
-    description: ["Make something ambitious with other makers."],
-    image: "/placeholder.png",
-  };
+  const timelines: TimelineType[] =
+    timelineResult.status === "fulfilled" ? timelineResult.value : [];
+  const makeathon =
+    makeathonResult.status === "fulfilled"
+      ? makeathonResult.value
+      : {
+          title: "Join our Make-A-Thon",
+          date: "Details coming soon",
+          description: ["Make something ambitious with other makers."],
+          image: "/placeholder.png",
+        };
   const photos = photosResult.status === "fulfilled" ? photosResult.value : [];
-  const upcomingEvent = eventResult.status === "fulfilled" ? eventResult.value : null;
-  const randomProduct = productResult.status === "fulfilled" ? productResult.value : {
-    name: "Maker Club creations",
-    src: "/placeholder.png",
-  };
-  const projects = projectsResult.status === "fulfilled" ? projectsResult.value : [];
-  const previewProjects = [...projects].sort(
-    (a, b) => Number(b.Featured) - Number(a.Featured),
-  );
+  const upcomingEvent =
+    eventResult.status === "fulfilled" ? eventResult.value : null;
+  const randomProduct =
+    productResult.status === "fulfilled"
+      ? productResult.value
+      : { name: "Maker Club creations", src: "/placeholder.png" };
+  const projects =
+    projectsResult.status === "fulfilled" ? projectsResult.value : [];
 
   return (
-    <div className="">
-      <Nav />
-      <Splash />
-      <div className="relative -top-10 lg:-top-7 z-10 pb-1.5">
-        <MovingText />
-      </div>
-      <WhatsNewSection upcomingEvent={upcomingEvent} photos={photos} />
-      <div className="w-full flex items-center justify-center pb-5">
-        <LinkButton link={`events/`} bgColour="pop-pink" textColour="white">
-          See More Events
-        </LinkButton>
-      </div>
-
-      <MakeathonSection makeathon={makeathon} />
-      <Header
-        text="Semester 2. Fully loaded."
-        rotation={0}
-        typeOverride="z-20 relative top-22 md:top-30 lg:top-31 h-20 pl-5 md:pl-10 xl:top-30 xl:p-15 overflow-x-hidden"
-        bgColour="pop-violet"
-        colour="white"
-      />
-      <div className="mt-20 md:mt-30 lg:mt-26 ">
-        <TimelineSection timelines={timelines} />
-      </div>
-      <div className="z-50">
-        <Header
-          text="Things We've Made"
-          rotation={1}
-          typeOverride="-top-3 z-20 xl:p-15 relative h-20 pl-5 overflow-x-hidden"
-          bgColour="pop-blue"
-          colour="white"
-        />
-        <ProjectsPreviewSection projects={previewProjects} />
-      </div>
-      <VendingMachineSection product={randomProduct} />
-      {/* Must stay a definite height — JoinSection sizes itself with `h-full`,
-          and a percentage height has nothing to resolve against on a min-height
-          parent. min-h is a floor for very short landscape viewports. */}
-      <div className="h-dvh min-h-[340px]">
-        <JoinSection />
-      </div>
-      <Footer />
-    </div>
+    <HomePageContent
+      initialTimelines={timelines}
+      makeathon={makeathon}
+      photos={photos}
+      initialUpcomingEvent={upcomingEvent}
+      randomProduct={randomProduct}
+      initialProjects={projects}
+    />
   );
 }

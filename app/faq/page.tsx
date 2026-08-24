@@ -17,7 +17,7 @@ import {
   faqList,
 } from "@/lib/ui";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 type Entry = { q: string; a: React.ReactNode };
 
