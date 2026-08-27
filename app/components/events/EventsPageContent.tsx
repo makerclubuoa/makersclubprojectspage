@@ -5,8 +5,8 @@ import placeholder from "@/public/placeholder.png";
 import type { Event } from "@/lib/ghost/events";
 import type { TimelineType } from "@/lib/ghost/timeline";
 import {
-  getPublicLatestUpcomingEvent,
   getPublicPastEvents,
+  getPublicUpcomingEvents,
   type PublicEventPage,
 } from "@/lib/ghost-public-client";
 import { getPublicTimelineItems } from "@/lib/timeline-public";
@@ -23,23 +23,23 @@ function eventLink(event: Event): string {
 }
 
 export default function EventsPageContent({
-  initialUpcomingEvent,
+  initialUpcomingEvents,
   initialPastEvents,
   initialTimelines,
 }: {
-  initialUpcomingEvent: Event | null;
+  initialUpcomingEvents: Event[];
   initialPastEvents: PublicEventPage;
   initialTimelines: TimelineType[];
 }) {
-  const [upcomingEvent, setUpcomingEvent] = useState(initialUpcomingEvent);
+  const [upcomingEvents, setUpcomingEvents] = useState(initialUpcomingEvents);
   const [pastEvents, setPastEvents] = useState(initialPastEvents);
   const [timelines, setTimelines] = useState(initialTimelines);
 
   useEffect(() => {
     let active = true;
     void Promise.allSettled([
-      getPublicLatestUpcomingEvent().then(
-        (event) => active && setUpcomingEvent(event),
+      getPublicUpcomingEvents().then(
+        (events) => active && setUpcomingEvents(events),
       ),
       getPublicPastEvents().then((page) => active && setPastEvents(page)),
       getPublicTimelineItems().then((items) => active && setTimelines(items)),
@@ -66,27 +66,40 @@ export default function EventsPageContent({
           </p>
         </div>
         <div>
-          <div className="pt-5 flex justify-center">
-            <div className="w-full items-center lg:items-stretch lg:w-3/4 px-20 lg:px-5 pt-1 md:pt-3 lg:pt-10 flex flex-col lg:flex-row gap-10">
-              <Photo
-                src={upcomingEvent?.src ?? placeholder}
-                alt=""
-                rotation={2.3}
-                link={upcomingEvent ? eventLink(upcomingEvent) : undefined}
-              />
-              <PinnedPostSnippet upcomingEvent={upcomingEvent} pinned={true}>
-                {upcomingEvent && (
-                  <div className="flex w-full justify-center md:justify-end-safe mt-4">
-                    <LinkButton
-                      link={eventLink(upcomingEvent)}
-                      typeOverride="text-md md:text-md lg:text-md"
-                    >
-                      Sign Me Up!
-                    </LinkButton>
-                  </div>
-                )}
-              </PinnedPostSnippet>
-            </div>
+          <div className="mx-auto flex w-full flex-col gap-10 px-20 pt-6 md:pt-8 lg:w-3/4 lg:px-5 lg:pt-10">
+            {(upcomingEvents.length > 0 ? upcomingEvents : [null]).map(
+              (upcomingEvent, index) => (
+                <div
+                  key={upcomingEvent?.slug ?? `no-upcoming-event-${index}`}
+                  className="flex w-full flex-col items-center gap-10 lg:flex-row lg:items-stretch"
+                >
+                  <Photo
+                    src={upcomingEvent?.src ?? placeholder}
+                    alt={
+                      upcomingEvent
+                        ? `Event image for ${upcomingEvent.title}`
+                        : ""
+                    }
+                    rotation={index % 2 === 0 ? 2.3 : -2.3}
+                    link={
+                      upcomingEvent ? eventLink(upcomingEvent) : undefined
+                    }
+                  />
+                  <PinnedPostSnippet upcomingEvent={upcomingEvent} pinned={true}>
+                    {upcomingEvent && (
+                      <div className="mt-4 flex w-full justify-center md:justify-end-safe">
+                        <LinkButton
+                          link={eventLink(upcomingEvent)}
+                          typeOverride="text-md md:text-md lg:text-md"
+                        >
+                          Learn More
+                        </LinkButton>
+                      </div>
+                    )}
+                  </PinnedPostSnippet>
+                </div>
+              ),
+            )}
           </div>
         </div>
       </div>

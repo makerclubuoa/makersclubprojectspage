@@ -199,8 +199,14 @@ async function ensurePastEventCount(count: number): Promise<void> {
   }
 }
 
+async function ensureAllEventsLoaded(): Promise<void> {
+  while (hasMoreEventPages) await loadNextEventPage();
+}
+
 export async function getPublicUpcomingEvents(limit = 12): Promise<Event[]> {
-  if (eventPosts.length === 0) await loadNextEventPage();
+  // Upcoming posts can sit on any Ghost page because Ghost orders this feed by
+  // publication date rather than the date stored in the event's #DATE tag.
+  await ensureAllEventsLoaded();
   return eventPosts
     .map((post) => {
       const tag = eventDateTag(post);
