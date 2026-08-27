@@ -5,6 +5,9 @@ import "./globals.css";
 import AuthProvider from "@/app/components/AuthProvider";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://makeuoa.nz",
+  ),
   title: "Maker Club",
   icons: { icon: "/logoNew.png" },
 };

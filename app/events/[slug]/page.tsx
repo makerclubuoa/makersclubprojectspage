@@ -5,6 +5,7 @@ import { getTimelineItems } from "@/lib/timeline";
 import Image from "next/image";
 import JoinSection from "@/app/components/homepage/JoinSection";
 import Footer from "@/app/components/Footer";
+import { getEventMetadata } from "@/lib/ghost/event-metadata";
 
 export async function generateMetadata({
   params,
@@ -12,18 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = await getEvent(slug);
-
-  if (event.title == "No title provided.") {
-    return {
-      title: "Post Not Found",
-    };
-  }
-  return {
-    title: `${event.title} | Maker Club`,
-    icons: { icon: "/logoNew.png" },
-    description: event.excerpt,
-  };
+  return getEventMetadata(slug, `/events/${encodeURIComponent(slug)}`);
 }
 
 export default async function Event({
