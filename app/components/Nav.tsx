@@ -136,6 +136,9 @@ export default function Nav() {
         <Link href="/projects" className={NAVLINK} onClick={close}>
           Projects
         </Link>
+        <Link href="/code-of-conduct" className={NAVLINK} onClick={close}>
+          Code of Conduct
+        </Link>
         <div
           className={`w-full flex items-center justify-center px-6 pt-5 ${menuOpen ? "md:hidden" : "hidden"}`}
         >

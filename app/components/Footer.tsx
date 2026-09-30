@@ -63,6 +63,11 @@ export default function Footer() {
               Vending Machine
             </Link>
           </li>
+          <li>
+            <Link className={FOOTERLINK} href="/code-of-conduct">
+              Code of Conduct
+            </Link>
+          </li>
         </ul>
 
         <div>
