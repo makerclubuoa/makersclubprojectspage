@@ -474,14 +474,14 @@ export default function DashboardPage() {
               <span className={formFig}>Profile settings</span>
 
               <div className={field}>
-                <label className={fieldLabel} htmlFor="profile-legal-name">
-                  Legal name
+                <label className={fieldLabel} htmlFor="profile-preferred-name">
+                  Preferred name
                   <span className="font-normal normal-case tracking-normal text-muted">
                     read-only
                   </span>
                 </label>
                 <input
-                  id="profile-legal-name"
+                  id="profile-preferred-name"
                   className={`${fieldInput} opacity-50`}
                   type="text"
                   value={profile?.display_name ?? ""}

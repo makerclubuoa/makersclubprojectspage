@@ -15,7 +15,10 @@ import MediaUploader, {
   uploadMediaDrafts,
   type DraftMedia,
 } from "@/app/components/MediaUploader";
-import { searchCoMakerProfiles } from "@/lib/co-maker-search";
+import {
+  searchCoMakerProfiles,
+  type CoMakerSearchProfile,
+} from "@/lib/co-maker-search";
 import {
   container,
   projectBack,
@@ -175,17 +178,17 @@ export default function SubmitPage() {
   const [contact, setContact] = useState("");
 
   // Makers
+  // No email here — the search API matches on address but never returns one.
   type CoMakerProfile = {
     id: string;
     display_name: string;
-    email: string | null;
     public_name: string | null;
     name_preference: string | null;
     credit_consented: boolean;
   };
   const [coMakers, setCoMakers] = useState<CoMakerProfile[]>([]);
   const [coMakerSearch, setCoMakerSearch] = useState("");
-  const [coMakerResults, setCoMakerResults] = useState<CoMakerProfile[]>([]);
+  const [coMakerResults, setCoMakerResults] = useState<CoMakerSearchProfile[]>([]);
   const [coMakerSearchError, setCoMakerSearchError] = useState("");
   const [showCoMakerDropdown, setShowCoMakerDropdown] = useState(false);
 
@@ -296,15 +299,17 @@ export default function SubmitPage() {
   }, [coMakerSearch, coMakers, user]);
 
   // ── Makers ──────────────────────────────────────────
-  function addCoMaker(r: {
-    id: string;
-    display_name: string;
-    email: string | null;
-    public_name: string | null;
-    name_preference: string | null;
-    credit_consented: boolean;
-  }) {
-    setCoMakers((prev) => [...prev, r]);
+  function addCoMaker(r: CoMakerSearchProfile) {
+    setCoMakers((prev) => [
+      ...prev,
+      {
+        id: r.id,
+        display_name: r.display_name,
+        public_name: r.public_name,
+        name_preference: r.name_preference,
+        credit_consented: r.credit_consented,
+      },
+    ]);
     setCoMakerSearch("");
     setCoMakerResults([]);
     setShowCoMakerDropdown(false);
@@ -985,6 +990,9 @@ export default function SubmitPage() {
                                   <span className={makersDropdownName}>
                                     {resolvePublicName(r)}
                                   </span>
+                                  {/* The address is never sent here. When the
+                                      query matched one, say so — that confirms
+                                      only what the searcher just typed. */}
                                   <span
                                     className={makersDropdownEmail}
                                     style={{
@@ -993,9 +1001,11 @@ export default function SubmitPage() {
                                         : "var(--pop-orange)",
                                     }}
                                   >
-                                    {r.email ?? (r.credit_consented
-                                      ? "can be credited"
-                                      : "will appear anonymous")}
+                                    {!r.credit_consented
+                                      ? "will appear anonymous"
+                                      : r.matched_email
+                                        ? "matches that email"
+                                        : "can be credited"}
                                   </span>
                                 </button>
                               ))

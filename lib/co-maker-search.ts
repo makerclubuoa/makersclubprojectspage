@@ -1,12 +1,16 @@
 import { supabase } from "@/lib/supabase";
 
+// No `email` field — by design. /api/profiles/search matches on the address
+// server-side and never sends it back, so nothing in the browser can read or
+// leak another member's email. `matched_email` is the substitute the picker uses
+// to say "this is the account behind the address you typed".
 export type CoMakerSearchProfile = {
   id: string;
   display_name: string;
-  email: string | null;
   public_name: string | null;
   name_preference: string | null;
   credit_consented: boolean;
+  matched_email: boolean;
 };
 
 export async function searchCoMakerProfiles(

@@ -13,7 +13,7 @@ import { CATEGORIES, resolvePublicName, type Project } from '@/lib/projects'
 import { compressForUpload, imageFileError } from '@/lib/image-compress'
 import CustomSelect from '@/app/components/CustomSelect'
 import MediaUploader, { draftFromStored, uploadMediaDrafts, type DraftMedia } from '@/app/components/MediaUploader'
-import { searchCoMakerProfiles } from '@/lib/co-maker-search'
+import { searchCoMakerProfiles, type CoMakerSearchProfile } from '@/lib/co-maker-search'
 import {
   secHead, secHeadRow, secHint,
   pageWrap, pageBand, pageBandTitle, pageBandDoodle, submitMain,
@@ -81,10 +81,12 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
   const [website, setWebsite]           = useState('')
 
   // Makers
-  type CoMakerProfile = { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }
+  // No email here — profiles.email is no longer readable with the anon key, and
+  // the search API matches on address without ever returning one.
+  type CoMakerProfile = { id: string; display_name: string; public_name: string | null; name_preference: string | null; credit_consented: boolean }
   const [coMakers, setCoMakers]                       = useState<CoMakerProfile[]>([])
   const [coMakerSearch, setCoMakerSearch]             = useState('')
-  const [coMakerResults, setCoMakerResults]           = useState<CoMakerProfile[]>([])
+  const [coMakerResults, setCoMakerResults]           = useState<CoMakerSearchProfile[]>([])
   const [coMakerSearchError, setCoMakerSearchError]   = useState('')
   const [showCoMakerDropdown, setShowCoMakerDropdown] = useState(false)
 
@@ -168,7 +170,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       if (allIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('id, display_name, email, public_name, name_preference, credit_consented')
+          .select('id, display_name, public_name, name_preference, credit_consented')
           .in('id', allIds)
         realProfiles = (profiles ?? []) as CoMakerProfile[]
       }
@@ -184,7 +186,7 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
       const realNameSet = new Set(orderedProfiles.map(p => resolvePublicName(p).toLowerCase()))
       const legacyEntries = (data.makers ?? [])
         .filter((n: string) => !realNameSet.has(n.toLowerCase()))
-        .map((n: string) => ({ id: `name:${n}`, display_name: n, email: null, public_name: null, name_preference: null, credit_consented: true }))
+        .map((n: string) => ({ id: `name:${n}`, display_name: n, public_name: null, name_preference: null, credit_consented: true }))
       setCoMakers([...orderedProfiles, ...legacyEntries])
       setTools(data.tools ?? [])
       setImagePreview(data.image ?? null)
@@ -259,8 +261,14 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
     setShowRemoveSelfModal(false)
   }
 
-  function addCoMaker(r: { id: string; display_name: string; email: string | null; public_name: string | null; name_preference: string | null; credit_consented: boolean }) {
-    setCoMakers(prev => [...prev, r])
+  function addCoMaker(r: CoMakerSearchProfile) {
+    setCoMakers(prev => [...prev, {
+      id: r.id,
+      display_name: r.display_name,
+      public_name: r.public_name,
+      name_preference: r.name_preference,
+      credit_consented: r.credit_consented,
+    }])
     setCoMakerSearch(''); setCoMakerResults([]); setShowCoMakerDropdown(false)
   }
 
@@ -587,7 +595,6 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                       onClick={() => setCoMakers(prev => [...prev, {
                         id: user!.id,
                         display_name: profile?.display_name ?? user!.email?.split('@')[0] ?? '',
-                        email: user!.email ?? null,
                         public_name: profile?.public_name ?? null,
                         name_preference: profile?.name_preference ?? null,
                         credit_consented: profile?.credit_consented ?? true,
@@ -617,7 +624,10 @@ function EditForm({ params }: { params: Promise<{ id: string }> }) {
                       {coMakerResults.length > 0 ? coMakerResults.map((r, resultIndex) => (
                         <button id={`edit-co-maker-option-${resultIndex}`} key={r.id} type="button" className={makersDropdownItem} onClick={() => addCoMaker(r)} role="option" aria-selected="false">
                           <span className={makersDropdownName}>{r.display_name}</span>
-                          <span className={makersDropdownEmail}>{r.email ?? (r.credit_consented ? 'can be credited' : 'will appear anonymous')}</span>
+                          {/* The address is never sent here. When the query matched
+                              one, say so — that confirms only what the searcher
+                              just typed. */}
+                          <span className={makersDropdownEmail}>{!r.credit_consented ? 'will appear anonymous' : r.matched_email ? 'matches that email' : 'can be credited'}</span>
                         </button>
                       )) : <div className={makersDropdownEmpty}>{coMakerSearchError || 'No users found'}</div>}
                     </div>
